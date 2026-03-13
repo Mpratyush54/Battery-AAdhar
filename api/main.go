@@ -118,11 +118,12 @@ func main() {
 	expressRouter := http.NewServeMux()
 
 	expressRouter.HandleFunc("/api/v1/rides", func(res http.ResponseWriter, req *http.Request) {
-		if req.Method == http.MethodPost {
+		switch req.Method {
+		case http.MethodPost:
 			createRideController(res, req)
-		} else if req.Method == http.MethodGet {
+		case http.MethodGet:
 			getRidesController(res, req)
-		} else {
+		default:
 			http.Error(res, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})

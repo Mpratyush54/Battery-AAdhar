@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package rides;
+
+option go_package = "api/pb";
+
+service RideService {
+  rpc CreateRide (CreateRideRequest) returns (RideResponse);
+  rpc GetRides (GetRidesRequest) returns (GetRidesResponse);
+}
+
+message CreateRideRequest {
+  string zkProof = 1;
+  string rideDetails = 2; 
+}
+
+message RideResponse {
+  int32 id = 1;
+  string zkProof = 2;
+  string rideDetails = 3; 
+}
+
+message GetRidesRequest {}
+
+message GetRidesResponse {
+  repeated RideResponse rides = 1;
+}

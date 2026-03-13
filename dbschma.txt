@@ -1,0 +1,604 @@
+//////////////////////////////////////////////////////
+// 1. MANUFACTURERS (BMI – Table 3)
+//////////////////////////////////////////////////////
+
+Table manufacturers {
+  id uuid [pk]
+
+  manufacturer_code varchar [unique]
+  name varchar
+  country_code varchar
+
+  encrypted_profile text
+
+  created_at timestamp
+}
+
+//////////////////////////////////////////////////////
+// 2. BATTERY ROOT (BPAN Identity)
+//////////////////////////////////////////////////////
+
+Table batteries {
+  bpan varchar [pk, note: "21-character BPAN"]
+
+  manufacturer_id uuid [ref: > manufacturers.id]
+
+  production_year int
+  battery_category varchar
+  compliance_class varchar
+
+  static_hash varchar
+  carbon_hash varchar
+
+  created_at timestamp
+}
+
+//////////////////////////////////////////////////////
+// 3. BATTERY IDENTIFIER SECTION (BI – Table 5)
+//////////////////////////////////////////////////////
+
+Table battery_identifiers {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+  cipher_algorithm varchar
+  cipher_version int
+
+  encrypted_serial_number text
+  encrypted_batch_number text
+  encrypted_factory_code text
+
+  created_at timestamp
+}
+
+//////////////////////////////////////////////////////
+// 4. BATTERY DESCRIPTOR DATA (BDD – Table 9)
+//////////////////////////////////////////////////////
+
+Table battery_descriptor {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+
+  chemistry_type varchar
+  nominal_voltage decimal
+  rated_capacity_kwh decimal
+  energy_density decimal
+  weight_kg decimal
+  form_factor varchar
+
+
+  created_at timestamp
+}
+
+//////////////////////////////////////////////////////
+// 5. MATERIAL COMPOSITION (BMCS – Table 6)
+//////////////////////////////////////////////////////
+
+Table battery_material_composition {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+
+  cathode_material varchar
+  anode_material varchar
+  electrolyte_type varchar
+  separator_material varchar
+
+  lithium_content_g decimal
+  cobalt_content_g decimal
+  nickel_content_g decimal
+
+  recyclable_percentage decimal
+
+  encrypted_details text
+
+  created_at timestamp
+}
+
+//////////////////////////////////////////////////////
+// 6. CARBON FOOTPRINT (BCF – Tables 7 & 8)
+//////////////////////////////////////////////////////
+
+Table carbon_footprint {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+
+  raw_material_emission decimal
+  manufacturing_emission decimal
+  transport_emission decimal
+  usage_emission decimal
+  recycling_emission decimal
+
+  total_emission decimal
+
+  verified boolean
+  created_at timestamp
+}
+
+//////////////////////////////////////////////////////
+// 7. BATTERY HEALTH SUMMARY (Dynamic)
+//////////////////////////////////////////////////////
+
+Table battery_health {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+
+  state_of_health decimal
+  total_cycles int
+  degradation_class varchar
+  end_of_life boolean
+
+  updated_at timestamp
+}
+
+//////////////////////////////////////////////////////
+// 8. OWNERSHIP HISTORY
+//////////////////////////////////////////////////////
+
+Table ownership_history {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+  cipher_algorithm varchar
+  cipher_version int
+
+  encrypted_owner_identity text
+  start_time timestamp
+  end_time timestamp
+}
+
+//////////////////////////////////////////////////////
+// 9. REUSE / SECOND LIFE TRACKING
+//////////////////////////////////////////////////////
+
+Table reuse_history {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+
+  reuse_application varchar
+  certified_by varchar
+  certified_at timestamp
+}
+
+//////////////////////////////////////////////////////
+// 10. RECYCLING / EOL TRACKING
+//////////////////////////////////////////////////////
+
+Table recycling_records {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+
+  recycler_name varchar
+  recovered_material_percentage decimal
+  certificate_hash varchar
+  recycled_at timestamp
+}
+
+//////////////////////////////////////////////////////
+// 11. TELEMETRY
+//////////////////////////////////////////////////////
+
+Table telemetry {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+  cipher_algorithm varchar
+  cipher_version int
+
+  encrypted_payload text
+  recorded_at timestamp
+}
+
+//////////////////////////////////////////////////////
+// 12. QR CODE RECORD
+//////////////////////////////////////////////////////
+
+Table qr_records {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+
+  qr_payload_hash varchar
+  generated_at timestamp
+}
+
+//////////////////////////////////////////////////////
+// 13. STAKEHOLDERS (Table 1)
+//////////////////////////////////////////////////////
+
+Table stakeholders {
+  id uuid [pk]
+
+  role varchar
+  encrypted_profile text
+  created_at timestamp
+}
+
+//////////////////////////////////////////////////////
+// 14. DATA ACCESS MATRIX (Table 2)
+//////////////////////////////////////////////////////
+
+Table data_access_control {
+  id uuid [pk]
+
+  stakeholder_id uuid [ref: > stakeholders.id]
+  resource_type varchar
+  access_level varchar
+}
+
+//////////////////////////////////////////////////////
+// 15. REGULATOR ACCESS LOG
+//////////////////////////////////////////////////////
+
+Table regulator_access_log {
+  id uuid [pk]
+
+  stakeholder_id uuid [ref: > stakeholders.id]
+  bpan varchar [ref: > batteries.bpan]
+
+  reason text
+  accessed_at timestamp
+}
+
+//////////////////////////////////////////////////////
+// 16. AUDIT LOG
+//////////////////////////////////////////////////////
+
+Table audit_logs {
+  id uuid [pk]
+
+  actor_id uuid
+  action varchar
+  resource varchar
+
+  previous_hash varchar
+  entry_hash varchar
+
+  created_at timestamp
+}
+// BATTERY REGISTRATION LOG
+Table battery_registration_log {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+
+  manufacturer_id uuid [ref: > manufacturers.id]
+  registration_status varchar
+  submitted_at timestamp
+  approved_at timestamp
+  approved_by uuid
+}
+// STATIC DATA SUBMISSION LOG
+Table static_data_submission_log {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+
+  data_type varchar [note: "BDD / BMCS / BCF"]
+  version int
+  submission_status varchar
+  submitted_at timestamp
+  reviewed_at timestamp
+  reviewer_id uuid
+}
+// VALIDATION / APPROVAL LOG
+Table validation_log {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+
+  validation_type varchar
+  validation_result varchar
+  remarks text
+  validated_by uuid
+  validated_at timestamp
+}
+
+// STATIC DATA UPDATE LOG
+Table static_data_update_log {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+
+  field_name varchar
+  old_hash varchar
+  new_hash varchar
+  updated_by uuid
+  updated_at timestamp
+}
+// DYNAMIC DATA UPLOAD LOG
+Table dynamic_data_log {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+  previous_event_hash varchar
+  event_hash varchar
+  upload_type varchar
+  record_hash varchar
+  uploaded_at timestamp
+}
+// 🔹 CARBON CERTIFICATION LOG
+Table ownership_transfer_log {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+  previous_event_hash varchar
+  event_hash varchar
+
+  from_owner_hash varchar
+  to_owner_hash varchar
+  transfer_reason varchar
+  transferred_at timestamp
+}
+// 🔹 REUSE / SECOND LIFE CERTIFICATION LOG
+Table reuse_certification_log {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+previous_event_hash varchar
+event_hash varchar
+
+  reuse_type varchar
+  certifier varchar
+  certified_at timestamp
+}
+// 🔹 RECYCLING CERTIFICATION LOG
+Table recycling_certification_log {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+  previous_event_hash varchar
+  event_hash varchar
+  recycler_name varchar
+  certificate_hash varchar
+  recycled_at timestamp
+}
+// 🔹 QR GENERATION LOG
+Table qr_generation_log {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+
+  qr_version int
+  generated_by uuid
+  generated_at timestamp
+}
+// 🔹 DATA ACCESS EXECUTION LOG
+
+Table data_access_execution_log {
+  id uuid [pk]
+  stakeholder_id uuid [ref: > stakeholders.id]
+  bpan varchar [ref: > batteries.bpan]
+
+  data_section varchar
+  purpose varchar
+  accessed_at timestamp
+}
+// 🔹 COMPLIANCE VIOLATION LOG
+Table compliance_violation_log {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+
+  violation_type varchar
+  severity varchar
+  detected_at timestamp
+  resolved boolean
+}
+// 🔹 KEY ROTATION LOG
+Table key_rotation_log {
+  id uuid [pk]
+  key_type varchar
+  previous_version int
+  new_version int
+  initiated_by uuid
+  approved_by uuid
+  approval_timestamp timestamp
+  rotated_at timestamp
+}
+
+// 🔹 SYSTEM INTEGRITY LOG
+Table system_integrity_log {
+  id uuid [pk]
+  check_type varchar
+  status varchar
+  checked_at timestamp
+}
+
+
+Table certificates {
+  id uuid [pk]
+
+  public_key text
+  issued_by_hash varchar
+  issued_at timestamp
+  expires_at timestamp
+  revoked boolean
+}
+
+Table certificate_revocation_list {
+  id uuid [pk]
+  certificate_id uuid [ref: > certificates.id]
+
+  revoked_at timestamp
+  reason_hash varchar
+}
+
+
+//////////////////////////////////////////////////////
+// API REQUEST TRACKING
+//////////////////////////////////////////////////////
+
+Table api_requests {
+  id uuid [pk]
+
+  parent_request_id uuid [ref: > api_requests.id]
+  request_hash varchar
+  endpoint_hash varchar
+  subject_hash varchar
+
+  status_hash varchar
+  latency_ms int
+  created_at timestamp
+}
+
+Table idempotency_keys {
+  id uuid [pk]
+
+  request_hash varchar
+  response_hash varchar
+  expires_at timestamp
+}
+
+//////////////////////////////////////////////////////
+// RATE LIMITING
+//////////////////////////////////////////////////////
+
+Table rate_limits {
+  id uuid [pk]
+
+  subject_hash varchar
+  window_start timestamp
+  request_count int
+}
+
+//////////////////////////////////////////////////////
+// JOB SCHEDULER
+//////////////////////////////////////////////////////
+
+Table scheduled_jobs {
+  id uuid [pk]
+
+  job_name_hash varchar
+  cron_expression varchar
+  enabled boolean
+  last_run timestamp
+}
+
+Table job_execution_log {
+  id uuid [pk]
+  job_id uuid [ref: > scheduled_jobs.id]
+
+  status_hash varchar
+  started_at timestamp
+  finished_at timestamp
+}
+
+//////////////////////////////////////////////////////
+// NOTIFICATIONS
+//////////////////////////////////////////////////////
+
+Table notifications {
+  id uuid [pk]
+  cipher_algorithm varchar
+  cipher_version int
+
+  recipient_hash varchar
+  encrypted_message text
+  status_hash varchar
+  created_at timestamp
+}
+
+//////////////////////////////////////////////////////
+// ASYNC PROCESSING
+//////////////////////////////////////////////////////
+
+Table message_queue {
+  id uuid [pk]
+  cipher_algorithm varchar
+  cipher_version int
+
+  topic_hash varchar
+  encrypted_payload text
+  status_hash varchar
+
+  created_at timestamp
+}
+
+Table dead_letter_queue {
+  id uuid [pk]
+
+  original_message_id uuid
+  failure_reason_hash varchar
+  retry_count int
+
+  created_at timestamp
+}
+
+//////////////////////////////////////////////////////
+// SYSTEM MONITORING (ENCRYPTED METRICS)
+//////////////////////////////////////////////////////
+
+Table system_metrics {
+  id uuid [pk]
+  cipher_algorithm varchar
+  cipher_version int
+
+  metric_name_hash varchar
+  metric_value_cipher text
+
+  recorded_at timestamp
+}
+
+Table alerts {
+  id uuid [pk]
+  cipher_algorithm varchar
+  cipher_version int
+
+  severity_hash varchar
+  message_cipher text
+  triggered_at timestamp
+  resolved boolean
+}
+
+
+
+//////////////////////////////////////////////////////
+// REGION SHARD ROUTING
+//////////////////////////////////////////////////////
+
+Table regions {
+  id uuid [pk]
+
+  region_hash varchar
+  data_center_hash varchar
+}
+
+Table root_keys {
+  id uuid [pk]
+  key_identifier varchar
+  hardware_backed boolean
+  status varchar
+  created_at timestamp
+  retired_at timestamp
+}
+Table kek_keys {
+  id uuid [pk]
+  encrypted_kek bytea
+  version int
+  root_key_id uuid [ref: > root_keys.id]
+  cipher_algorithm varchar
+  cipher_version int
+  status varchar
+  created_at timestamp
+  retired_at timestamp
+}
+Table battery_keys {
+  bpan varchar [pk, ref: > batteries.bpan]
+  encrypted_dek bytea
+  kek_version int
+  cipher_algorithm varchar
+  cipher_version int
+  key_status varchar
+  created_at timestamp
+  rotated_at timestamp
+}
+
+Table static_signatures {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+  data_section varchar
+  data_hash varchar
+  signature bytea
+  certificate_id uuid [ref: > certificates.id]
+  signed_at timestamp
+}
+Table key_destruction_log {
+  id uuid [pk]
+  bpan varchar [ref: > batteries.bpan]
+  dek_version int
+  destroyed_by uuid
+  destruction_method varchar
+  destroyed_at timestamp
+}
+Table data_classification {
+  id uuid [pk]
+  table_name varchar
+  field_name varchar
+  classification varchar
+}

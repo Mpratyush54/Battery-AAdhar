@@ -1,0 +1,32 @@
+# Build artifacts
+target/
+**/target/
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+*.zip
+*.tar.gz
+*.rar
+
+# Environment and secrets
+.env
+.env.*
+--client-id
+--client-secret
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Go specific
+api/api.exe

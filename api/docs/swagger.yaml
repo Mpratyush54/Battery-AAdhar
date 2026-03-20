@@ -1,0 +1,186 @@
+basePath: /
+definitions:
+  main.RegisterBatteryPayload:
+    properties:
+      actorId:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      batchNumber:
+        example: BAT2026
+        type: string
+      batteryCategory:
+        example: EV-M
+        type: string
+      chemistryType:
+        example: LFP
+        type: string
+      complianceClass:
+        example: AIS-156
+        type: string
+      energyDensity:
+        example: 150
+        type: number
+      factoryCode:
+        example: FAC01
+        type: string
+      formFactor:
+        example: PRISMATIC
+        type: string
+      manufacturerCode:
+        example: ABC
+        type: string
+      manufacturerId:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      nominalVoltage:
+        example: 48
+        type: number
+      productionYear:
+        example: 2026
+        type: integer
+      ratedCapacityKwh:
+        example: 2.5
+        type: number
+      sequenceNumber:
+        example: "01"
+        type: string
+      serialNumber:
+        example: SN12345678
+        type: string
+      weightKg:
+        example: 25
+        type: number
+    type: object
+  main.RegisterBatteryResponseJSON:
+    properties:
+      bpan:
+        type: string
+      registrationId:
+        type: string
+      staticHash:
+        type: string
+      status:
+        type: string
+    type: object
+  main.RidePayload:
+    description: Payload containing the zero-knowledge proof and ride details
+    properties:
+      rideDetails:
+        example: New ride details...
+        type: string
+      zkProof:
+        example: proof_payload_123
+        type: string
+    type: object
+  main.RideResponseJSON:
+    description: Complete ride details including its assigned ID
+    properties:
+      id:
+        example: 42
+        type: integer
+      rideDetails:
+        example: New ride details...
+        type: string
+      zkProof:
+        example: proof_payload_123
+        type: string
+    type: object
+host: localhost:3000
+info:
+  contact: {}
+  description: The Go Gateway for the BPA and Zero-Knowledge Rides application.
+  title: Battery Pack Aadhaar / zk_rides API
+  version: "1.0"
+paths:
+  /api/v1/battery/register:
+    post:
+      consumes:
+      - application/json
+      description: Registers a new battery with the BPA Core Engine
+      parameters:
+      - description: Battery registration payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.RegisterBatteryPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful registration
+          schema:
+            $ref: '#/definitions/main.RegisterBatteryResponseJSON'
+        "400":
+          description: Invalid payload
+          schema:
+            type: string
+        "405":
+          description: Method not allowed
+          schema:
+            type: string
+        "500":
+          description: Internal Server/Microservice Error
+          schema:
+            type: string
+      summary: Register a new battery
+      tags:
+      - battery
+  /api/v1/rides:
+    get:
+      description: Retrieves all rides decrypted by the Rust backend
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of rides
+          schema:
+            items:
+              $ref: '#/definitions/main.RideResponseJSON'
+            type: array
+        "405":
+          description: Method not allowed
+          schema:
+            type: string
+        "500":
+          description: Internal Server/Microservice Error
+          schema:
+            type: string
+      summary: Get all rides
+      tags:
+      - rides
+    post:
+      consumes:
+      - application/json
+      description: Creates a ride by passing a ZkProof and details to the Rust gRPC
+        backend
+      parameters:
+      - description: Ride creation payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.RidePayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful ride creation
+          schema:
+            $ref: '#/definitions/main.RideResponseJSON'
+        "400":
+          description: Invalid payload
+          schema:
+            type: string
+        "405":
+          description: Method not allowed
+          schema:
+            type: string
+        "500":
+          description: Internal Server/Microservice Error
+          schema:
+            type: string
+      summary: Create a new ride
+      tags:
+      - rides
+swagger: "2.0"

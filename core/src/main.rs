@@ -32,7 +32,18 @@ pub mod rides {
     tonic::include_proto!("rides");
 }
 
-/// The BPA Core Engine — holds the DB pool, encryption service, and all domain services.
+use bpa::bpa_service_server::{BpaService, BpaServiceServer};
+use bpa::{RegisterBatteryRequest as GrpcRegisterBatteryRequest, RegisterBatteryResponse as GrpcRegisterBatteryResponse};
+
+pub mod bpa {
+    tonic::include_proto!("bpa");
+}
+
+use uuid::Uuid;
+use std::str::FromStr;
+use crate::services::registration::BatteryRegistrationRequest;
+
+#[derive(Clone)]
 pub struct BpaEngine {
     db_pool: Pool<Postgres>,
     encryption: EncryptionService,
@@ -133,6 +144,53 @@ impl RideService for BpaEngine {
                 Ok(Response::new(GetRidesResponse { rides: response_array }))
             }
             Err(_) => Err(Status::internal("Failed to query database")),
+        }
+    }
+}
+
+#[tonic::async_trait]
+impl BpaService for BpaEngine {
+    async fn register_battery(
+        &self,
+        request: Request<GrpcRegisterBatteryRequest>,
+    ) -> Result<Response<GrpcRegisterBatteryResponse>, Status> {
+        let req = request.into_inner();
+        
+        let manufacturer_id = Uuid::from_str(&req.manufacturer_id)
+            .map_err(|_| Status::invalid_argument("Invalid manufacturer_id format"))?;
+        
+        let actor_id = Uuid::from_str(&req.actor_id)
+            .map_err(|_| Status::invalid_argument("Invalid actor_id format"))?;
+
+        let domain_req = BatteryRegistrationRequest {
+            manufacturer_id,
+            manufacturer_code: req.manufacturer_code,
+            chemistry_type: req.chemistry_type,
+            battery_category: req.battery_category,
+            compliance_class: req.compliance_class,
+            nominal_voltage: req.nominal_voltage,
+            rated_capacity_kwh: req.rated_capacity_kwh,
+            energy_density: req.energy_density,
+            weight_kg: req.weight_kg,
+            form_factor: req.form_factor,
+            serial_number: req.serial_number,
+            batch_number: req.batch_number,
+            factory_code: req.factory_code,
+            production_year: req.production_year as u16,
+            sequence_number: req.sequence_number,
+        };
+
+        match self.registration.register_battery(domain_req, actor_id).await {
+            Ok(res) => Ok(Response::new(GrpcRegisterBatteryResponse {
+                bpan: res.bpan,
+                static_hash: res.static_hash,
+                registration_id: res.registration_id.to_string(),
+                status: res.status,
+            })),
+            Err(e) => {
+                error!("Failed to register battery: {:?}", e);
+                Err(Status::internal(e.to_string()))
+            }
         }
     }
 }
@@ -837,7 +895,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // --- Initialize BPA Engine ---
     let engine = BpaEngine::new(db_pool, encryption);
 
-    let listen_address = "[::1]:50051".parse()?;
+    let listen_address = "127.0.0.1:50051".parse()?;
 
     info!("🚀 BPA Core Engine ready on {}", listen_address);
     info!("   ├── Registration Service ✓");
@@ -857,7 +915,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // --- Start gRPC server ---
     Server::builder()
-        .add_service(RideServiceServer::new(engine))
+        .add_service(RideServiceServer::new(engine.clone()))
+        .add_service(BpaServiceServer::new(engine))
         .serve(listen_address)
         .await?;
 

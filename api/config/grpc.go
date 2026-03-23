@@ -13,7 +13,6 @@ import (
 
 const microserviceUrl = "127.0.0.1:50051"
 var BpaService pb.BpaServiceClient
-var AuthService pb.AuthServiceClient
 
 func InitMicroserviceClient() {
 	connection, err := grpc.NewClient(microserviceUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -39,5 +38,4 @@ func InitMicroserviceClient() {
 	}
 
 	BpaService = pb.NewBpaServiceClient(connection)
-	AuthService = pb.NewAuthServiceClient(connection)
 }

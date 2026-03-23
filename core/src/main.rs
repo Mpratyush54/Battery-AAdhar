@@ -11,7 +11,6 @@ use bpa_engine::repositories::db_setup::sync_database_schema;
 use bpa_engine::services::encryption::EncryptionService;
 use bpa_engine::BpaEngine;
 use bpa_engine::bpa::bpa_service_server::BpaServiceServer;
-use bpa_engine::bpa::auth_service_server::AuthServiceServer;
 
 
 
@@ -146,7 +145,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Server::builder()
         .add_service(BpaServiceServer::new(engine.clone()))
-        .add_service(AuthServiceServer::new(engine))
         .serve(listen_address)
         .await?;
 

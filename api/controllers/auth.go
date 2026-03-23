@@ -1,17 +1,16 @@
 package controllers
 
 import (
-	"context"
 	"encoding/json"
 	"io"
 	"log"
 	"net/http"
-	"time"
 
-	"api/config"
 	"api/models"
-	pb "api/pb"
+	"api/services"
 )
+
+var authService = services.NewAuthService()
 
 // RegisterStakeholderController godoc
 // @Summary Register a new stakeholder
@@ -42,31 +41,28 @@ func RegisterStakeholderController(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	stakeholderID, err := authService.Register(
+		payload.Email,
+		payload.Password,
+		payload.Role,
+		payload.ProfileDetails,
+		payload.AadharNumber,
+		payload.AadharDocumentBase64,
+	)
 
-	if config.AuthService == nil {
-		http.Error(res, "Auth Service unavailable", http.StatusInternalServerError)
-		return
-	}
-
-	response, err := config.AuthService.RegisterStakeholder(ctx, &pb.RegisterStakeholderRequest{
-		Email:                payload.Email,
-		Password:             payload.Password,
-		Role:                 payload.Role,
-		ProfileDetails:       payload.ProfileDetails,
-		AadharNumber:         payload.AadharNumber,
-		AadharDocumentBase64: payload.AadharDocumentBase64,
-	})
 	if err != nil {
-		log.Printf("Microservice error: %v", err)
-		http.Error(res, "Microservice error: "+err.Error(), http.StatusInternalServerError)
+		if err == services.ErrUserExists {
+			http.Error(res, err.Error(), http.StatusConflict)
+			return
+		}
+		log.Printf("Registration error: %v", err)
+		http.Error(res, "Registration failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	jsonResponse := models.RegisterStakeholderResponseJSON{
-		StakeholderID: response.GetStakeholderId(),
-		Status:        response.GetStatus(),
+		StakeholderID: stakeholderID,
+		Status:        "SUCCESS",
 	}
 
 	res.Header().Set("Content-Type", "application/json")
@@ -101,18 +97,7 @@ func LoginController(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
-
-	if config.AuthService == nil {
-		http.Error(res, "Auth Service unavailable", http.StatusInternalServerError)
-		return
-	}
-
-	response, err := config.AuthService.Login(ctx, &pb.LoginRequest{
-		Email:    payload.Email,
-		Password: payload.Password,
-	})
+	accessToken, refreshToken, stakeholderID, role, err := authService.Login(payload.Email, payload.Password)
 	if err != nil {
 		http.Error(res, "Authentication failed: "+err.Error(), http.StatusUnauthorized)
 		return
@@ -121,7 +106,7 @@ func LoginController(res http.ResponseWriter, req *http.Request) {
 	// Set Access Token HTTP-Only Cookie
 	http.SetCookie(res, &http.Cookie{
 		Name:     "access_token",
-		Value:    response.GetAccessToken(),
+		Value:    accessToken,
 		HttpOnly: true,
 		Secure:   true,
 		Path:     "/",
@@ -132,7 +117,7 @@ func LoginController(res http.ResponseWriter, req *http.Request) {
 	// Set Refresh Token HTTP-Only Cookie
 	http.SetCookie(res, &http.Cookie{
 		Name:     "refresh_token",
-		Value:    response.GetRefreshToken(),
+		Value:    refreshToken,
 		HttpOnly: true,
 		Secure:   true,
 		Path:     "/api/v1/auth/refresh",
@@ -141,8 +126,8 @@ func LoginController(res http.ResponseWriter, req *http.Request) {
 	})
 
 	jsonResponse := models.LoginResponseJSON{
-		StakeholderID: response.GetStakeholderId(),
-		Role:          response.GetRole(),
+		StakeholderID: stakeholderID,
+		Role:          role,
 		Message:       "Logged in successfully",
 	}
 
@@ -170,17 +155,7 @@ func RefreshController(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
-
-	if config.AuthService == nil {
-		http.Error(res, "Auth Service unavailable", http.StatusInternalServerError)
-		return
-	}
-
-	response, err := config.AuthService.Refresh(ctx, &pb.RefreshRequest{
-		RefreshToken: cookie.Value,
-	})
+	accessToken, refreshToken, err := authService.Refresh(cookie.Value)
 	if err != nil {
 		http.Error(res, "Failed to refresh token: "+err.Error(), http.StatusUnauthorized)
 		return
@@ -188,7 +163,7 @@ func RefreshController(res http.ResponseWriter, req *http.Request) {
 
 	http.SetCookie(res, &http.Cookie{
 		Name:     "access_token",
-		Value:    response.GetAccessToken(),
+		Value:    accessToken,
 		HttpOnly: true,
 		Secure:   true,
 		Path:     "/",
@@ -196,10 +171,10 @@ func RefreshController(res http.ResponseWriter, req *http.Request) {
 		MaxAge:   900, // 15 minutes
 	})
 
-	if response.GetRefreshToken() != "" {
+	if refreshToken != "" {
 		http.SetCookie(res, &http.Cookie{
 			Name:     "refresh_token",
-			Value:    response.GetRefreshToken(),
+			Value:    refreshToken,
 			HttpOnly: true,
 			Secure:   true,
 			Path:     "/api/v1/auth/refresh",
@@ -215,7 +190,7 @@ func RefreshController(res http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(res).Encode(jsonResponse)
 }
 
-// Logoutgodoc
+// LogoutController godoc
 // @Summary Logout stakeholder
 // @Description Clears the authentication cookies
 // @Tags auth

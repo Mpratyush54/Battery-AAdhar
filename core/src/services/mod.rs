@@ -1,5 +1,4 @@
-pub mod auth;
-pub use auth::*;
+
 pub mod encryption;
 pub use encryption::*;
 pub mod hash_chain;

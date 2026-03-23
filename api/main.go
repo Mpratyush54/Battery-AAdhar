@@ -16,6 +16,7 @@ import (
 // @BasePath /
 func main() {
 	config.InitMicroserviceClient()
+	config.InitDB()
 
 	expressRouter := routes.SetupRoutes()
 

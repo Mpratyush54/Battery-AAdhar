@@ -1,6 +1,33 @@
 basePath: /
 definitions:
-  main.RegisterBatteryPayload:
+  models.LoginPayload:
+    properties:
+      email:
+        example: admin@example.com
+        type: string
+      password:
+        example: MySecureP@ssw0rd!
+        type: string
+    type: object
+  models.LoginResponseJSON:
+    properties:
+      message:
+        example: Logged in successfully
+        type: string
+      role:
+        example: Government Authority
+        type: string
+      stakeholderId:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+    type: object
+  models.RefreshResponseJSON:
+    properties:
+      message:
+        example: Token refreshed successfully
+        type: string
+    type: object
+  models.RegisterBatteryPayload:
     properties:
       actorId:
         example: 123e4567-e89b-12d3-a456-426614174000
@@ -51,7 +78,7 @@ definitions:
         example: 25
         type: number
     type: object
-  main.RegisterBatteryResponseJSON:
+  models.RegisterBatteryResponseJSON:
     properties:
       bpan:
         type: string
@@ -62,36 +89,123 @@ definitions:
       status:
         type: string
     type: object
-  main.RidePayload:
-    description: Payload containing the zero-knowledge proof and ride details
+  models.RegisterStakeholderPayload:
     properties:
-      rideDetails:
-        example: New ride details...
+      email:
+        example: admin@example.com
         type: string
-      zkProof:
-        example: proof_payload_123
+      password:
+        example: MySecureP@ssw0rd!
+        type: string
+      profileDetails:
+        example: '{}'
+        type: string
+      role:
+        example: Government Authority
         type: string
     type: object
-  main.RideResponseJSON:
-    description: Complete ride details including its assigned ID
+  models.RegisterStakeholderResponseJSON:
     properties:
-      id:
-        example: 42
-        type: integer
-      rideDetails:
-        example: New ride details...
+      stakeholderId:
+        example: 123e4567-e89b-12d3-a456-426614174000
         type: string
-      zkProof:
-        example: proof_payload_123
+      status:
+        example: SUCCESS
         type: string
     type: object
 host: localhost:3000
 info:
   contact: {}
-  description: The Go Gateway for the BPA and Zero-Knowledge Rides application.
-  title: Battery Pack Aadhaar / zk_rides API
+  description: The Go Gateway for the BPA Core Engine.
+  title: Battery Pack Aadhaar API
   version: "1.0"
 paths:
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Logs in a stakeholder and sets HttpOnly cookies
+      parameters:
+      - description: Login payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful login
+          schema:
+            $ref: '#/definitions/models.LoginResponseJSON'
+        "401":
+          description: Invalid credentials
+          schema:
+            type: string
+      summary: Login stakeholder
+      tags:
+      - auth
+  /api/v1/auth/logout:
+    post:
+      description: Clears the authentication cookies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logged out
+          schema:
+            type: string
+      summary: Logout stakeholder
+      tags:
+      - auth
+  /api/v1/auth/refresh:
+    post:
+      description: Uses the refresh token cookie to get a new access token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tokens refreshed
+          schema:
+            $ref: '#/definitions/models.RefreshResponseJSON'
+        "401":
+          description: Invalid or missing refresh token
+          schema:
+            type: string
+      summary: Refresh access token
+      tags:
+      - auth
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Registers a new stakeholder with Email and Password
+      parameters:
+      - description: Registration payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterStakeholderPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful registration
+          schema:
+            $ref: '#/definitions/models.RegisterStakeholderResponseJSON'
+        "400":
+          description: Invalid payload
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Register a new stakeholder
+      tags:
+      - auth
   /api/v1/battery/register:
     post:
       consumes:
@@ -103,14 +217,14 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/main.RegisterBatteryPayload'
+          $ref: '#/definitions/models.RegisterBatteryPayload'
       produces:
       - application/json
       responses:
         "200":
           description: Successful registration
           schema:
-            $ref: '#/definitions/main.RegisterBatteryResponseJSON'
+            $ref: '#/definitions/models.RegisterBatteryResponseJSON'
         "400":
           description: Invalid payload
           schema:
@@ -126,61 +240,4 @@ paths:
       summary: Register a new battery
       tags:
       - battery
-  /api/v1/rides:
-    get:
-      description: Retrieves all rides decrypted by the Rust backend
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: List of rides
-          schema:
-            items:
-              $ref: '#/definitions/main.RideResponseJSON'
-            type: array
-        "405":
-          description: Method not allowed
-          schema:
-            type: string
-        "500":
-          description: Internal Server/Microservice Error
-          schema:
-            type: string
-      summary: Get all rides
-      tags:
-      - rides
-    post:
-      consumes:
-      - application/json
-      description: Creates a ride by passing a ZkProof and details to the Rust gRPC
-        backend
-      parameters:
-      - description: Ride creation payload
-        in: body
-        name: payload
-        required: true
-        schema:
-          $ref: '#/definitions/main.RidePayload'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Successful ride creation
-          schema:
-            $ref: '#/definitions/main.RideResponseJSON'
-        "400":
-          description: Invalid payload
-          schema:
-            type: string
-        "405":
-          description: Method not allowed
-          schema:
-            type: string
-        "500":
-          description: Internal Server/Microservice Error
-          schema:
-            type: string
-      summary: Create a new ride
-      tags:
-      - rides
 swagger: "2.0"

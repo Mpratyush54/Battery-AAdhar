@@ -1,14 +1,146 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "The Go Gateway for the BPA and Zero-Knowledge Rides application.",
-        "title": "Battery Pack Aadhaar / zk_rides API",
+        "description": "The Go Gateway for the BPA Core Engine.",
+        "title": "Battery Pack Aadhaar API",
         "contact": {},
         "version": "1.0"
     },
     "host": "localhost:3000",
     "basePath": "/",
     "paths": {
+        "/api/v1/auth/login": {
+            "post": {
+                "description": "Logs in a stakeholder and sets HttpOnly cookies",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Login stakeholder",
+                "parameters": [
+                    {
+                        "description": "Login payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.LoginPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful login",
+                        "schema": {
+                            "$ref": "#/definitions/models.LoginResponseJSON"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/logout": {
+            "post": {
+                "description": "Clears the authentication cookies",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logout stakeholder",
+                "responses": {
+                    "200": {
+                        "description": "Logged out",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/refresh": {
+            "post": {
+                "description": "Uses the refresh token cookie to get a new access token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Refresh access token",
+                "responses": {
+                    "200": {
+                        "description": "Tokens refreshed",
+                        "schema": {
+                            "$ref": "#/definitions/models.RefreshResponseJSON"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or missing refresh token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/register": {
+            "post": {
+                "description": "Registers a new stakeholder with Email and Password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Register a new stakeholder",
+                "parameters": [
+                    {
+                        "description": "Registration payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RegisterStakeholderPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful registration",
+                        "schema": {
+                            "$ref": "#/definitions/models.RegisterStakeholderResponseJSON"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/battery/register": {
             "post": {
                 "description": "Registers a new battery with the BPA Core Engine",
@@ -29,7 +161,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.RegisterBatteryPayload"
+                            "$ref": "#/definitions/models.RegisterBatteryPayload"
                         }
                     }
                 ],
@@ -37,92 +169,7 @@
                     "200": {
                         "description": "Successful registration",
                         "schema": {
-                            "$ref": "#/definitions/main.RegisterBatteryResponseJSON"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid payload",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "405": {
-                        "description": "Method not allowed",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server/Microservice Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/rides": {
-            "get": {
-                "description": "Retrieves all rides decrypted by the Rust backend",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "rides"
-                ],
-                "summary": "Get all rides",
-                "responses": {
-                    "200": {
-                        "description": "List of rides",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/main.RideResponseJSON"
-                            }
-                        }
-                    },
-                    "405": {
-                        "description": "Method not allowed",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server/Microservice Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Creates a ride by passing a ZkProof and details to the Rust gRPC backend",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "rides"
-                ],
-                "summary": "Create a new ride",
-                "parameters": [
-                    {
-                        "description": "Ride creation payload",
-                        "name": "payload",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/main.RidePayload"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful ride creation",
-                        "schema": {
-                            "$ref": "#/definitions/main.RideResponseJSON"
+                            "$ref": "#/definitions/models.RegisterBatteryResponseJSON"
                         }
                     },
                     "400": {
@@ -148,7 +195,46 @@
         }
     },
     "definitions": {
-        "main.RegisterBatteryPayload": {
+        "models.LoginPayload": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "admin@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "MySecureP@ssw0rd!"
+                }
+            }
+        },
+        "models.LoginResponseJSON": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Logged in successfully"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "Government Authority"
+                },
+                "stakeholderId": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                }
+            }
+        },
+        "models.RefreshResponseJSON": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Token refreshed successfully"
+                }
+            }
+        },
+        "models.RegisterBatteryPayload": {
             "type": "object",
             "properties": {
                 "actorId": {
@@ -217,7 +303,7 @@
                 }
             }
         },
-        "main.RegisterBatteryResponseJSON": {
+        "models.RegisterBatteryResponseJSON": {
             "type": "object",
             "properties": {
                 "bpan": {
@@ -234,35 +320,37 @@
                 }
             }
         },
-        "main.RidePayload": {
-            "description": "Payload containing the zero-knowledge proof and ride details",
+        "models.RegisterStakeholderPayload": {
             "type": "object",
             "properties": {
-                "rideDetails": {
+                "email": {
                     "type": "string",
-                    "example": "New ride details..."
+                    "example": "admin@example.com"
                 },
-                "zkProof": {
+                "password": {
                     "type": "string",
-                    "example": "proof_payload_123"
+                    "example": "MySecureP@ssw0rd!"
+                },
+                "profileDetails": {
+                    "type": "string",
+                    "example": "{}"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "Government Authority"
                 }
             }
         },
-        "main.RideResponseJSON": {
-            "description": "Complete ride details including its assigned ID",
+        "models.RegisterStakeholderResponseJSON": {
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "integer",
-                    "example": 42
-                },
-                "rideDetails": {
+                "stakeholderId": {
                     "type": "string",
-                    "example": "New ride details..."
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
                 },
-                "zkProof": {
+                "status": {
                     "type": "string",
-                    "example": "proof_payload_123"
+                    "example": "SUCCESS"
                 }
             }
         }

@@ -4,9 +4,9 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_USER: rides_user
-      POSTGRES_PASSWORD: rides_pass
-      POSTGRES_DB: rides_db
+      POSTGRES_USER: bpa_user
+      POSTGRES_PASSWORD: bpa_pass
+      POSTGRES_DB: bpa_db
     ports:
       - "5433:5432"
     volumes:
@@ -18,7 +18,7 @@ services:
       dockerfile: Dockerfile
     environment:
       # Override the DB URL to point to the `db` service on port 5432
-      DATABASE_URL: postgres://rides_user:rides_pass@db:5432/rides_db
+      DATABASE_URL: postgres://bpa_user:bpa_pass@db:5432/bpa_db
       RUST_LOG: info
       ENCRYPTION_KEY: "01234567890123456789012345678901"
     ports:

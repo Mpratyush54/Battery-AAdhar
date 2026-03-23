@@ -253,6 +253,358 @@ func (x *RegisterBatteryResponse) GetStatus() string {
 	return ""
 }
 
+type RegisterStakeholderRequest struct {
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	Email                string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	Password             string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	Role                 string                 `protobuf:"bytes,3,opt,name=role,proto3" json:"role,omitempty"`
+	ProfileDetails       string                 `protobuf:"bytes,4,opt,name=profile_details,json=profileDetails,proto3" json:"profile_details,omitempty"`
+	AadharNumber         string                 `protobuf:"bytes,5,opt,name=aadhar_number,json=aadharNumber,proto3" json:"aadhar_number,omitempty"`
+	AadharDocumentBase64 string                 `protobuf:"bytes,6,opt,name=aadhar_document_base64,json=aadharDocumentBase64,proto3" json:"aadhar_document_base64,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *RegisterStakeholderRequest) Reset() {
+	*x = RegisterStakeholderRequest{}
+	mi := &file_bpa_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RegisterStakeholderRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegisterStakeholderRequest) ProtoMessage() {}
+
+func (x *RegisterStakeholderRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bpa_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegisterStakeholderRequest.ProtoReflect.Descriptor instead.
+func (*RegisterStakeholderRequest) Descriptor() ([]byte, []int) {
+	return file_bpa_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *RegisterStakeholderRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *RegisterStakeholderRequest) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+func (x *RegisterStakeholderRequest) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
+func (x *RegisterStakeholderRequest) GetProfileDetails() string {
+	if x != nil {
+		return x.ProfileDetails
+	}
+	return ""
+}
+
+func (x *RegisterStakeholderRequest) GetAadharNumber() string {
+	if x != nil {
+		return x.AadharNumber
+	}
+	return ""
+}
+
+func (x *RegisterStakeholderRequest) GetAadharDocumentBase64() string {
+	if x != nil {
+		return x.AadharDocumentBase64
+	}
+	return ""
+}
+
+type RegisterStakeholderResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	StakeholderId string                 `protobuf:"bytes,1,opt,name=stakeholder_id,json=stakeholderId,proto3" json:"stakeholder_id,omitempty"`
+	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RegisterStakeholderResponse) Reset() {
+	*x = RegisterStakeholderResponse{}
+	mi := &file_bpa_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RegisterStakeholderResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegisterStakeholderResponse) ProtoMessage() {}
+
+func (x *RegisterStakeholderResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_bpa_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegisterStakeholderResponse.ProtoReflect.Descriptor instead.
+func (*RegisterStakeholderResponse) Descriptor() ([]byte, []int) {
+	return file_bpa_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *RegisterStakeholderResponse) GetStakeholderId() string {
+	if x != nil {
+		return x.StakeholderId
+	}
+	return ""
+}
+
+func (x *RegisterStakeholderResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+type LoginRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LoginRequest) Reset() {
+	*x = LoginRequest{}
+	mi := &file_bpa_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LoginRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoginRequest) ProtoMessage() {}
+
+func (x *LoginRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bpa_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoginRequest.ProtoReflect.Descriptor instead.
+func (*LoginRequest) Descriptor() ([]byte, []int) {
+	return file_bpa_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *LoginRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *LoginRequest) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+type LoginResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	StakeholderId string                 `protobuf:"bytes,3,opt,name=stakeholder_id,json=stakeholderId,proto3" json:"stakeholder_id,omitempty"`
+	Role          string                 `protobuf:"bytes,4,opt,name=role,proto3" json:"role,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LoginResponse) Reset() {
+	*x = LoginResponse{}
+	mi := &file_bpa_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LoginResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoginResponse) ProtoMessage() {}
+
+func (x *LoginResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_bpa_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoginResponse.ProtoReflect.Descriptor instead.
+func (*LoginResponse) Descriptor() ([]byte, []int) {
+	return file_bpa_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *LoginResponse) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
+func (x *LoginResponse) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+func (x *LoginResponse) GetStakeholderId() string {
+	if x != nil {
+		return x.StakeholderId
+	}
+	return ""
+}
+
+func (x *LoginResponse) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
+type RefreshRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshRequest) Reset() {
+	*x = RefreshRequest{}
+	mi := &file_bpa_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshRequest) ProtoMessage() {}
+
+func (x *RefreshRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bpa_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshRequest.ProtoReflect.Descriptor instead.
+func (*RefreshRequest) Descriptor() ([]byte, []int) {
+	return file_bpa_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *RefreshRequest) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+type RefreshResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshResponse) Reset() {
+	*x = RefreshResponse{}
+	mi := &file_bpa_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshResponse) ProtoMessage() {}
+
+func (x *RefreshResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_bpa_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshResponse.ProtoReflect.Descriptor instead.
+func (*RefreshResponse) Descriptor() ([]byte, []int) {
+	return file_bpa_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *RefreshResponse) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
+func (x *RefreshResponse) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
 var File_bpa_proto protoreflect.FileDescriptor
 
 const file_bpa_proto_rawDesc = "" +
@@ -282,10 +634,37 @@ const file_bpa_proto_rawDesc = "" +
 	"\vstatic_hash\x18\x02 \x01(\tR\n" +
 	"staticHash\x12'\n" +
 	"\x0fregistration_id\x18\x03 \x01(\tR\x0eregistrationId\x12\x16\n" +
-	"\x06status\x18\x04 \x01(\tR\x06status2Z\n" +
+	"\x06status\x18\x04 \x01(\tR\x06status\"\xe6\x01\n" +
+	"\x1aRegisterStakeholderRequest\x12\x14\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\x12\x12\n" +
+	"\x04role\x18\x03 \x01(\tR\x04role\x12'\n" +
+	"\x0fprofile_details\x18\x04 \x01(\tR\x0eprofileDetails\x12#\n" +
+	"\raadhar_number\x18\x05 \x01(\tR\faadharNumber\x124\n" +
+	"\x16aadhar_document_base64\x18\x06 \x01(\tR\x14aadharDocumentBase64\"\\\n" +
+	"\x1bRegisterStakeholderResponse\x12%\n" +
+	"\x0estakeholder_id\x18\x01 \x01(\tR\rstakeholderId\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\"@\n" +
+	"\fLoginRequest\x12\x14\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\"\x92\x01\n" +
+	"\rLoginResponse\x12!\n" +
+	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12%\n" +
+	"\x0estakeholder_id\x18\x03 \x01(\tR\rstakeholderId\x12\x12\n" +
+	"\x04role\x18\x04 \x01(\tR\x04role\"5\n" +
+	"\x0eRefreshRequest\x12#\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"Y\n" +
+	"\x0fRefreshResponse\x12!\n" +
+	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken2Z\n" +
 	"\n" +
 	"BpaService\x12L\n" +
-	"\x0fRegisterBattery\x12\x1b.bpa.RegisterBatteryRequest\x1a\x1c.bpa.RegisterBatteryResponseB\bZ\x06api/pbb\x06proto3"
+	"\x0fRegisterBattery\x12\x1b.bpa.RegisterBatteryRequest\x1a\x1c.bpa.RegisterBatteryResponse2\xcd\x01\n" +
+	"\vAuthService\x12X\n" +
+	"\x13RegisterStakeholder\x12\x1f.bpa.RegisterStakeholderRequest\x1a .bpa.RegisterStakeholderResponse\x12.\n" +
+	"\x05Login\x12\x11.bpa.LoginRequest\x1a\x12.bpa.LoginResponse\x124\n" +
+	"\aRefresh\x12\x13.bpa.RefreshRequest\x1a\x14.bpa.RefreshResponseB\bZ\x06api/pbb\x06proto3"
 
 var (
 	file_bpa_proto_rawDescOnce sync.Once
@@ -299,16 +678,28 @@ func file_bpa_proto_rawDescGZIP() []byte {
 	return file_bpa_proto_rawDescData
 }
 
-var file_bpa_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_bpa_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_bpa_proto_goTypes = []any{
-	(*RegisterBatteryRequest)(nil),  // 0: bpa.RegisterBatteryRequest
-	(*RegisterBatteryResponse)(nil), // 1: bpa.RegisterBatteryResponse
+	(*RegisterBatteryRequest)(nil),      // 0: bpa.RegisterBatteryRequest
+	(*RegisterBatteryResponse)(nil),     // 1: bpa.RegisterBatteryResponse
+	(*RegisterStakeholderRequest)(nil),  // 2: bpa.RegisterStakeholderRequest
+	(*RegisterStakeholderResponse)(nil), // 3: bpa.RegisterStakeholderResponse
+	(*LoginRequest)(nil),                // 4: bpa.LoginRequest
+	(*LoginResponse)(nil),               // 5: bpa.LoginResponse
+	(*RefreshRequest)(nil),              // 6: bpa.RefreshRequest
+	(*RefreshResponse)(nil),             // 7: bpa.RefreshResponse
 }
 var file_bpa_proto_depIdxs = []int32{
 	0, // 0: bpa.BpaService.RegisterBattery:input_type -> bpa.RegisterBatteryRequest
-	1, // 1: bpa.BpaService.RegisterBattery:output_type -> bpa.RegisterBatteryResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	2, // 1: bpa.AuthService.RegisterStakeholder:input_type -> bpa.RegisterStakeholderRequest
+	4, // 2: bpa.AuthService.Login:input_type -> bpa.LoginRequest
+	6, // 3: bpa.AuthService.Refresh:input_type -> bpa.RefreshRequest
+	1, // 4: bpa.BpaService.RegisterBattery:output_type -> bpa.RegisterBatteryResponse
+	3, // 5: bpa.AuthService.RegisterStakeholder:output_type -> bpa.RegisterStakeholderResponse
+	5, // 6: bpa.AuthService.Login:output_type -> bpa.LoginResponse
+	7, // 7: bpa.AuthService.Refresh:output_type -> bpa.RefreshResponse
+	4, // [4:8] is the sub-list for method output_type
+	0, // [0:4] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -325,9 +716,9 @@ func file_bpa_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_bpa_proto_rawDesc), len(file_bpa_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   8,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   2,
 		},
 		GoTypes:           file_bpa_proto_goTypes,
 		DependencyIndexes: file_bpa_proto_depIdxs,

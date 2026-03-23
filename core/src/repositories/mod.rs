@@ -1,3 +1,4 @@
+pub mod db_setup;
 pub mod manufacturers;
 pub use manufacturers::*;
 pub mod batteries;

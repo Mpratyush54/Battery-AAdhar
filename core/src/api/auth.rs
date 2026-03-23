@@ -20,7 +20,7 @@ impl AuthService for BpaEngine {
         let encrypted_profile = self
             .encryption
             .encrypt(&req.profile_details)
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(|e: crate::errors::BpaError| Status::internal(e.to_string()))?;
 
         match self
             .auth_service

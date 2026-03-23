@@ -1,5 +1,5 @@
 use chrono::Utc;
-use sqlx::{Pool, Postgres};
+use sqlx::{Pool, Postgres, Row};
 use tracing::{info, error, instrument};
 use uuid::Uuid;
 
@@ -25,6 +25,10 @@ use crate::services::validation::ValidationService;
 pub struct RegistrationService {
     pool: Pool<Postgres>,
     encryption: EncryptionService,
+}
+
+pub struct BatteryData {
+    pub chemistry_type: String,
 }
 
 impl RegistrationService {
@@ -217,6 +221,21 @@ impl RegistrationService {
             registration_id: reg_uuid,
             status: "PENDING".to_string(),
         })
+    }
+
+    pub async fn get_battery(&self, bpan: &str) -> std::result::Result<Option<BatteryData>, sqlx::Error> {
+        let record = sqlx::query(
+            r#"
+            SELECT chemistry_type FROM battery_descriptor WHERE bpan = $1
+            "#
+        )
+        .bind(bpan)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(record.map(|row| BatteryData {
+            chemistry_type: row.get("chemistry_type"),
+        }))
     }
 
     /// Approve a pending battery registration.

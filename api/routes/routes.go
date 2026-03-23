@@ -11,6 +11,8 @@ func SetupRoutes() *http.ServeMux {
 	expressRouter := http.NewServeMux()
 
 
+	expressRouter.HandleFunc("/api/v1/battery", controllers.GetBatteryController)
+
 	expressRouter.HandleFunc("/api/v1/battery/register", func(res http.ResponseWriter, req *http.Request) {
 		switch req.Method {
 		case http.MethodPost:

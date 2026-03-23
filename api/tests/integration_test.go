@@ -47,6 +47,20 @@ func TestFullAppEndpoints(t *testing.T) {
 			expectedStatus: http.StatusInternalServerError,
 		},
 		{
+			name:           "Valid Get Battery Route",
+			method:         http.MethodGet,
+			url:            ts.URL + "/api/v1/battery?bpan=123",
+			body:           nil,
+			expectedStatus: http.StatusInternalServerError, // Fails 500 without backend mock
+		},
+		{
+			name:           "Invalid Method For Battery",
+			method:         http.MethodPost,
+			url:            ts.URL + "/api/v1/battery",
+			body:           nil,
+			expectedStatus: http.StatusMethodNotAllowed,
+		},
+		{
 			name:           "Swagger Route Accessible",
 			method:         http.MethodGet,
 			url:            ts.URL + "/swagger/index.html",

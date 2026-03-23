@@ -253,6 +253,110 @@ func (x *RegisterBatteryResponse) GetStatus() string {
 	return ""
 }
 
+type GetBatteryRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Bpan          string                 `protobuf:"bytes,1,opt,name=bpan,proto3" json:"bpan,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetBatteryRequest) Reset() {
+	*x = GetBatteryRequest{}
+	mi := &file_bpa_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetBatteryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetBatteryRequest) ProtoMessage() {}
+
+func (x *GetBatteryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bpa_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetBatteryRequest.ProtoReflect.Descriptor instead.
+func (*GetBatteryRequest) Descriptor() ([]byte, []int) {
+	return file_bpa_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GetBatteryRequest) GetBpan() string {
+	if x != nil {
+		return x.Bpan
+	}
+	return ""
+}
+
+type GetBatteryResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Bpan          string                 `protobuf:"bytes,1,opt,name=bpan,proto3" json:"bpan,omitempty"`
+	ChemistryType string                 `protobuf:"bytes,2,opt,name=chemistry_type,json=chemistryType,proto3" json:"chemistry_type,omitempty"`
+	Status        string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetBatteryResponse) Reset() {
+	*x = GetBatteryResponse{}
+	mi := &file_bpa_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetBatteryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetBatteryResponse) ProtoMessage() {}
+
+func (x *GetBatteryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_bpa_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetBatteryResponse.ProtoReflect.Descriptor instead.
+func (*GetBatteryResponse) Descriptor() ([]byte, []int) {
+	return file_bpa_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GetBatteryResponse) GetBpan() string {
+	if x != nil {
+		return x.Bpan
+	}
+	return ""
+}
+
+func (x *GetBatteryResponse) GetChemistryType() string {
+	if x != nil {
+		return x.ChemistryType
+	}
+	return ""
+}
+
+func (x *GetBatteryResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
 type RegisterStakeholderRequest struct {
 	state                protoimpl.MessageState `protogen:"open.v1"`
 	Email                string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
@@ -267,7 +371,7 @@ type RegisterStakeholderRequest struct {
 
 func (x *RegisterStakeholderRequest) Reset() {
 	*x = RegisterStakeholderRequest{}
-	mi := &file_bpa_proto_msgTypes[2]
+	mi := &file_bpa_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -279,7 +383,7 @@ func (x *RegisterStakeholderRequest) String() string {
 func (*RegisterStakeholderRequest) ProtoMessage() {}
 
 func (x *RegisterStakeholderRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_bpa_proto_msgTypes[2]
+	mi := &file_bpa_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -292,7 +396,7 @@ func (x *RegisterStakeholderRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegisterStakeholderRequest.ProtoReflect.Descriptor instead.
 func (*RegisterStakeholderRequest) Descriptor() ([]byte, []int) {
-	return file_bpa_proto_rawDescGZIP(), []int{2}
+	return file_bpa_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *RegisterStakeholderRequest) GetEmail() string {
@@ -347,7 +451,7 @@ type RegisterStakeholderResponse struct {
 
 func (x *RegisterStakeholderResponse) Reset() {
 	*x = RegisterStakeholderResponse{}
-	mi := &file_bpa_proto_msgTypes[3]
+	mi := &file_bpa_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -359,7 +463,7 @@ func (x *RegisterStakeholderResponse) String() string {
 func (*RegisterStakeholderResponse) ProtoMessage() {}
 
 func (x *RegisterStakeholderResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_bpa_proto_msgTypes[3]
+	mi := &file_bpa_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -372,7 +476,7 @@ func (x *RegisterStakeholderResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegisterStakeholderResponse.ProtoReflect.Descriptor instead.
 func (*RegisterStakeholderResponse) Descriptor() ([]byte, []int) {
-	return file_bpa_proto_rawDescGZIP(), []int{3}
+	return file_bpa_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *RegisterStakeholderResponse) GetStakeholderId() string {
@@ -399,7 +503,7 @@ type LoginRequest struct {
 
 func (x *LoginRequest) Reset() {
 	*x = LoginRequest{}
-	mi := &file_bpa_proto_msgTypes[4]
+	mi := &file_bpa_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -411,7 +515,7 @@ func (x *LoginRequest) String() string {
 func (*LoginRequest) ProtoMessage() {}
 
 func (x *LoginRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_bpa_proto_msgTypes[4]
+	mi := &file_bpa_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -424,7 +528,7 @@ func (x *LoginRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoginRequest.ProtoReflect.Descriptor instead.
 func (*LoginRequest) Descriptor() ([]byte, []int) {
-	return file_bpa_proto_rawDescGZIP(), []int{4}
+	return file_bpa_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *LoginRequest) GetEmail() string {
@@ -453,7 +557,7 @@ type LoginResponse struct {
 
 func (x *LoginResponse) Reset() {
 	*x = LoginResponse{}
-	mi := &file_bpa_proto_msgTypes[5]
+	mi := &file_bpa_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -465,7 +569,7 @@ func (x *LoginResponse) String() string {
 func (*LoginResponse) ProtoMessage() {}
 
 func (x *LoginResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_bpa_proto_msgTypes[5]
+	mi := &file_bpa_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -478,7 +582,7 @@ func (x *LoginResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoginResponse.ProtoReflect.Descriptor instead.
 func (*LoginResponse) Descriptor() ([]byte, []int) {
-	return file_bpa_proto_rawDescGZIP(), []int{5}
+	return file_bpa_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *LoginResponse) GetAccessToken() string {
@@ -518,7 +622,7 @@ type RefreshRequest struct {
 
 func (x *RefreshRequest) Reset() {
 	*x = RefreshRequest{}
-	mi := &file_bpa_proto_msgTypes[6]
+	mi := &file_bpa_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -530,7 +634,7 @@ func (x *RefreshRequest) String() string {
 func (*RefreshRequest) ProtoMessage() {}
 
 func (x *RefreshRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_bpa_proto_msgTypes[6]
+	mi := &file_bpa_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -543,7 +647,7 @@ func (x *RefreshRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RefreshRequest.ProtoReflect.Descriptor instead.
 func (*RefreshRequest) Descriptor() ([]byte, []int) {
-	return file_bpa_proto_rawDescGZIP(), []int{6}
+	return file_bpa_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *RefreshRequest) GetRefreshToken() string {
@@ -563,7 +667,7 @@ type RefreshResponse struct {
 
 func (x *RefreshResponse) Reset() {
 	*x = RefreshResponse{}
-	mi := &file_bpa_proto_msgTypes[7]
+	mi := &file_bpa_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -575,7 +679,7 @@ func (x *RefreshResponse) String() string {
 func (*RefreshResponse) ProtoMessage() {}
 
 func (x *RefreshResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_bpa_proto_msgTypes[7]
+	mi := &file_bpa_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -588,7 +692,7 @@ func (x *RefreshResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RefreshResponse.ProtoReflect.Descriptor instead.
 func (*RefreshResponse) Descriptor() ([]byte, []int) {
-	return file_bpa_proto_rawDescGZIP(), []int{7}
+	return file_bpa_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *RefreshResponse) GetAccessToken() string {
@@ -634,7 +738,13 @@ const file_bpa_proto_rawDesc = "" +
 	"\vstatic_hash\x18\x02 \x01(\tR\n" +
 	"staticHash\x12'\n" +
 	"\x0fregistration_id\x18\x03 \x01(\tR\x0eregistrationId\x12\x16\n" +
-	"\x06status\x18\x04 \x01(\tR\x06status\"\xe6\x01\n" +
+	"\x06status\x18\x04 \x01(\tR\x06status\"'\n" +
+	"\x11GetBatteryRequest\x12\x12\n" +
+	"\x04bpan\x18\x01 \x01(\tR\x04bpan\"g\n" +
+	"\x12GetBatteryResponse\x12\x12\n" +
+	"\x04bpan\x18\x01 \x01(\tR\x04bpan\x12%\n" +
+	"\x0echemistry_type\x18\x02 \x01(\tR\rchemistryType\x12\x16\n" +
+	"\x06status\x18\x03 \x01(\tR\x06status\"\xe6\x01\n" +
 	"\x1aRegisterStakeholderRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\x12\x12\n" +
@@ -657,10 +767,12 @@ const file_bpa_proto_rawDesc = "" +
 	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"Y\n" +
 	"\x0fRefreshResponse\x12!\n" +
 	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
-	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken2Z\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken2\x99\x01\n" +
 	"\n" +
 	"BpaService\x12L\n" +
-	"\x0fRegisterBattery\x12\x1b.bpa.RegisterBatteryRequest\x1a\x1c.bpa.RegisterBatteryResponse2\xcd\x01\n" +
+	"\x0fRegisterBattery\x12\x1b.bpa.RegisterBatteryRequest\x1a\x1c.bpa.RegisterBatteryResponse\x12=\n" +
+	"\n" +
+	"GetBattery\x12\x16.bpa.GetBatteryRequest\x1a\x17.bpa.GetBatteryResponse2\xcd\x01\n" +
 	"\vAuthService\x12X\n" +
 	"\x13RegisterStakeholder\x12\x1f.bpa.RegisterStakeholderRequest\x1a .bpa.RegisterStakeholderResponse\x12.\n" +
 	"\x05Login\x12\x11.bpa.LoginRequest\x1a\x12.bpa.LoginResponse\x124\n" +
@@ -678,28 +790,32 @@ func file_bpa_proto_rawDescGZIP() []byte {
 	return file_bpa_proto_rawDescData
 }
 
-var file_bpa_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_bpa_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_bpa_proto_goTypes = []any{
 	(*RegisterBatteryRequest)(nil),      // 0: bpa.RegisterBatteryRequest
 	(*RegisterBatteryResponse)(nil),     // 1: bpa.RegisterBatteryResponse
-	(*RegisterStakeholderRequest)(nil),  // 2: bpa.RegisterStakeholderRequest
-	(*RegisterStakeholderResponse)(nil), // 3: bpa.RegisterStakeholderResponse
-	(*LoginRequest)(nil),                // 4: bpa.LoginRequest
-	(*LoginResponse)(nil),               // 5: bpa.LoginResponse
-	(*RefreshRequest)(nil),              // 6: bpa.RefreshRequest
-	(*RefreshResponse)(nil),             // 7: bpa.RefreshResponse
+	(*GetBatteryRequest)(nil),           // 2: bpa.GetBatteryRequest
+	(*GetBatteryResponse)(nil),          // 3: bpa.GetBatteryResponse
+	(*RegisterStakeholderRequest)(nil),  // 4: bpa.RegisterStakeholderRequest
+	(*RegisterStakeholderResponse)(nil), // 5: bpa.RegisterStakeholderResponse
+	(*LoginRequest)(nil),                // 6: bpa.LoginRequest
+	(*LoginResponse)(nil),               // 7: bpa.LoginResponse
+	(*RefreshRequest)(nil),              // 8: bpa.RefreshRequest
+	(*RefreshResponse)(nil),             // 9: bpa.RefreshResponse
 }
 var file_bpa_proto_depIdxs = []int32{
 	0, // 0: bpa.BpaService.RegisterBattery:input_type -> bpa.RegisterBatteryRequest
-	2, // 1: bpa.AuthService.RegisterStakeholder:input_type -> bpa.RegisterStakeholderRequest
-	4, // 2: bpa.AuthService.Login:input_type -> bpa.LoginRequest
-	6, // 3: bpa.AuthService.Refresh:input_type -> bpa.RefreshRequest
-	1, // 4: bpa.BpaService.RegisterBattery:output_type -> bpa.RegisterBatteryResponse
-	3, // 5: bpa.AuthService.RegisterStakeholder:output_type -> bpa.RegisterStakeholderResponse
-	5, // 6: bpa.AuthService.Login:output_type -> bpa.LoginResponse
-	7, // 7: bpa.AuthService.Refresh:output_type -> bpa.RefreshResponse
-	4, // [4:8] is the sub-list for method output_type
-	0, // [0:4] is the sub-list for method input_type
+	2, // 1: bpa.BpaService.GetBattery:input_type -> bpa.GetBatteryRequest
+	4, // 2: bpa.AuthService.RegisterStakeholder:input_type -> bpa.RegisterStakeholderRequest
+	6, // 3: bpa.AuthService.Login:input_type -> bpa.LoginRequest
+	8, // 4: bpa.AuthService.Refresh:input_type -> bpa.RefreshRequest
+	1, // 5: bpa.BpaService.RegisterBattery:output_type -> bpa.RegisterBatteryResponse
+	3, // 6: bpa.BpaService.GetBattery:output_type -> bpa.GetBatteryResponse
+	5, // 7: bpa.AuthService.RegisterStakeholder:output_type -> bpa.RegisterStakeholderResponse
+	7, // 8: bpa.AuthService.Login:output_type -> bpa.LoginResponse
+	9, // 9: bpa.AuthService.Refresh:output_type -> bpa.RefreshResponse
+	5, // [5:10] is the sub-list for method output_type
+	0, // [0:5] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -716,7 +832,7 @@ func file_bpa_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_bpa_proto_rawDesc), len(file_bpa_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

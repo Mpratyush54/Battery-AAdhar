@@ -18,11 +18,25 @@ func TestBatteryEndpoints(t *testing.T) {
 		expectedStatus int
 	}{
 		{
-			name:           "Register Battery Failure - Missing Service",
+			name:           "Valid Registration Request",
 			method:         http.MethodPost,
 			url:            "/api/v1/battery/register",
-			body:           []byte(`{"manufacturerId":"6c9a3b66-1c88-444a-bea7-9e4b6b6537eb", "batteryCategory":"EV", "chemistryType":"LFP"}`),
+			body:           []byte(`{"manufacturerId":"6c9a3b66-1c88-444a-bea7-9e4b6b6537eb", "batteryCategory":"EV"}`),
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:           "Fetch Battery Valid Request",
+			method:         http.MethodGet,
+			url:            "/api/v1/battery?bpan=123",
+			body:           nil,
 			expectedStatus: http.StatusInternalServerError, // Returns 500 when grpc isn't mock injected
+		},
+		{
+			name:           "Fetch Missing BPAN Parameter",
+			method:         http.MethodGet,
+			url:            "/api/v1/battery",
+			body:           nil,
+			expectedStatus: http.StatusBadRequest,
 		},
 		{
 			name:           "Invalid Method",
@@ -49,8 +63,12 @@ func TestBatteryEndpoints(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 			
-			// Invoke the controller directly
-			controllers.RegisterBatteryController(rr, req)
+			// Invoke the appropriate controller
+			if req.URL.Path == "/api/v1/battery/register" {
+				controllers.RegisterBatteryController(rr, req)
+			} else {
+				controllers.GetBatteryController(rr, req)
+			}
 
 			if status := rr.Code; status != tc.expectedStatus {
 				t.Errorf("handler returned wrong status code: got %v want %v",

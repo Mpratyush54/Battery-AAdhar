@@ -86,3 +86,55 @@ func RegisterBatteryController(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(res).Encode(jsonResponse)
 }
+
+// GetBatteryController godoc
+// @Summary Fetch a battery
+// @Description Fetches battery details via BPAN from the Core Engine
+// @Tags battery
+// @Produce json
+// @Param bpan query string true "BPAN of the battery"
+// @Success 200 {object} models.GetBatteryResponseJSON "Successful retrieval"
+// @Failure 400 {string} string "Missing BPAN"
+// @Failure 404 {string} string "Battery not found"
+// @Failure 405 {string} string "Method not allowed"
+// @Failure 500 {string} string "Internal Server/Microservice Error"
+// @Router /api/v1/battery [get]
+func GetBatteryController(res http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		http.Error(res, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	bpan := req.URL.Query().Get("bpan")
+	if bpan == "" {
+		http.Error(res, "Missing bpan parameter", http.StatusBadRequest)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	if config.BpaService == nil {
+		http.Error(res, "BPA Service unavailable", http.StatusInternalServerError)
+		return
+	}
+
+	response, err := config.BpaService.GetBattery(ctx, &pb.GetBatteryRequest{
+		Bpan: bpan,
+	})
+
+	if err != nil {
+		log.Printf("Microservice error: %v", err)
+		http.Error(res, "Microservice error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonResponse := models.GetBatteryResponseJSON{
+		Bpan:          response.GetBpan(),
+		ChemistryType: response.GetChemistryType(),
+		Status:        response.GetStatus(),
+	}
+
+	res.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(res).Encode(jsonResponse)
+}

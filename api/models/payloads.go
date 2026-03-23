@@ -25,3 +25,9 @@ type RegisterBatteryResponseJSON struct {
 	RegistrationId string `json:"registrationId"`
 	Status         string `json:"status"`
 }
+
+type GetBatteryResponseJSON struct {
+	Bpan          string `json:"bpan"`
+	ChemistryType string `json:"chemistryType"`
+	Status        string `json:"status"`
+}

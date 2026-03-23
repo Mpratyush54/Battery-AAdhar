@@ -5,7 +5,12 @@ use tracing::error;
 
 use crate::BpaEngine;
 use crate::bpa::bpa_service_server::BpaService;
-use crate::bpa::{RegisterBatteryRequest as GrpcRegisterBatteryRequest, RegisterBatteryResponse as GrpcRegisterBatteryResponse};
+use crate::bpa::{
+    RegisterBatteryRequest as GrpcRegisterBatteryRequest, 
+    RegisterBatteryResponse as GrpcRegisterBatteryResponse,
+    GetBatteryRequest,
+    GetBatteryResponse
+};
 use crate::services::registration::BatteryRegistrationRequest;
 
 #[tonic::async_trait]
@@ -49,6 +54,26 @@ impl BpaService for BpaEngine {
             })),
             Err(e) => {
                 error!("Failed to register battery: {:?}", e);
+                Err(Status::internal(e.to_string()))
+            }
+        }
+    }
+
+    async fn get_battery(
+        &self,
+        request: Request<GetBatteryRequest>,
+    ) -> Result<Response<GetBatteryResponse>, Status> {
+        let req = request.into_inner();
+        
+        match self.registration.get_battery(&req.bpan).await {
+            Ok(Some(battery)) => Ok(Response::new(GetBatteryResponse {
+                bpan: req.bpan,
+                chemistry_type: battery.chemistry_type,
+                status: "ACTIVE".to_string(),
+            })),
+            Ok(None) => Err(Status::not_found("Battery not found")),
+            Err(e) => {
+                error!("Failed to get battery: {:?}", e);
                 Err(Status::internal(e.to_string()))
             }
         }

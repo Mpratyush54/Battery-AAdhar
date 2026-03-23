@@ -6,6 +6,7 @@ option go_package = "api/pb";
 
 service BpaService {
   rpc RegisterBattery (RegisterBatteryRequest) returns (RegisterBatteryResponse);
+  rpc GetBattery (GetBatteryRequest) returns (GetBatteryResponse);
 }
 
 message RegisterBatteryRequest {
@@ -32,6 +33,16 @@ message RegisterBatteryResponse {
   string static_hash = 2;
   string registration_id = 3;
   string status = 4;
+}
+
+message GetBatteryRequest {
+  string bpan = 1;
+}
+
+message GetBatteryResponse {
+  string bpan = 1;
+  string chemistry_type = 2;
+  string status = 3;
 }
 
 service AuthService {

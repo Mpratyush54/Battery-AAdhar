@@ -85,4 +85,4 @@ When `INFISICAL_CLIENT_ID` and `INFISICAL_CLIENT_SECRET` are provided, the engin
 - `proto/`: Protobuf definitions for gRPC.
 
 ## 📄 License
-Internal Development - All Rights Reserved.
+MIT License.

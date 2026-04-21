@@ -51,6 +51,21 @@ services:
     networks:
       - bpa-network
 
+  api:
+    build:
+      context: ./api
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ""
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+      - core
+    networks:
+      - bpa-network
+
 networks:
   bpa-network:
     driver: bridge

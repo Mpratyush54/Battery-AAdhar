@@ -13,7 +13,6 @@ import (
 
 const microserviceUrl = "127.0.0.1:50051"
 var BpaService pb.BpaServiceClient
-var AuthService pb.AuthServiceClient
 
 func InitMicroserviceClient() {
 	connection, err := grpc.NewClient(microserviceUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -34,10 +33,10 @@ func InitMicroserviceClient() {
 			break
 		}
 		if !connection.WaitForStateChange(ctx, state) {
-			log.Fatalf("❌ CRITICAL: Failed to connect to Rust gRPC microservice at %s within 5 seconds. Please ensure the Rust backend is running!", microserviceUrl)
+			log.Printf("⚠️ WARNING: Failed to connect to Rust gRPC microservice at %s within 5 seconds. Running in decoupled mode for Day 1!", microserviceUrl)
+			break
 		}
 	}
 
 	BpaService = pb.NewBpaServiceClient(connection)
-	AuthService = pb.NewAuthServiceClient(connection)
 }

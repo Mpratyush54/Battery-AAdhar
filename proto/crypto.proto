@@ -1,0 +1,131 @@
+syntax = "proto3";
+
+package bpa.crypto.v1;
+
+option go_package = "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/crypto/v1;cryptov1";
+
+import "google/protobuf/timestamp.proto";
+
+// ─── Encryption ────────────────────────────────────────────────────────────
+
+message EncryptRequest {
+  string bpan            = 1; // used as AAD for AES-GCM
+  string field_name      = 2; // e.g. "cathode_material"
+  bytes  plaintext       = 3;
+  int32  kek_version     = 4; // 0 = use current
+}
+
+message EncryptResponse {
+  bytes  ciphertext        = 1; // AES-256-GCM ciphertext + nonce + tag
+  int32  kek_version_used  = 2;
+  int32  cipher_version    = 3;
+  string cipher_algorithm  = 4; // "AES-256-GCM"
+}
+
+message DecryptRequest {
+  string bpan            = 1;
+  string field_name      = 2;
+  bytes  ciphertext      = 3;
+  int32  kek_version     = 4;
+  string cipher_algorithm= 5;
+}
+
+message DecryptResponse {
+  bytes plaintext = 1;
+}
+
+// ─── Signing ───────────────────────────────────────────────────────────────
+
+message SignRequest {
+  string manufacturer_id = 1;
+  bytes  message         = 2; // raw bytes to sign
+}
+
+message SignResponse {
+  bytes  signature = 1; // 64-byte Ed25519 signature
+  string key_id    = 2;
+}
+
+message VerifyRequest {
+  bytes  public_key = 1; // 32-byte Ed25519 public key
+  bytes  message    = 2;
+  bytes  signature  = 3;
+}
+
+message VerifyResponse {
+  bool valid = 1;
+}
+
+// ─── ZK Proofs ─────────────────────────────────────────────────────────────
+
+enum RangeProofType {
+  RANGE_PROOF_TYPE_UNSPECIFIED  = 0;
+  RANGE_PROOF_TYPE_OPERATIONAL  = 1; // SoH > 80
+  RANGE_PROOF_TYPE_SECOND_LIFE  = 2; // 60 <= SoH <= 80
+  RANGE_PROOF_TYPE_RECYCLABLE   = 3; // recyclability% >= threshold
+}
+
+message ZkProveRequest {
+  RangeProofType proof_type  = 1;
+  uint64         value       = 2; // the secret value being proved
+  uint64         range_min   = 3;
+  uint64         range_max   = 4;
+}
+
+message ZkProveResponse {
+  bytes proof         = 1; // serialised bulletproof
+  bytes public_inputs = 2;
+}
+
+message ZkVerifyRequest {
+  bytes          proof         = 1;
+  bytes          public_inputs = 2;
+  RangeProofType proof_type    = 3;
+  uint64         range_min     = 4;
+  uint64         range_max     = 5;
+}
+
+message ZkVerifyResponse {
+  bool valid = 1;
+}
+
+// ─── Key management RPCs ───────────────────────────────────────────────────
+
+message GenerateKeyPairRequest {
+  string manufacturer_id = 1;
+}
+
+message GenerateKeyPairResponse {
+  bytes  public_key = 1;
+  string key_id     = 2;
+}
+
+message RotateDekRequest {
+  string bpan           = 1;
+  string rotated_by_id  = 2;
+}
+
+message RotateDekResponse {
+  bool   success    = 1;
+  int32  new_version = 2;
+}
+
+// ─── Service definition ────────────────────────────────────────────────────
+
+service CryptoService {
+  // Encryption
+  rpc Encrypt (EncryptRequest)  returns (EncryptResponse);
+  rpc Decrypt (DecryptRequest)  returns (DecryptResponse);
+
+  // Signing
+  rpc Sign              (SignRequest)             returns (SignResponse);
+  rpc Verify            (VerifyRequest)           returns (VerifyResponse);
+  rpc GenerateKeyPair   (GenerateKeyPairRequest)  returns (GenerateKeyPairResponse);
+
+  // ZK proofs
+  rpc ZkProve  (ZkProveRequest)  returns (ZkProveResponse);
+  rpc ZkVerify (ZkVerifyRequest) returns (ZkVerifyResponse);
+
+  // Key lifecycle
+  rpc RotateDek (RotateDekRequest) returns (RotateDekResponse);
+}

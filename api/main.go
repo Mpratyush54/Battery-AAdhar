@@ -16,8 +16,10 @@ import (
 // @BasePath /
 func main() {
 	config.InitMicroserviceClient()
+	config.InitDB()
+	config.InitRedis()
 
-	expressRouter := routes.SetupRoutes()
+	expressRouter := routes.NewRouter()
 
 	log.Println("API Gateway running on port 3000 (Proxying to Microservice)")
 	log.Println("Swagger documentation available at http://localhost:3000/swagger/index.html")

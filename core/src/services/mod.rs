@@ -1,5 +1,3 @@
-pub mod auth;
-pub use auth::*;
 pub mod encryption;
 pub use encryption::*;
 pub mod hash_chain;
@@ -14,19 +12,6 @@ pub mod validation;
 pub use validation::*;
 pub mod registration;
 pub use registration::*;
-pub mod static_data;
-pub use static_data::*;
-pub mod dynamic_data;
-pub use dynamic_data::*;
-pub mod ownership;
-pub use ownership::*;
-pub mod reuse;
-pub use reuse::*;
-pub mod recycling;
-pub use recycling::*;
-pub mod carbon_footprint;
-pub use carbon_footprint::*;
-pub mod compliance;
-pub use compliance::*;
-pub mod access_control;
-pub use access_control::*;
+pub mod key_manager; // HKDF key hierarchy  (stub from R2)
+pub mod signing;
+pub mod zk_proofs; // ZK range proofs      (trait only today) // Ed25519 signing       (trait only today)

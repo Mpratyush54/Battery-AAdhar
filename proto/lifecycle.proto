@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package bpa.lifecycle.v1;
+
+option go_package = "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/lifecycle/v1;lifecyclev1";
+
+import "google/protobuf/timestamp.proto";
+
+message VerifyOperationalRequest {
+  string bpan         = 1;
+  string requester_id = 2;
+}
+
+message VerifyOperationalResponse {
+  bool   is_operational = 1;
+  bytes  zk_proof       = 2; // bulletproof bytes — verifiable offline
+  bytes  public_inputs  = 3;
+  google.protobuf.Timestamp proof_issued_at = 4;
+  int64  proof_valid_until_unix = 5;
+}
+
+message VerifyRecyclableRequest {
+  string bpan                      = 1;
+  float  min_recyclability_percent = 2;
+}
+
+message VerifyRecyclableResponse {
+  bool   meets_threshold = 1;
+  bytes  zk_proof        = 2;
+  bytes  public_inputs   = 3;
+}
+
+message VerifySignatureRequest {
+  string bpan = 1;
+}
+
+message VerifySignatureResponse {
+  bool   tamper_evident     = 1;
+  string signer_key_id      = 2;
+  google.protobuf.Timestamp signed_at = 3;
+}
+
+service LifecycleService {
+  rpc VerifyOperational (VerifyOperationalRequest) returns (VerifyOperationalResponse);
+  rpc VerifyRecyclable  (VerifyRecyclableRequest)  returns (VerifyRecyclableResponse);
+  rpc VerifySignature   (VerifySignatureRequest)   returns (VerifySignatureResponse);
+}

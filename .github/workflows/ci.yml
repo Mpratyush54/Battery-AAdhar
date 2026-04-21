@@ -1,0 +1,117 @@
+# ci.yml — Battery Aadhaar CI pipeline
+# Triggers: every PR to master, every push to master
+
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # ── Proto lint ────────────────────────────────────────────────────────────
+  proto-lint:
+    name: Proto lint (buf)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          version: latest
+
+      - name: Lint proto files
+        run: buf lint proto/
+
+      - name: Check breaking changes
+        run: buf breaking --against '.git#branch=master' proto/
+        # On the first run against master this will fail if base is empty;
+        # wrap in || true until there is a stable baseline
+        continue-on-error: true
+
+  # ── Rust ──────────────────────────────────────────────────────────────────
+  rust:
+    name: Rust — check, clippy, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain (stable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            core/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('core/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: cargo check
+        working-directory: core
+        run: cargo check
+
+      - name: cargo clippy
+        working-directory: core
+        run: cargo clippy -- -D warnings
+
+      - name: cargo test
+        working-directory: core
+        run: cargo test -- --test-threads=4
+
+  # ── Go ────────────────────────────────────────────────────────────────────
+  go:
+    name: Go — build, vet, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: api/go.mod
+          cache-dependency-path: api/go.sum
+
+      - name: go build
+        working-directory: api
+        run: go build ./...
+
+      - name: go vet
+        working-directory: api
+        run: go vet ./...
+
+      - name: go test
+        working-directory: api
+        run: go test -race -coverprofile=coverage.out ./...
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-coverage
+          path: api/coverage.out
+
+  # ── Docker build smoke test ───────────────────────────────────────────────
+  docker-smoke:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build images
+        run: docker compose build --no-cache
+
+      - name: Verify containers start
+        run: |
+          docker compose up -d
+          sleep 10
+          docker compose ps
+          docker compose down

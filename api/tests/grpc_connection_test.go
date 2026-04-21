@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
@@ -35,16 +36,21 @@ func TestGrpcConnection(t *testing.T) {
 	}
 	defer conn.Close()
 
-	// Wait for the connection mapping to verify it is READY instead of IDLE or CONNECTING
-	// Note: We don't use WithBlock directly on NewClient because NewClient operates non-blocking by default.
-	// We wait explicitly:
-	// To actually verify the connection state, one would typically use conn.WaitForStateChange, 
-	// but since we are relying on NewClient over Dial, this is the modern approach.
-	// Because this is a generic dial test without invoking a specific RPC, we verify
-	// the client instantiation is successful.
-	
-	if conn == nil {
-		t.Fatal("Connection client is nil")
+	// Force the connection to initiate dialing
+	conn.Connect()
+
+	for {
+		state := conn.GetState()
+		if state == connectivity.Ready {
+			break
+		}
+		if state == connectivity.TransientFailure || state == connectivity.Shutdown {
+			t.Fatalf("Connection hit a failure state before connecting: %v", state)
+		}
+		
+		if !conn.WaitForStateChange(ctx, state) {
+			t.Fatalf("Connection timeout: failed to connect within 5 seconds! Is the Rust Core running on localhost:50051?")
+		}
 	}
 	
 	t.Logf("Successfully instantiated connection client mapped to %s! If the Rust backend is running, the services will now route correctly over port 50051.", microserviceUrl)

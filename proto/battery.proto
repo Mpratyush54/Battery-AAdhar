@@ -1,0 +1,112 @@
+syntax = "proto3";
+
+package bpa.battery.v1;
+
+option go_package = "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/battery/v1;batteryv1";
+
+import "google/protobuf/timestamp.proto";
+import "proto/common.proto";
+
+// ─── Enums ─────────────────────────────────────────────────────────────────
+
+enum BatteryCategory {
+  BATTERY_CATEGORY_UNSPECIFIED = 0;
+  EV_L_CATEGORY                = 1;
+  EV_M_N_CATEGORY              = 2;
+  INDUSTRIAL_ABOVE_2KWH        = 3;
+}
+
+enum BatteryStatus {
+  BATTERY_STATUS_UNSPECIFIED = 0;
+  OPERATIONAL                = 1; // SoH > 80%
+  SECOND_LIFE                = 2; // 60–80%
+  END_OF_LIFE                = 3; // < 60%
+  WASTE                      = 4;
+}
+
+// ─── Static data (uploaded once at manufacture) ────────────────────────────
+
+message BatteryStaticData {
+  // BMI
+  string country_code       = 1;
+  string manufacturer_code  = 2;
+
+  // BDS
+  float  battery_capacity_kwh = 3;
+  string battery_chemistry    = 4;
+  float  nominal_voltage      = 5;
+  string cell_origin          = 6;
+  string extinguisher_class   = 7;
+
+  // BI
+  string manufacturing_date   = 8; // YYYYMMDD
+  string factory_code         = 9;
+  string sequential_number    = 10;
+
+  // BMCS (public subset)
+  string tac_number              = 11;
+  int32  num_cells               = 12;
+  float  internal_resistance_ohm = 13;
+  float  weight_kg               = 14;
+  int32  warranty_years          = 15;
+  string cell_type               = 16;
+
+  // BCF (public: total only)
+  float  total_carbon_footprint_kgco2e_per_kwh = 17;
+}
+
+// ─── Dynamic data (BDD) ────────────────────────────────────────────────────
+
+message BatteryDynamicData {
+  string         bpan              = 1;
+  BatteryCategory category         = 2;
+  BatteryStatus   status           = 3;
+  float           state_of_health  = 4; // 0.0–100.0
+  string          disassembly_method = 5;
+  string          circularity_method = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+// ─── Requests / Responses ──────────────────────────────────────────────────
+
+message RegisterBatteryRequest {
+  string            manufacturer_id = 1;
+  BatteryStaticData static_data     = 2;
+}
+
+message RegisterBatteryResponse {
+  string bpan          = 1; // generated 21-char BPAN
+  bytes  qr_code_png   = 2; // QR code image
+  string qr_payload    = 3; // raw QR string for offline decode
+}
+
+message GetBatteryRequest {
+  string bpan = 1;
+}
+
+message GetBatteryResponse {
+  string            bpan        = 1;
+  BatteryStaticData static_data = 2;
+  // private fields are NOT included — use GetPrivateBatteryData
+}
+
+message UpdateBatteryStatusRequest {
+  string  bpan              = 1;
+  float   state_of_health   = 2;
+  BatteryStatus new_status  = 3;
+  string  updated_by_id     = 4;
+  string  disassembly_method = 5;
+}
+
+message UpdateBatteryStatusResponse {
+  bool   success    = 1;
+  string new_status = 2;
+}
+
+// ─── Service ───────────────────────────────────────────────────────────────
+
+service BatteryService {
+  rpc RegisterBattery    (RegisterBatteryRequest)     returns (RegisterBatteryResponse);
+  rpc GetBattery         (GetBatteryRequest)          returns (GetBatteryResponse);
+  rpc UpdateBatteryStatus(UpdateBatteryStatusRequest) returns (UpdateBatteryStatusResponse);
+}

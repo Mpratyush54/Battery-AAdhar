@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 actix-web = "4"
 tokio = { version = "1", features = ["full"] }
-sqlx = { version = "0.8", features = ["runtime-tokio-native-tls", "postgres", "uuid", "chrono"] }
+sqlx = { version = "0.8", features = ["runtime-tokio-native-tls", "postgres", "uuid", "chrono", "migrate"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 uuid = { version = "1.0", features = ["v4", "serde"] }
@@ -14,6 +14,7 @@ dotenvy = "0.15"
 infisical = "0.0.3"
 tonic = "0.12"
 prost = "0.13"
+prost-types = "0.13"
 aes-gcm = "0.10"
 rand = "0.8"
 base64 = "0.22"
@@ -24,6 +25,12 @@ sha2 = "0.10"
 hex = "0.4"
 jsonwebtoken = "10.3.0"
 bcrypt = "0.19.0"
-
+redis = { version = "0.27", features = ["tokio-comp"] }
+# ── ZK / Crypto additions (Day 1) ──────────────────────────────────────────
+bulletproofs        = { version = "4", default-features = false, features = ["std"] }
+curve25519-dalek    = { version = "4", features = ["serde"] }
+ed25519-dalek       = { version = "2", features = ["rand_core", "serde"] }
+hkdf                = "0.12"
+zeroize             = { version = "1", features = ["derive"] }
 [build-dependencies]
 tonic-build = "0.12"

@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package bpa.auth.v1;
+
+option go_package = "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/auth/v1;authv1";
+
+import "google/protobuf/timestamp.proto";
+
+enum StakeholderRole {
+  STAKEHOLDER_ROLE_UNSPECIFIED = 0;
+  PUBLIC                       = 1;
+  MANUFACTURER                 = 2;
+  IMPORTER                     = 3;
+  DISTRIBUTOR                  = 4;
+  SERVICE_PROVIDER             = 5;
+  RECYCLER                     = 6;
+  GOVERNMENT                   = 7;
+  ADMIN                        = 8;
+}
+
+message IssueTokenRequest {
+  string client_id     = 1;
+  string client_secret = 2;
+}
+
+message IssueTokenResponse {
+  string access_token  = 1;
+  int64  expires_in    = 2;
+  string token_type    = 3; // "Bearer"
+}
+
+message CheckRoleRequest {
+  string token    = 1;
+  string resource = 2;
+  string action   = 3;
+}
+
+message CheckRoleResponse {
+  bool   allowed = 1;
+  string reason  = 2;
+}
+
+message RegisterManufacturerRequest {
+  string name         = 1;
+  string country_code = 2;
+}
+
+message RegisterManufacturerResponse {
+  string manufacturer_id   = 1;
+  string assigned_bmi      = 2; // e.g. "MY008"
+  string api_client_id     = 3;
+  string api_client_secret = 4; // returned ONCE — store securely
+}
+
+service AuthService {
+  rpc IssueToken           (IssueTokenRequest)           returns (IssueTokenResponse);
+  rpc CheckRole            (CheckRoleRequest)            returns (CheckRoleResponse);
+  rpc RegisterManufacturer (RegisterManufacturerRequest) returns (RegisterManufacturerResponse);
+}

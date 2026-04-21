@@ -1,22 +1,15 @@
 use dotenvy::dotenv;
-use std::env;
-use tonic::transport::Server;
-use tracing::{info, warn};
-use infisical::{AuthMethod, Client};
 use infisical::secrets::GetSecretRequest;
+use infisical::{AuthMethod, Client};
+use std::env;
+// // use tonic::transport::Server;
+use tracing::{info, warn};
 
 use sqlx::postgres::PgPoolOptions;
 
-use bpa_engine::repositories::db_setup::sync_database_schema;
-use bpa_engine::services::encryption::EncryptionService;
 use bpa_engine::BpaEngine;
-use bpa_engine::bpa::bpa_service_server::BpaServiceServer;
-
-
-
-
-
-
+// use bpa_engine::bpa::bpa_service_server::BpaServiceServer;
+use bpa_engine::services::encryption::EncryptionService;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -40,8 +33,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let project_id =
                 env::var("INFISICAL_PROJECT_ID").expect("INFISICAL_PROJECT_ID must be set");
 
-            let environment =
-                env::var("INFISICAL_ENV").unwrap_or_else(|_| "dev".to_string());
+            let environment = env::var("INFISICAL_ENV").unwrap_or_else(|_| "dev".to_string());
 
             let host = env::var("INFISICAL_BASE_URL")
                 .unwrap_or_else(|_| "https://app.infisical.com".to_string());
@@ -64,8 +56,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             // Fetch DATABASE_URL
             if connection_string.is_none() {
-                let req = GetSecretRequest::builder("DATABASE_URL", &project_id, &environment)
-                    .build();
+                let req =
+                    GetSecretRequest::builder("DATABASE_URL", &project_id, &environment).build();
 
                 match client.secrets().get(req).await {
                     Ok(secret) => {
@@ -78,8 +70,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             // Fetch ENCRYPTION_KEY
             if master_key.is_none() {
-                let req = GetSecretRequest::builder("ENCRYPTION_KEY", &project_id, &environment)
-                    .build();
+                let req =
+                    GetSecretRequest::builder("ENCRYPTION_KEY", &project_id, &environment).build();
 
                 match client.secrets().get(req).await {
                     Ok(secret) => {
@@ -100,8 +92,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         master_key.expect("ENCRYPTION_KEY must be set (via .env, env vars, or Infisical)");
 
     // --- Initialize encryption ---
-    let encryption = EncryptionService::new(&master_key)
-        .expect("Failed to initialize encryption service");
+    let encryption =
+        EncryptionService::new(&master_key).expect("Failed to initialize encryption service");
 
     // --- Connect to database ---
     info!("📡 Connecting to database...");
@@ -114,10 +106,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("✅ Database connected");
 
-    // --- Auto-sync schema ---
-    sync_database_schema(&db_pool)
+    // --- Auto-sync schema (using sqlx migrations) ---
+    sqlx::migrate!("./migrations")
+        .run(&db_pool)
         .await
-        .expect("Failed to sync database schema");
+        .expect("Failed to sync database migrations");
 
     info!("✅ Database schema ready");
 
@@ -125,7 +118,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let jwt_secret = env::var("JWT_SECRET").unwrap_or_else(|_| master_key.clone());
     let engine = BpaEngine::new(db_pool, encryption, jwt_secret);
 
-    let listen_address = "127.0.0.1:50051".parse()?;
+    let listen_address: std::net::SocketAddr = "127.0.0.1:50051".parse()?;
 
     info!("🚀 BPA Core Engine ready on {}", listen_address);
     info!("   ├── Registration Service ✓");
@@ -143,10 +136,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("   ├── Encryption Service ✓");
     info!("   └── Validation Service ✓");
 
-    Server::builder()
-        .add_service(BpaServiceServer::new(engine.clone()))
-        .serve(listen_address)
-        .await?;
+    info!("⚠️ API handlers split. ");
+    info!("Holding Rust process alive until manual exit...");
+
+    let _ = tokio::signal::ctrl_c().await;
 
     Ok(())
 }

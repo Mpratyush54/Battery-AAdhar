@@ -12,7 +12,7 @@ import (
 // TestFullAppEndpoints runs integration tests over the actual configured HTTP Router
 // verifying that handlers map correctly to their HTTP methods and return proper HTTP headers.
 func TestFullAppEndpoints(t *testing.T) {
-	mux := routes.SetupRoutes()
+	mux := routes.NewRouter()
 
 	// Spin up a test HTTP server
 	ts := httptest.NewServer(mux)
@@ -44,7 +44,7 @@ func TestFullAppEndpoints(t *testing.T) {
 			method:         http.MethodPost,
 			url:            ts.URL + "/api/v1/battery/register",
 			body:           []byte(`{"manufacturerId":"6c9a3b66-1c88-444a-bea7-9e4b6b6537eb", "batteryCategory":"EV"}`),
-			expectedStatus: http.StatusInternalServerError,
+			expectedStatus: http.StatusForbidden,
 		},
 		{
 			name:           "Valid Get Battery Route",

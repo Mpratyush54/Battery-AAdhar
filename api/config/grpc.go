@@ -33,7 +33,8 @@ func InitMicroserviceClient() {
 			break
 		}
 		if !connection.WaitForStateChange(ctx, state) {
-			log.Fatalf("❌ CRITICAL: Failed to connect to Rust gRPC microservice at %s within 5 seconds. Please ensure the Rust backend is running!", microserviceUrl)
+			log.Printf("⚠️ WARNING: Failed to connect to Rust gRPC microservice at %s within 5 seconds. Running in decoupled mode for Day 1!", microserviceUrl)
+			break
 		}
 	}
 

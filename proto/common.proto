@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package bpa.common.v1;
+
+option go_package = "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/common/v1;commonv1";
+
+import "google/protobuf/timestamp.proto";
+
+// ─── BPAN ──────────────────────────────────────────────────────────────────
+
+// A validated 21-character Battery Pack Aadhaar Number.
+message Bpan {
+  string value = 1; // e.g. "MY008A6FKKKLC1DH80001"
+}
+
+// ─── Pagination ────────────────────────────────────────────────────────────
+
+message PageRequest {
+  int32  page_size  = 1;
+  string page_token = 2;
+}
+
+message PageResponse {
+  string next_page_token = 1;
+  int32  total_count     = 2;
+}
+
+// ─── Common error details ──────────────────────────────────────────────────
+
+message FieldViolation {
+  string field   = 1;
+  string message = 2;
+}
+
+// ─── Timestamp alias ───────────────────────────────────────────────────────
+
+// Re-exported for consistent import across services.
+// Use google.protobuf.Timestamp directly in message definitions.

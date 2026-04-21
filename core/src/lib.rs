@@ -5,8 +5,20 @@ pub mod repositories;
 pub mod services;
 pub mod api;
 
-pub mod bpa {
-    tonic::include_proto!("bpa");
+pub mod common_v1 {
+    tonic::include_proto!("bpa.common.v1");
+}
+pub mod crypto_v1 {
+    tonic::include_proto!("bpa.crypto.v1");
+}
+pub mod battery_v1 {
+    tonic::include_proto!("bpa.battery.v1");
+}
+pub mod auth_v1 {
+    tonic::include_proto!("bpa.auth.v1");
+}
+pub mod lifecycle_v1 {
+    tonic::include_proto!("bpa.lifecycle.v1");
 }
 
 use sqlx::{Pool, Postgres};

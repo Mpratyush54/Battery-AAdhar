@@ -11,6 +11,8 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bpa-network
 
   core:
     build:
@@ -25,6 +27,33 @@ services:
       - "50051:50051"
     depends_on:
       - db
+    networks:
+      - bpa-network
+
+  # ── Redis (cache + ZK proof cache + rate limiting) ───────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: bpa-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+      --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - bpa-network
+
+networks:
+  bpa-network:
+    driver: bridge
 
 volumes:
   postgres_data:

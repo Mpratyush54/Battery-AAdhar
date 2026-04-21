@@ -15,8 +15,6 @@ bin/
 .env.*
 --client-id
 --client-secret
-doc
-docs
 
 # IDEs
 .vscode/

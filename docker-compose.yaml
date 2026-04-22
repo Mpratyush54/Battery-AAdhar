@@ -1,36 +1,27 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:15
+  # ─── PostgreSQL ───────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: bpa-postgres
     environment:
       POSTGRES_USER: bpa_user
       POSTGRES_PASSWORD: bpa_pass
       POSTGRES_DB: bpa_db
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bpa_user -d bpa_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - bpa-network
 
-  core:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      # Override the DB URL to point to the `db` service on port 5432
-      DATABASE_URL: postgres://bpa_user:bpa_pass@db:5432/bpa_db
-      RUST_LOG: info
-      ENCRYPTION_KEY: "01234567890123456789012345678901"
-    ports:
-      - "50051:50051"
-    depends_on:
-      - db
-    networks:
-      - bpa-network
-
-  # ── Redis (cache + ZK proof cache + rate limiting) ───────────────────────
+  # ─── Redis ────────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: bpa-redis
@@ -51,18 +42,49 @@ services:
     networks:
       - bpa-network
 
+  # ─── Rust gRPC service (crypto engine) ────────────────────────────────────
+  core:
+    build:
+      context: .
+      dockerfile: Dockerfile.core
+    container_name: bpa-core
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://bpa_user:bpa_pass@postgres:5432/bpa_db
+      RUST_LOG: info
+      ENCRYPTION_KEY: "01234567890123456789012345678901"
+    ports:
+      - "50051:50051"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - bpa-network
+
+  # ─── Go HTTP/REST service (business logic + router) ──────────────────────
   api:
     build:
-      context: ./api
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: bpa-api
+    restart: unless-stopped
     environment:
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      REDIS_PASSWORD: ""
+      GRPC_SERVICE_URL: grpc://core:50051
+      DATABASE_URL: postgresql://bpa_user:bpa_pass@postgres:5432/bpa_db
+      REDIS_URL: redis://redis:6379
+      PORT: "8080"
+      LOG_LEVEL: info
     ports:
-      - "3000:3000"
+      - "8080:8080"
     depends_on:
-      - redis
-      - core
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      core:
+        condition: service_started
     networks:
       - bpa-network
 

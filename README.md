@@ -55,7 +55,7 @@ cargo build
 
 ## 🚦 Running the Engine
 
-On startup, the engine automatically synchronizes the database schema (creates 43 tables if they don't exist).
+On startup, the engine automatically synchronizes the database schema (creates 48 tables if they don't exist).
 
 ```bash
 cargo run

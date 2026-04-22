@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 
-	"api/models"
-	"api/services"
+	"github.com/Mpratyush54/Battery-AAdhar/api/models"
+	"github.com/Mpratyush54/Battery-AAdhar/api/services"
 )
 
 var authService = services.NewAuthService()

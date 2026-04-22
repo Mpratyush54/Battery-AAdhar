@@ -1,4 +1,4 @@
-module api
+module github.com/Mpratyush54/Battery-AAdhar/api
 
 go 1.26.1
 
@@ -9,6 +9,7 @@ require (
 	github.com/infisical/go-sdk v0.6.8
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.12.0
+	github.com/redis/go-redis/v9 v9.18.0
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.6
 	golang.org/x/crypto v0.49.0
@@ -59,7 +60,6 @@ require (
 	github.com/googleapis/gax-go/v2 v2.12.5 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/oracle/oci-go-sdk/v65 v65.95.2 // indirect
-	github.com/redis/go-redis/v9 v9.18.0 // indirect
 	github.com/rs/zerolog v1.26.1 // indirect
 	github.com/sony/gobreaker v0.5.0 // indirect
 	github.com/swaggo/files v0.0.0-20220610200504-28940afbdbfe // indirect

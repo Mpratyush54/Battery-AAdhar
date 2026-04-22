@@ -456,6 +456,7 @@ version = "0.1.0"
 dependencies = [
  "actix-web",
  "aes-gcm",
+ "async-trait",
  "base64",
  "bcrypt",
  "bulletproofs",

@@ -23,7 +23,8 @@ bin/
 *.swo
 *.sublime-project
 *.sublime-workspace
-
+doc
+docs
 # OS files
 Thumbs.db
 .DS_Store

@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"api/config"
+	"github.com/Mpratyush54/Battery-AAdhar/api/config"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"

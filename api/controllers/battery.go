@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"time"
 
-	"api/config"
-	"api/models"
-	pb "api/pb"
+	"github.com/Mpratyush54/Battery-AAdhar/api/config"
+	"github.com/Mpratyush54/Battery-AAdhar/api/models"
+	pb "github.com/Mpratyush54/Battery-AAdhar/api/pb"
 )
 
 // RegisterBatteryController godoc

@@ -4,8 +4,6 @@ package bpa.common.v1;
 
 option go_package = "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/common/v1;commonv1";
 
-import "google/protobuf/timestamp.proto";
-
 // ─── BPAN ──────────────────────────────────────────────────────────────────
 
 // A validated 21-character Battery Pack Aadhaar Number.

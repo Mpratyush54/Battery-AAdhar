@@ -4,8 +4,6 @@ package bpa.crypto.v1;
 
 option go_package = "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/crypto/v1;cryptov1";
 
-import "google/protobuf/timestamp.proto";
-
 // ─── Encryption ────────────────────────────────────────────────────────────
 
 message EncryptRequest {

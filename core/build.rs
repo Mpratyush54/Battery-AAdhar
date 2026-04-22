@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 fn main() {
-    let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
+    let _out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
     // All proto files live in ../proto (sibling of core/)
     let proto_root = PathBuf::from("..");
@@ -24,7 +24,7 @@ fn main() {
     tonic_build::configure()
         .build_client(true)
         .build_server(true)
-        .compile_protos(&proto_paths, &[proto_root.clone()])
+        .compile_protos(&proto_paths, std::slice::from_ref(&proto_root))
         .expect("Failed to compile proto stubs");
 
     // Rerun if any proto file changes

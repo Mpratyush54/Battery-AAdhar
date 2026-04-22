@@ -1,5 +1,4 @@
 version: v2
-name: buf.build/battery-aadhaar/api
 lint:
   use:
     - DEFAULT

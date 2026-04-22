@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"api/config"
-	"api/controllers"
+	"github.com/Mpratyush54/Battery-AAdhar/api/config"
+	"github.com/Mpratyush54/Battery-AAdhar/api/controllers"
 )
 
 func TestMain(m *testing.M) {

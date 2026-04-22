@@ -1,29 +1,49 @@
+// main.go — Battery Aadhaar API server
+// HTTP router + gRPC client factory
+
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"time"
 
-	"api/config"
-	_ "api/docs"
-	"api/routes"
+	"github.com/Mpratyush54/Battery-AAdhar/api/config"
+	"github.com/Mpratyush54/Battery-AAdhar/api/routes"
 )
 
-// @title Battery Pack Aadhaar API
-// @version 1.0
-// @description The Go Gateway for the BPA Core Engine.
-// @host localhost:3000
-// @BasePath /
 func main() {
-	config.InitMicroserviceClient()
-	config.InitDB()
-	config.InitRedis()
+	// Initialize gRPC clients
+	grpcTarget := os.Getenv("GRPC_SERVICE_URL")
+	if grpcTarget == "" {
+		grpcTarget = "localhost:50051"
+	}
 
-	expressRouter := routes.NewRouter()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	log.Println("API Gateway running on port 3000 (Proxying to Microservice)")
-	log.Println("Swagger documentation available at http://localhost:3000/swagger/index.html")
-	if err := http.ListenAndServe(":3000", expressRouter); err != nil {
-		log.Fatalf("Could not start Express-like server: %v", err)
+	microservices, err := config.InitMicroservices(ctx, grpcTarget)
+	if err != nil {
+		log.Fatalf("Failed to initialize gRPC clients: %v", err)
+	}
+	defer microservices.Close()
+
+	// Create router
+	router := routes.NewRouter()
+
+	// Start HTTP server
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	addr := fmt.Sprintf(":%s", port)
+	log.Printf("🚀 BPA API server starting on %s", addr)
+
+	if err := http.ListenAndServe(addr, router); err != nil {
+		log.Fatalf("Server error: %v", err)
 	}
 }

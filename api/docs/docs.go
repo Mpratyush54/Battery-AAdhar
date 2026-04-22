@@ -147,6 +147,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/battery": {
+            "get": {
+                "description": "Fetches battery details via BPAN from the Core Engine",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "battery"
+                ],
+                "summary": "Fetch a battery",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "BPAN of the battery",
+                        "name": "bpan",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful retrieval",
+                        "schema": {
+                            "$ref": "#/definitions/models.GetBatteryResponseJSON"
+                        }
+                    },
+                    "400": {
+                        "description": "Missing BPAN",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Battery not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server/Microservice Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/battery/register": {
             "post": {
                 "description": "Registers a new battery with the BPA Core Engine",
@@ -201,6 +254,20 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "models.GetBatteryResponseJSON": {
+            "type": "object",
+            "properties": {
+                "bpan": {
+                    "type": "string"
+                },
+                "chemistryType": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "models.LoginPayload": {
             "type": "object",
             "properties": {
@@ -329,6 +396,14 @@ const docTemplate = `{
         "models.RegisterStakeholderPayload": {
             "type": "object",
             "properties": {
+                "aadharDocumentBase64": {
+                    "type": "string",
+                    "example": "data:image/png;base64,iVBORw0KGgo..."
+                },
+                "aadharNumber": {
+                    "type": "string",
+                    "example": "123456789012"
+                },
                 "email": {
                     "type": "string",
                     "example": "admin@example.com"
@@ -365,12 +440,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
-	Host:             "localhost:3000",
-	BasePath:         "/",
+	Version:          "",
+	Host:             "",
+	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Battery Pack Aadhaar API",
-	Description:      "The Go Gateway for the BPA Core Engine.",
+	Title:            "",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

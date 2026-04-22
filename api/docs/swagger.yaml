@@ -1,5 +1,13 @@
-basePath: /
 definitions:
+  models.GetBatteryResponseJSON:
+    properties:
+      bpan:
+        type: string
+      chemistryType:
+        type: string
+      status:
+        type: string
+    type: object
   models.LoginPayload:
     properties:
       email:
@@ -91,6 +99,12 @@ definitions:
     type: object
   models.RegisterStakeholderPayload:
     properties:
+      aadharDocumentBase64:
+        example: data:image/png;base64,iVBORw0KGgo...
+        type: string
+      aadharNumber:
+        example: "123456789012"
+        type: string
       email:
         example: admin@example.com
         type: string
@@ -113,12 +127,8 @@ definitions:
         example: SUCCESS
         type: string
     type: object
-host: localhost:3000
 info:
   contact: {}
-  description: The Go Gateway for the BPA Core Engine.
-  title: Battery Pack Aadhaar API
-  version: "1.0"
 paths:
   /api/v1/auth/login:
     post:
@@ -206,6 +216,41 @@ paths:
       summary: Register a new stakeholder
       tags:
       - auth
+  /api/v1/battery:
+    get:
+      description: Fetches battery details via BPAN from the Core Engine
+      parameters:
+      - description: BPAN of the battery
+        in: query
+        name: bpan
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful retrieval
+          schema:
+            $ref: '#/definitions/models.GetBatteryResponseJSON'
+        "400":
+          description: Missing BPAN
+          schema:
+            type: string
+        "404":
+          description: Battery not found
+          schema:
+            type: string
+        "405":
+          description: Method not allowed
+          schema:
+            type: string
+        "500":
+          description: Internal Server/Microservice Error
+          schema:
+            type: string
+      summary: Fetch a battery
+      tags:
+      - battery
   /api/v1/battery/register:
     post:
       consumes:

@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"api/routes"
+	"github.com/Mpratyush54/Battery-AAdhar/api/routes"
 )
 
 // TestSimulation verifies an end-to-end simulation of the HTTP routes, including how the RBAC middleware correctly filters and allows requests across different endpoints.

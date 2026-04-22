@@ -1,7 +1,7 @@
 package config
 
 import (
-	pb "api/pb"
+	pb "github.com/Mpratyush54/Battery-AAdhar/api/pb"
 	"context"
 	"log"
 	"time"

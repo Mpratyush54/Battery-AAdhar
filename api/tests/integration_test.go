@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"api/routes"
+	"github.com/Mpratyush54/Battery-AAdhar/api/routes"
 )
 
 // TestFullAppEndpoints runs integration tests over the actual configured HTTP Router

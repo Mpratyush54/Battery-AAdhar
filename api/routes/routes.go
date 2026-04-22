@@ -10,9 +10,9 @@ import (
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	httpSwagger "github.com/swaggo/http-swagger"
 
-	"api/controllers"
-	"api/middleware"
-	// Import your existing handlers — adjust import paths as needed
+	"github.com/Mpratyush54/Battery-AAdhar/api/controllers"
+	"github.com/Mpratyush54/Battery-AAdhar/api/middleware"
+	_ "github.com/Mpratyush54/Battery-AAdhar/api/docs"
 )
 
 // NewRouter constructs and returns the application chi.Router.
@@ -84,6 +84,13 @@ func NewRouter() http.Handler {
 			r.Post("/manufacturers",       handleRegisterManufacturer)
 			r.Get("/manufacturers",        handleListManufacturers)
 		})
+		// Wire all new controller routes
+		controllers.RegisterMaterialRoutes(r)
+		controllers.RegisterHealthRoutes(r)
+		controllers.RegisterLifecycleRoutes(r)
+		controllers.RegisterComplianceRoutes(r)
+		controllers.RegisterTelemetryRoutes(r)
+		controllers.RegisterQRRoutes(r)
 	})
 
 	return r

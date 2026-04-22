@@ -1,16 +1,16 @@
 version: v2
 plugins:
   # Go stubs (for api/ service)
-  - plugin: buf.build/protocolbuffers/go
-    out: api/gen/proto
+  - remote: buf.build/protocolbuffers/go
+    out: api
     opt:
-      - paths=source_relative
+      - module=github.com/Mpratyush54/Battery-AAdhar/api
 
   # Go gRPC service stubs
-  - plugin: buf.build/grpc/go
-    out: api/gen/proto
+  - remote: buf.build/grpc/go
+    out: api
     opt:
-      - paths=source_relative
+      - module=github.com/Mpratyush54/Battery-AAdhar/api
 
   # Rust stubs (for core/ service via tonic-build in build.rs)
   # tonic-build generates from proto at compile time — no buf plugin needed

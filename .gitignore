@@ -15,8 +15,6 @@ bin/
 .env.*
 --client-id
 --client-secret
-doc
-docs
 
 # IDEs
 .vscode/
@@ -25,7 +23,8 @@ docs
 *.swo
 *.sublime-project
 *.sublime-workspace
-
+doc
+docs
 # OS files
 Thumbs.db
 .DS_Store

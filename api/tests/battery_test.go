@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"api/controllers"
+	"github.com/Mpratyush54/Battery-AAdhar/api/controllers"
 )
 
 func TestBatteryEndpoints(t *testing.T) {

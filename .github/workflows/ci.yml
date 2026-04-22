@@ -26,7 +26,7 @@ jobs:
           version: latest
 
       - name: Lint proto files
-        run: echo "Proto linting temporarily disabled - files compile successfully"
+        run: buf lint proto
 
       - name: Check breaking changes
         run: echo "Proto breaking changes check temporarily disabled"
@@ -64,7 +64,7 @@ jobs:
 
       - name: cargo clippy
         working-directory: core
-        run: cargo clippy -- -A dead_code -A unused
+        run: cargo clippy --allow dead_code --allow unused
 
       - name: cargo test
         working-directory: core

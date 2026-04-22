@@ -22,7 +22,10 @@ func TestSimulation(t *testing.T) {
 	// --- 1. Test Auth Endpoints (No role required) ---
 	t.Run("Auth Simulation", func(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodPost, ts.URL+"/api/v1/auth/login", bytes.NewBuffer([]byte(`{"email":"test","password":"test"}`)))
-		resp, _ := client.Do(req)
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("Failed to make request: %v", err)
+		}
 		defer resp.Body.Close()
 		// Will likely fail because DB isn't mocked but should hit 500/401 and NOT 404
 		if resp.StatusCode == http.StatusNotFound {
@@ -52,7 +55,8 @@ func TestSimulation(t *testing.T) {
 		}
 
 		mux.ServeHTTP(rr, req)
-		return rr.Code
+		resp := rr.Result()
+		return resp.StatusCode
 	}
 
 	// --- 2. Test Battery Routes with Auth Header ---

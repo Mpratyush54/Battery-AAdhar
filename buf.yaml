@@ -1,10 +1,9 @@
 version: v2
-name: buf.build/battery-aadhaar/api
 lint:
   use:
     - DEFAULT
   except:
-    - PACKAGE_DIRECTORY_MATCH   # we use flat proto/ dir for now
+    - PACKAGE_DIRECTORY_MATCH
 breaking:
   use:
     - FILE

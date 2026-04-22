@@ -4,8 +4,6 @@ package bpa.auth.v1;
 
 option go_package = "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/auth/v1;authv1";
 
-import "google/protobuf/timestamp.proto";
-
 enum StakeholderRole {
   STAKEHOLDER_ROLE_UNSPECIFIED = 0;
   PUBLIC                       = 1;

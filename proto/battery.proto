@@ -5,23 +5,22 @@ package bpa.battery.v1;
 option go_package = "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/battery/v1;batteryv1";
 
 import "google/protobuf/timestamp.proto";
-import "proto/common.proto";
 
 // ─── Enums ─────────────────────────────────────────────────────────────────
 
 enum BatteryCategory {
   BATTERY_CATEGORY_UNSPECIFIED = 0;
-  EV_L_CATEGORY                = 1;
-  EV_M_N_CATEGORY              = 2;
-  INDUSTRIAL_ABOVE_2KWH        = 3;
+  BATTERY_CATEGORY_EV_L        = 1;
+  BATTERY_CATEGORY_EV_M_N      = 2;
+  BATTERY_CATEGORY_INDUSTRIAL_ABOVE_2KWH = 3;
 }
 
 enum BatteryStatus {
   BATTERY_STATUS_UNSPECIFIED = 0;
-  OPERATIONAL                = 1; // SoH > 80%
-  SECOND_LIFE                = 2; // 60–80%
-  END_OF_LIFE                = 3; // < 60%
-  WASTE                      = 4;
+  BATTERY_STATUS_OPERATIONAL = 1; // SoH > 80%
+  BATTERY_STATUS_SECOND_LIFE = 2; // 60–80%
+  BATTERY_STATUS_END_OF_LIFE = 3; // < 60%
+  BATTERY_STATUS_WASTE       = 4;
 }
 
 // ─── Static data (uploaded once at manufacture) ────────────────────────────

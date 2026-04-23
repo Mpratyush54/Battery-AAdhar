@@ -5,6 +5,7 @@
 use std::net::SocketAddr;
 use tonic::transport::Server;
 
+mod errors;
 mod api;
 mod models;
 mod repositories;

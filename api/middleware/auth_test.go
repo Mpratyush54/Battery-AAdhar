@@ -4,6 +4,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func TestAuthenticate(t *testing.T) {
@@ -41,7 +44,16 @@ func TestAuthenticate(t *testing.T) {
 
 	t.Run("With Authorization Header", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
-		req.Header.Set("Authorization", "Bearer fake-jwt-token")
+		
+		// Create a realistic valid JWT (unverified)
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+			"sub":  "123",
+			"role": "authenticated",
+			"exp":  time.Now().Add(time.Hour).Unix(),
+		})
+		tokenString, _ := token.SignedString([]byte("secret"))
+
+		req.Header.Set("Authorization", "Bearer "+tokenString)
 		rr := httptest.NewRecorder()
 
 		handler.ServeHTTP(rr, req)

@@ -66,7 +66,7 @@ func Authenticate(next http.Handler) http.Handler {
 func parseJWTClaims(tokenString string) (*Claims, error) {
 	// This is a stub implementation that does NOT verify the signature.
 	// It only parses the payload.
-	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, &jwt.MapClaims{})
+	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
 	if err != nil {
 		return nil, fmt.Errorf("parse JWT: %w", err)
 	}

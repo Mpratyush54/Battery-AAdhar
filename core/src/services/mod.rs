@@ -12,6 +12,7 @@ pub mod validation;
 pub use validation::*;
 pub mod registration;
 pub use registration::*;
-pub mod key_manager; // HKDF key hierarchy  (stub from R2)
+pub mod key_manager;
+pub use key_manager::{KeyManagerImpl, RawKey, WrappedDek, KeyManagerError};
 pub mod signing;
 pub mod zk_proofs; // ZK range proofs      (trait only today) // Ed25519 signing       (trait only today)

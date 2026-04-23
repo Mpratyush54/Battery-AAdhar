@@ -1,13 +1,10 @@
-# ci.yml — Battery Aadhaar CI pipeline
-# Triggers: every PR to master, every push to master
-
 name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [master, main, develop]
   pull_request:
-    branches: [master]
+    branches: [master, main, develop]
 
 env:
   CARGO_TERM_COLOR: always
@@ -20,35 +17,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: bufbuild/buf-setup-action@v1
-        with:
-          version: latest
-
       - name: Lint proto files
-        run: echo "Proto linting temporarily disabled - files compile successfully"
-
+        run: buf lint proto/
       - name: Check breaking changes
-        run: echo "Proto breaking changes check temporarily disabled"
+        run: |
+          buf breaking --against '.git#branch=master' proto/ || true
 
   # ── Rust ──────────────────────────────────────────────────────────────────
-  rust:
-    name: Rust — check, clippy, test
+  rust-lint-test:
+    name: Rust — clippy, test, audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust toolchain (stable)
+      - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
 
-      - name: Install protoc
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y protobuf-compiler
-
-      - name: Cache cargo registry
+      - name: Cache cargo
         uses: actions/cache@v4
         with:
           path: |
@@ -56,23 +44,28 @@ jobs:
             ~/.cargo/git
             core/target
           key: ${{ runner.os }}-cargo-${{ hashFiles('core/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
 
-      - name: cargo check
+      - name: cargo fmt check
         working-directory: core
-        run: cargo check
+        run: cargo fmt -- --check
 
       - name: cargo clippy
         working-directory: core
-        run: cargo clippy -- -A dead_code -A unused
+        run: cargo clippy --all-targets -- -D warnings
 
       - name: cargo test
         working-directory: core
-        run: cargo test -- --test-threads=4
+        run: cargo test --lib --all-features -- --nocapture --test-threads=4
+
+      - name: cargo audit
+        working-directory: core
+        run: |
+          cargo install cargo-audit 2>/dev/null || true
+          cargo audit
 
   # ── Go ────────────────────────────────────────────────────────────────────
-  go:
-    name: Go — build, vet, test
+  go-lint-test:
+    name: Go — vet, staticcheck, test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -83,37 +76,105 @@ jobs:
           go-version-file: api/go.mod
           cache-dependency-path: api/go.sum
 
-      - name: go build
+      - name: go mod tidy check
         working-directory: api
-        run: go build .
+        run: |
+          go mod tidy
+          git diff --exit-code
+
+      - name: go fmt check
+        working-directory: api
+        run: |
+          UNFORMATTED=$(gofmt -l .)
+          [ -z "$UNFORMATTED" ] || (echo "Files need formatting:\n$UNFORMATTED" && exit 1)
 
       - name: go vet
         working-directory: api
-        run: go vet .
+        run: go vet ./...
+
+      - name: staticcheck
+        working-directory: api
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+          staticcheck ./...
 
       - name: go test
         working-directory: api
-        run: go test .
+        run: go test -race -coverprofile=coverage.out ./...
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v4
+        uses: codecov/codecov-action@v4
         with:
-          name: go-coverage
-          path: api/coverage.out
+          files: ./api/coverage.out
+          flags: unittests
+          name: codecov-umbrella
 
-  # ── Docker build smoke test ───────────────────────────────────────────────
-  docker-smoke:
+  # ── Docker build ───────────────────────────────────────────────────────────
+  docker-build:
     name: Docker build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Build images
-        run: docker compose build --no-cache
+        run: docker-compose build --no-cache
 
-      - name: Verify containers start
+      - name: Verify services start
         run: |
-          docker compose up -d
+          docker-compose up -d
           sleep 10
-          docker compose ps
-          docker compose down
+          docker-compose ps
+          docker-compose down
+
+  # ── Integration tests ──────────────────────────────────────────────────────
+  integration:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    needs: [rust-lint-test, go-lint-test, docker-build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: api/go.mod
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Start Docker stack
+        run: docker-compose up -d
+
+      - name: Wait for services
+        run: sleep 15
+
+      - name: Test BPAN codec (Go)
+        working-directory: api
+        run: go test ./bpan -v
+
+      - name: Test key manager (Rust)
+        working-directory: core
+        run: cargo test key_manager::tests -- --nocapture
+
+      - name: Test API endpoint
+        run: |
+          curl -f http://localhost:8080/healthz || exit 1
+
+      - name: Cleanup
+        if: always()
+        run: docker-compose down
+
+  # ── Summary ────────────────────────────────────────────────────────────────
+  all-checks:
+    name: All checks passed
+    runs-on: ubuntu-latest
+    needs: [proto-lint, rust-lint-test, go-lint-test, docker-build, integration]
+    if: always()
+    steps:
+      - run: |
+          if [ "${{ needs.proto-lint.result }}" != "success" ]; then exit 1; fi
+          if [ "${{ needs.rust-lint-test.result }}" != "success" ]; then exit 1; fi
+          if [ "${{ needs.go-lint-test.result }}" != "success" ]; then exit 1; fi
+          if [ "${{ needs.docker-build.result }}" != "success" ]; then exit 1; fi
+          if [ "${{ needs.integration.result }}" != "success" ]; then exit 1; fi
+          echo "✓ All checks passed"

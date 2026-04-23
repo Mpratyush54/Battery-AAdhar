@@ -1,0 +1,38 @@
+run:
+  timeout: 5m
+  tests: true
+  skip-dirs:
+    - vendor
+    - gen
+
+linters:
+  enable:
+    - copyloopvar
+    - errcheck
+    - errname
+    - gci
+    - goconst
+    - gocritic
+    - gofmt
+    - goimports
+    - gosimple
+    - govet
+    - ineffassign
+    - misspell
+    - nolintlint
+    - prealloc
+    - revive
+    - staticcheck
+    - typecheck
+    - unconvert
+    - unused
+    - unparam
+
+linters-settings:
+  govet:
+    enable-all: true
+    disable:
+      - fieldalignment
+
+severity:
+  default-severity: error

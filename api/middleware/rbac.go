@@ -1,50 +1,70 @@
-// rbac.go — role-based access control middleware
-// Role hierarchy (lowest → highest privilege):
-//   public < authenticated < manufacturer < service_provider < recycler < verifier < government < admin
+// rbac.go — Role-Based Access Control enforcement
+// Checks permissions against AccessMatrix before allowing handler execution.
+
 package middleware
 
 import (
 	"net/http"
-	"slices"
+
+	"github.com/Mpratyush54/Battery-AAdhar/api/models"
 )
 
-// roleHierarchy defines the ordered privilege tiers.
-// A role grants access to its own tier and all tiers below it.
-var roleHierarchy = []string{
-	"public",
-	"authenticated",
-	"manufacturer",
-	"service_provider",
-	"recycler",
-	"verifier",
-	"government",
-	"admin",
-}
-
-func roleLevel(role string) int {
-	idx := slices.Index(roleHierarchy, role)
-	if idx < 0 {
-		return -1 // unknown role → no access
-	}
-	return idx
-}
-
-// RequireRole returns a middleware that rejects requests whose JWT role
-// is below the required level.
-func RequireRole(required string) func(http.Handler) http.Handler {
-	requiredLevel := roleLevel(required)
-
+// RequireResource returns a middleware that checks if the request's role
+// can access the given resource with the given action.
+func RequireResource(resource models.Resource, action models.Action) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			claims := ClaimsFromContext(r.Context())
-			if requiredLevel < 0 || claims == nil || roleLevel(claims.Role) < requiredLevel {
-				http.Error(w,
-					`{"error":"insufficient_role","required":"`+required+`"}`,
-					http.StatusForbidden,
-				)
+			if claims == nil {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return
 			}
+
+			// Check if role can access resource+action
+			role := models.StakeholderRole(claims.Role)
+			if !models.CanAccess(role, resource, action) {
+				http.Error(w, "forbidden", http.StatusForbidden)
+				return
+			}
+
 			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// IsRole checks if the current user has a specific role (simple check, no RBAC matrix)
+func IsRole(requiredRole string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			claims := ClaimsFromContext(r.Context())
+			if claims == nil || claims.Role != requiredRole {
+				http.Error(w, "forbidden", http.StatusForbidden)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// HasAnyRole checks if the current user has any of the given roles
+func HasAnyRole(roles ...string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			claims := ClaimsFromContext(r.Context())
+			if claims == nil {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			for _, role := range roles {
+				if claims.Role == role {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
+
+			http.Error(w, "forbidden", http.StatusForbidden)
 		})
 	}
 }

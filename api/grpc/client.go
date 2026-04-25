@@ -1,14 +1,20 @@
 // client.go — Factory for all gRPC service clients
 // Connects to the Rust crypto service and returns ready-to-use clients.
+// Supports both mTLS (production) and insecure (local dev) modes.
 
 package grpc
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"log/slog"
+	"os"
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
 	cryptov1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/crypto/v1"
@@ -30,14 +36,47 @@ type ClientConn struct {
 // NewClientConn creates a new gRPC connection to the Rust crypto service
 // and initializes all service clients.
 //
+// If GRPC_CA_CERT, GRPC_CLIENT_CERT, GRPC_CLIENT_KEY are all set, uses mTLS.
+// Otherwise falls back to insecure transport for local development.
+//
 // target: e.g. "localhost:50051"
 func NewClientConn(ctx context.Context, target string) (*ClientConn, error) {
-	// Dial with insecure credentials for local dev.
-	// On Day 16 (security hardening), upgrade to mTLS.
-	conn, err := grpc.NewClient(
-		target,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+	var dialOpt grpc.DialOption
+
+	caCertFile := os.Getenv("GRPC_CA_CERT")
+	clientCertFile := os.Getenv("GRPC_CLIENT_CERT")
+	clientKeyFile := os.Getenv("GRPC_CLIENT_KEY")
+
+	if caCertFile != "" && clientCertFile != "" && clientKeyFile != "" {
+		// mTLS mode — load certificates
+		cert, err := tls.LoadX509KeyPair(clientCertFile, clientKeyFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load client certificates: %w", err)
+		}
+
+		caCert, err := os.ReadFile(caCertFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read CA certificate: %w", err)
+		}
+		caCertPool := x509.NewCertPool()
+		if !caCertPool.AppendCertsFromPEM(caCert) {
+			return nil, fmt.Errorf("failed to append CA certificate")
+		}
+
+		tlsConfig := &tls.Config{
+			Certificates: []tls.Certificate{cert},
+			RootCAs:      caCertPool,
+			ServerName:   "localhost",
+		}
+		dialOpt = grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))
+		slog.Info("gRPC client using mTLS", "target", target)
+	} else {
+		// Insecure mode — local dev without TLS on Rust side
+		dialOpt = grpc.WithTransportCredentials(insecure.NewCredentials())
+		slog.Warn("gRPC client using INSECURE transport (dev only)", "target", target)
+	}
+
+	conn, err := grpc.NewClient(target, dialOpt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial Rust service at %s: %w", target, err)
 	}

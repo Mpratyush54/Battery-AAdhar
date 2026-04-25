@@ -33,18 +33,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_max_level(tracing::Level::INFO)
         .init();
 
-    // Load or generate root key
-    let root_key_str = env::var("ENCRYPTION_KEY")
-        .unwrap_or_else(|_| "0000000000000000000000000000000000000000000000000000000000000000".to_string()); // Default for testing if missing
+    // Load .env file if it exists
+    dotenvy::dotenv().ok();
 
-    if root_key_str.len() != 64 {
-        panic!("ENCRYPTION_KEY must be 64 hex chars (32 bytes)");
+    // Load or generate root key
+    let root_key_str = env::var("ENCRYPTION_KEY").unwrap_or_default();
+    
+    if root_key_str.is_empty() {
+        panic!("Failed to initialize key manager: RootKeyUnavailable (ENCRYPTION_KEY environment variable is not set)");
     }
 
     let mut root_key_bytes = [0u8; 32];
-    for i in 0..32 {
-        root_key_bytes[i] = u8::from_str_radix(&root_key_str[i * 2..i * 2 + 2], 16)
-            .expect("ENCRYPTION_KEY must be valid hex");
+    if root_key_str.len() == 64 {
+        for i in 0..32 {
+            root_key_bytes[i] = u8::from_str_radix(&root_key_str[i * 2..i * 2 + 2], 16)
+                .expect("ENCRYPTION_KEY must be valid hex");
+        }
+    } else if root_key_str.len() == 32 {
+        root_key_bytes.copy_from_slice(root_key_str.as_bytes());
+    } else {
+        panic!("ENCRYPTION_KEY must be 64 hex chars or 32 ascii chars. Got length: {}", root_key_str.len());
     }
 
     let key_manager = KeyManagerImpl::new(&root_key_bytes)
@@ -52,8 +60,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing::info!("✓ Key manager initialized");
 
-    let addr: SocketAddr = "[::1]:50051".parse()?;
-    tracing::info!("🚀 BPA gRPC server starting on {}", addr);
+    let addr: SocketAddr = "0.0.0.0:50051".parse()?;
+    tracing::info!("BPA gRPC server starting on {}", addr);
 
     // Create service instances
     let crypto_svc = CryptoServiceImpl;

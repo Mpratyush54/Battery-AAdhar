@@ -62,7 +62,7 @@ func TestBatteryEndpoints(t *testing.T) {
 			}
 
 			rr := httptest.NewRecorder()
-			
+
 			// Invoke the appropriate controller
 			if req.URL.Path == "/api/v1/battery/register" {
 				controllers.RegisterBatteryController(rr, req)

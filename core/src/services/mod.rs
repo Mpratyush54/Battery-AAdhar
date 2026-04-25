@@ -15,4 +15,5 @@ pub use registration::*;
 pub mod key_manager;
 pub use key_manager::{KeyManagerImpl, RawKey, WrappedDek, KeyManagerError};
 pub mod signing;
+pub use signing::{SigningServiceImpl, PublicKey, SignatureWrap, PrivateKeySeed};
 pub mod zk_proofs; // ZK range proofs      (trait only today) // Ed25519 signing       (trait only today)

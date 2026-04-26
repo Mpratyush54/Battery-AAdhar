@@ -10,7 +10,7 @@ pub mod auth_proto {
 pub use auth_proto::*;
 pub use auth_service_server::{AuthService, AuthServiceServer};
 
-use bpa_engine::BpaEngine;
+use crate::BpaEngine;
 use std::sync::Arc;
 
 pub struct AuthServiceImpl {
@@ -48,7 +48,7 @@ impl AuthService for AuthServiceImpl {
         let req = request.into_inner();
 
         // Generate keypair for manufacturer
-        let (_, _public_key) = bpa_engine::services::SigningServiceImpl::generate_keypair()
+        let (_, _public_key) = crate::services::SigningServiceImpl::generate_keypair()
             .map_err(|e| Status::internal(e.to_string()))?;
 
         // TODO Day 7: Store in DB

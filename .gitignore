@@ -31,3 +31,7 @@ Thumbs.db
 
 # Go specific
 api/api.exe
+
+# Certificates (generated locally, never commit)
+certs/
+!certs/.gitkeep

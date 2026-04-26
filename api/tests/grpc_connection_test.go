@@ -5,15 +5,16 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/connectivity"
-	"google.golang.org/grpc/credentials/insecure"
+	bpa_grpc "github.com/Mpratyush54/Battery-AAdhar/api/grpc"
 )
 
 // TestGrpcConnection tests whether the Go Gateway can dial and connect
 // to the backend Rust microservice.
-// Note: This test requires the Rust microservice to be actively running on localhost:50051.
-// If the microservice is offline, it appropriately fails after the dial timeout.
+//
+// For local dev (no Docker, no TLS on Rust side), this uses insecure transport.
+// In production (mTLS certs configured), it will use mutual TLS.
+//
+// Requires: Rust core running on localhost:50051 (cargo run from core/).
 func TestGrpcConnection(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping live gRPC connection test in short mode.")
@@ -23,35 +24,14 @@ func TestGrpcConnection(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	microserviceUrl := "127.0.0.1:50051"
+	microserviceUrl := "localhost:50051"
 
-	// Attempt connection using WithBlock to enforce dial-time connection
-	conn, err := grpc.NewClient(
-		microserviceUrl,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-
+	// NewClientConn auto-detects mTLS vs insecure based on env vars
+	clientConn, err := bpa_grpc.NewClientConn(ctx, microserviceUrl)
 	if err != nil {
 		t.Fatalf("Failed to initialize gRPC client: %v", err)
 	}
-	defer conn.Close()
+	defer clientConn.Close()
 
-	// Force the connection to initiate dialing
-	conn.Connect()
-
-	for {
-		state := conn.GetState()
-		if state == connectivity.Ready {
-			break
-		}
-		if state == connectivity.TransientFailure || state == connectivity.Shutdown {
-			t.Fatalf("Connection hit a failure state before connecting: %v", state)
-		}
-		
-		if !conn.WaitForStateChange(ctx, state) {
-			t.Fatalf("Connection timeout: failed to connect within 5 seconds! Is the Rust Core running on localhost:50051?")
-		}
-	}
-	
-	t.Logf("Successfully instantiated connection client mapped to %s! If the Rust backend is running, the services will now route correctly over port 50051.", microserviceUrl)
+	t.Logf("Successfully connected to Rust core at %s", microserviceUrl)
 }

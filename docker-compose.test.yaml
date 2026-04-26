@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # Test Postgres with seeded data
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: bpa-postgres-test
+    environment:
+      POSTGRES_USER: bpa_test
+      POSTGRES_PASSWORD: bpa_test
+      POSTGRES_DB: bpa_test_db
+    ports:
+      - "5433:5432"  # Different port than dev
+    volumes:
+      - ./scripts/seed-test-db.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bpa_test -d bpa_test_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Test Redis
+  redis-test:
+    image: redis:7-alpine
+    container_name: bpa-redis-test
+    restart: unless-stopped
+    ports:
+      - "6380:6379"  # Different port than dev
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Rust tests against test DB
+  core-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.core
+    container_name: bpa-core-test
+    environment:
+      DATABASE_URL: postgresql://bpa_test:bpa_test@postgres-test:5432/bpa_test_db
+      RUST_LOG: debug
+      ENCRYPTION_KEY: "01234567890123456789012345678901"
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    volumes:
+      - ./core:/usr/src/app/core
+    command: cargo test --lib
+
+  # Go tests against test DB
+  api-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: bpa-api-test
+    environment:
+      DATABASE_URL: postgresql://bpa_test:bpa_test@postgres-test:5432/bpa_test_db
+      REDIS_URL: redis://redis-test:6380
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    volumes:
+      - ./api:/usr/src/app/api
+    command: go test -v -race ./...

@@ -1,14 +1,20 @@
 // client.go — Factory for all gRPC service clients
 // Connects to the Rust crypto service and returns ready-to-use clients.
+// Supports both mTLS (production) and insecure (local dev) modes.
 
 package grpc
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"log/slog"
+	"os"
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
 	cryptov1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/crypto/v1"
@@ -30,14 +36,47 @@ type ClientConn struct {
 // NewClientConn creates a new gRPC connection to the Rust crypto service
 // and initializes all service clients.
 //
+// If GRPC_CA_CERT, GRPC_CLIENT_CERT, GRPC_CLIENT_KEY are all set, uses mTLS.
+// Otherwise falls back to insecure transport for local development.
+//
 // target: e.g. "localhost:50051"
 func NewClientConn(ctx context.Context, target string) (*ClientConn, error) {
-	// Dial with insecure credentials for local dev.
-	// On Day 16 (security hardening), upgrade to mTLS.
-	conn, err := grpc.NewClient(
-		target,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+	var dialOpt grpc.DialOption
+
+	caCertFile := os.Getenv("GRPC_CA_CERT")
+	clientCertFile := os.Getenv("GRPC_CLIENT_CERT")
+	clientKeyFile := os.Getenv("GRPC_CLIENT_KEY")
+
+	if caCertFile != "" && clientCertFile != "" && clientKeyFile != "" {
+		// mTLS mode — load certificates
+		cert, err := tls.LoadX509KeyPair(clientCertFile, clientKeyFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load client certificates: %w", err)
+		}
+
+		caCert, err := os.ReadFile(caCertFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read CA certificate: %w", err)
+		}
+		caCertPool := x509.NewCertPool()
+		if !caCertPool.AppendCertsFromPEM(caCert) {
+			return nil, fmt.Errorf("failed to append CA certificate")
+		}
+
+		tlsConfig := &tls.Config{
+			Certificates: []tls.Certificate{cert},
+			RootCAs:      caCertPool,
+			ServerName:   "localhost",
+		}
+		dialOpt = grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))
+		slog.Info("gRPC client using mTLS", "target", target)
+	} else {
+		// Insecure mode — local dev without TLS on Rust side
+		dialOpt = grpc.WithTransportCredentials(insecure.NewCredentials())
+		slog.Debug("gRPC client using INSECURE transport (dev only)", "target", target)
+	}
+
+	conn, err := grpc.NewClient(target, dialOpt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial Rust service at %s: %w", target, err)
 	}
@@ -65,12 +104,26 @@ func NewClientConn(ctx context.Context, target string) (*ClientConn, error) {
 	return cc, nil
 }
 
-// healthCheck verifies all services are responsive.
-// On Day 15 we'll add a formal health service, but for now this is a simple check.
+// healthCheck performs a real handshake with the Rust engine.
+// Calls ZkProve(proof_type=OPERATIONAL, value=85) — a lightweight in-memory
+// ZK proof that requires no DB and confirms the crypto engine is live.
 func (c *ClientConn) healthCheck(ctx context.Context) error {
-	// For now, just verify the connection works by making a dummy RPC.
-	// (All methods return Unimplemented on Day 2, so this will fail with a known error.)
-	// On Day 15+ we'll add a Health RPC.
+	slog.Info("🤝 Performing handshake with Rust gRPC engine...")
+
+	resp, err := c.CryptoClient.ZkProve(ctx, &cryptov1.ZkProveRequest{
+		ProofType: 1,   // OPERATIONAL
+		Value:     85,  // SoH 85% — safely within operational threshold (>80%)
+		RangeMin:  80,
+		RangeMax:  100,
+	})
+	if err != nil {
+		return fmt.Errorf("ZkProve handshake failed: %w", err)
+	}
+
+	slog.Info("✅ Rust engine handshake OK",
+		"proof_bytes", len(resp.Proof),
+		"commitment_bytes", len(resp.PublicInputs),
+	)
 	return nil
 }
 

@@ -12,6 +12,7 @@ import (
 
 	"github.com/Mpratyush54/Battery-AAdhar/api/controllers"
 	"github.com/Mpratyush54/Battery-AAdhar/api/middleware"
+	"github.com/Mpratyush54/Battery-AAdhar/api/models"
 	_ "github.com/Mpratyush54/Battery-AAdhar/api/docs"
 )
 
@@ -51,36 +52,46 @@ func NewRouter() http.Handler {
 
 		// Public endpoints — no auth required beyond claim parse
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.RequireRole("public"))
 			r.Get("/battery", controllers.GetBatteryController)
+			r.Get("/batteries/{bpan}", controllers.GetBatteryByBPAN)
 			r.Post("/batteries/scan",  handleScanQR)
 		})
 
 		// Authenticated manufacturer endpoints
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.RequireRole("manufacturer"))
+			r.Use(middleware.RequireResource(models.ResourceBattery, models.ActionCreate))
 			r.Post("/battery/register",       controllers.RegisterBatteryController)
 			r.Get("/batteries/{bpan}/qr",     handleGetQR)
 		})
 
-		// Service provider / recycler endpoints
+		// Service provider endpoints
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.RequireRole("service_provider"))
-			r.Get("/batteries/{bpan}/private",          handleGetPrivateData)
+			r.Use(middleware.RequireResource(models.ResourceBatteryHealth, models.ActionUpdate))
 			r.Patch("/batteries/{bpan}/status",         handleUpdateStatus)
 		})
 
-		// Compliance / ZK verification endpoints
+		// Government / Recycler
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.RequireRole("verifier"))
+			r.Use(middleware.RequireResource(models.ResourceBatteryLifecycle, models.ActionUpdate))
+			r.Post("/batteries/{bpan}/recycling", handleVerifyRecyclable)
+		})
+
+		// Compliance / ZK verification endpoints (IsRole for verifier)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.IsRole("verifier"))
 			r.Post("/batteries/{bpan}/verify/operational", handleVerifyOperational)
-			r.Post("/batteries/{bpan}/verify/recyclable",  handleVerifyRecyclable)
 			r.Post("/batteries/{bpan}/verify/signature",   handleVerifySignature)
 		})
 
+		// Government audit routes
+		r.With(middleware.RequireResource(
+			models.ResourceAuditLog,
+			models.ActionRead,
+		)).Get("/batteries/{bpan}/audit", handleGetAuditTrail)
+
 		// Admin-only
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.RequireRole("admin"))
+			r.Use(middleware.IsRole("admin"))
 			r.Post("/manufacturers",       handleRegisterManufacturer)
 			r.Get("/manufacturers",        handleListManufacturers)
 		})
@@ -117,3 +128,4 @@ func handleVerifyRecyclable(w http.ResponseWriter, _ *http.Request)    { http.Er
 func handleVerifySignature(w http.ResponseWriter, _ *http.Request)     { http.Error(w, "not implemented", http.StatusNotImplemented) }
 func handleRegisterManufacturer(w http.ResponseWriter, _ *http.Request){ http.Error(w, "not implemented", http.StatusNotImplemented) }
 func handleListManufacturers(w http.ResponseWriter, _ *http.Request)   { http.Error(w, "not implemented", http.StatusNotImplemented) }
+func handleGetAuditTrail(w http.ResponseWriter, _ *http.Request)       { http.Error(w, "not implemented", http.StatusNotImplemented) }

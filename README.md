@@ -85,4 +85,70 @@ When `INFISICAL_CLIENT_ID` and `INFISICAL_CLIENT_SECRET` are provided, the engin
 - `proto/`: Protobuf definitions for gRPC.
 
 ## 📄 License
-MIT License.
+Internal Development - All Rights Reserved.
+
+---
+
+## mTLS Setup (Rust ↔ Go Communication)
+
+The Rust gRPC server and Go client communicate over mTLS (mutual TLS).
+
+### Generate Certificates
+
+Run the provided script to generate CA, server, and client certificates:
+
+```bash
+./scripts/generate-certs.sh
+```
+
+This creates:
+- `certs/ca.crt` — Root CA certificate
+- `certs/server.crt` — Rust server certificate
+- `certs/server.key` — Rust server private key
+- `certs/client.crt` — Go client certificate
+- `certs/client.key` — Go client private key
+
+**IMPORTANT:** Never commit certificate files to version control. Add `certs/` to `.gitignore`.
+
+### Verify Certificates
+
+Check certificate validity:
+
+```bash
+openssl verify -CAfile certs/ca.crt certs/server.crt
+openssl verify -CAfile certs/ca.crt certs/client.crt
+```
+
+Both should return `OK`.
+
+### Docker Compose
+
+Certificates are automatically mounted as read-only volumes in both containers.
+No additional setup needed when using `docker-compose up`.
+
+### Manual Setup
+
+If running services outside Docker, export the certificate paths:
+
+```bash
+export GRPC_SERVER_CERT=certs/server.crt
+export GRPC_SERVER_KEY=certs/server.key
+export GRPC_CLIENT_CERT=certs/client.crt
+export GRPC_CLIENT_KEY=certs/client.key
+export GRPC_CA_CERT=certs/ca.crt
+```
+
+### Certificate Rotation
+
+To rotate certificates (e.g., when expiring):
+
+```bash
+# Backup old certs
+mv certs certs.old
+
+# Generate new certs
+./scripts/generate-certs.sh
+
+# Restart services
+docker-compose restart core api
+```

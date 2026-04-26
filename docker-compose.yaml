@@ -53,8 +53,13 @@ services:
       DATABASE_URL: postgresql://bpa_user:bpa_pass@postgres:5432/bpa_db
       RUST_LOG: info
       ENCRYPTION_KEY: "01234567890123456789012345678901"
+      GRPC_SERVER_CERT: /certs/server.crt
+      GRPC_SERVER_KEY: /certs/server.key
+      GRPC_CA_CERT: /certs/ca.crt
     ports:
       - "50051:50051"
+    volumes:
+      - ./certs:/certs:ro  # Mount certs as read-only
     depends_on:
       postgres:
         condition: service_healthy
@@ -71,13 +76,18 @@ services:
     container_name: bpa-api
     restart: unless-stopped
     environment:
-      GRPC_SERVICE_URL: grpc://core:50051
+      GRPC_SERVICE_URL: core:50051
+      GRPC_CA_CERT: /certs/ca.crt
+      GRPC_CLIENT_CERT: /certs/client.crt
+      GRPC_CLIENT_KEY: /certs/client.key
       DATABASE_URL: postgresql://bpa_user:bpa_pass@postgres:5432/bpa_db
       REDIS_URL: redis://redis:6379
       PORT: "8080"
       LOG_LEVEL: info
     ports:
       - "8080:8080"
+    volumes:
+      - ./certs:/certs:ro  # Mount certs as read-only
     depends_on:
       postgres:
         condition: service_healthy

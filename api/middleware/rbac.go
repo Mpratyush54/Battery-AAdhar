@@ -16,14 +16,14 @@ func RequireResource(resource models.Resource, action models.Action) func(http.H
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			claims := ClaimsFromContext(r.Context())
 			if claims == nil {
-				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
 				return
 			}
 
 			// Check if role can access resource+action
 			role := models.StakeholderRole(claims.Role)
 			if !models.CanAccess(role, resource, action) {
-				http.Error(w, "forbidden", http.StatusForbidden)
+				http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
 				return
 			}
 

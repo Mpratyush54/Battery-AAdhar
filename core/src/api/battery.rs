@@ -10,8 +10,18 @@ pub mod battery_proto {
 pub use battery_proto::*;
 pub use battery_service_server::{BatteryService, BatteryServiceServer};
 
-pub struct BatteryServiceImpl;
+use std::sync::Arc;
+use crate::BpaEngine;
 
+pub struct BatteryServiceImpl {
+    engine: Arc<BpaEngine>,
+}
+
+impl BatteryServiceImpl {
+    pub fn new(engine: Arc<BpaEngine>) -> Self {
+        BatteryServiceImpl { engine }
+    }
+}
 #[tonic::async_trait]
 impl BatteryService for BatteryServiceImpl {
     async fn register_battery(

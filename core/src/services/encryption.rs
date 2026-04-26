@@ -16,14 +16,28 @@ pub struct EncryptionService {
 }
 
 impl EncryptionService {
-    /// Create a new EncryptionService from a 32-byte key string.
+    /// Create a new EncryptionService from a key string.
+    /// Accepts:
+    ///   - 32-char ASCII  (used directly as the 256-bit key)
+    ///   - 64-char hex    (decoded to 32 raw bytes, as stored by Infisical)
     pub fn new(master_key: &str) -> BpaResult<Self> {
-        if master_key.len() != 32 {
+        let key_bytes: Vec<u8> = if master_key.len() == 64 {
+            // 64 hex chars → 32 bytes
+            (0..32)
+                .map(|i| {
+                    u8::from_str_radix(&master_key[i * 2..i * 2 + 2], 16)
+                        .map_err(|_| BpaError::Encryption("ENCRYPTION_KEY hex decode failed".into()))
+                })
+                .collect::<Result<Vec<u8>, _>>()?
+        } else if master_key.len() == 32 {
+            master_key.as_bytes().to_vec()
+        } else {
             return Err(BpaError::Encryption(
-                "ENCRYPTION_KEY must be exactly 32 bytes".into(),
+                "ENCRYPTION_KEY must be 32 ASCII chars or 64 hex chars".into(),
             ));
-        }
-        let aes_key = aes_gcm::Key::<Aes256Gcm>::from_slice(master_key.as_bytes());
+        };
+
+        let aes_key = aes_gcm::Key::<Aes256Gcm>::from_slice(&key_bytes);
         let cipher = Aes256Gcm::new(aes_key);
         Ok(Self { cipher })
     }

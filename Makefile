@@ -54,8 +54,7 @@ build-rust:
 
 test-rust:
 	@echo "→ Testing Rust..."
-	cd $(RUST_DIR) && cargo test -- --test-threads=4
-	@echo "✓ Rust tests done"
+	cd $(RUST_DIR) && cargo test --lib -- --nocapture
 
 lint-rust:
 	@echo "→ Linting Rust..."
@@ -71,8 +70,7 @@ build-go:
 
 test-go:
 	@echo "→ Testing Go..."
-	cd $(GO_DIR) && go test -race -coverprofile=coverage.out ./...
-	@echo "✓ Go tests done"
+	cd $(GO_DIR) && go test -race -v ./...
 
 lint-go:
 	@echo "→ Linting Go..."
@@ -118,3 +116,24 @@ clean:
 	cd $(GO_DIR) && go clean ./...
 	rm -rf api/gen/proto/*.pb.go
 	@echo "✓ Clean done"
+
+test-integration:
+	@echo "→ Running integration tests against test database..."
+	docker-compose -f docker-compose.test.yaml up -d
+	sleep 10
+	docker-compose -f docker-compose.test.yaml run --rm core-test
+	docker-compose -f docker-compose.test.yaml run --rm api-test
+	docker-compose -f docker-compose.test.yaml down
+
+test-zk:
+	@echo "→ Testing ZK proofs..."
+	cd $(RUST_DIR) && cargo test zk_proofs::tests -- --nocapture --test-threads=1
+
+test-audit:
+	@echo "→ Testing audit chain integrity..."
+	cd $(RUST_DIR) && cargo test audit_repo::tests -- --nocapture
+
+# ── CI targets (for GitHub Actions) ────────────────────────────────────────
+
+ci-test: test lint
+	@echo "✓ All CI tests passed"

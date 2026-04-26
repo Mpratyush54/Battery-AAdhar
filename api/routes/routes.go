@@ -83,6 +83,12 @@ func NewRouter() http.Handler {
 			r.Post("/batteries/{bpan}/verify/signature",   handleVerifySignature)
 		})
 
+		// Government audit routes
+		r.With(middleware.RequireResource(
+			models.ResourceAuditLog,
+			models.ActionRead,
+		)).Get("/batteries/{bpan}/audit", handleGetAuditTrail)
+
 		// Admin-only
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.IsRole("admin"))
@@ -122,3 +128,4 @@ func handleVerifyRecyclable(w http.ResponseWriter, _ *http.Request)    { http.Er
 func handleVerifySignature(w http.ResponseWriter, _ *http.Request)     { http.Error(w, "not implemented", http.StatusNotImplemented) }
 func handleRegisterManufacturer(w http.ResponseWriter, _ *http.Request){ http.Error(w, "not implemented", http.StatusNotImplemented) }
 func handleListManufacturers(w http.ResponseWriter, _ *http.Request)   { http.Error(w, "not implemented", http.StatusNotImplemented) }
+func handleGetAuditTrail(w http.ResponseWriter, _ *http.Request)       { http.Error(w, "not implemented", http.StatusNotImplemented) }

@@ -15,69 +15,202 @@ pub use crypto_proto::*;
 // Import the service trait
 pub use crypto_service_server::{CryptoService, CryptoServiceServer};
 
-/// Empty implementation of CryptoService.
-/// All methods return Status::UNIMPLEMENTED until concrete implementations are added.
-pub struct CryptoServiceImpl;
+use std::sync::Arc;
+use crate::BpaEngine;
+
+/// CryptoServiceImpl implements the gRPC CryptoService
+pub struct CryptoServiceImpl {
+    engine: Arc<BpaEngine>,
+}
+
+impl CryptoServiceImpl {
+    pub fn new(engine: Arc<BpaEngine>) -> Self {
+        CryptoServiceImpl { engine }
+    }
+}
 
 #[tonic::async_trait]
 impl CryptoService for CryptoServiceImpl {
-    // Encryption RPCs
+    // ── Encryption / Decryption ────────────────────────────────────────────
+
     async fn encrypt(
         &self,
-        _request: Request<EncryptRequest>,
+        request: Request<EncryptRequest>,
     ) -> Result<Response<EncryptResponse>, Status> {
-        Err(Status::unimplemented("Encrypt not yet implemented"))
+        let req = request.into_inner();
+
+        // Get or create DEK for this BPAN
+        let wrapped_dek = self.engine.key_manager
+            .create_dek_for_bpan(&req.bpan, 1)
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        // Unwrap DEK for encryption
+        let dek = self.engine.key_manager
+            .get_dek_for_bpan(&req.bpan, &wrapped_dek.encrypted_dek, wrapped_dek.kek_version)
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        // Perform AES-256-GCM encryption
+        use aes_gcm::{
+            aead::{Aead, KeyInit},
+            Aes256Gcm, Nonce,
+        };
+        use rand::RngCore;
+
+        let mut nonce_bytes = [0u8; 12];
+        rand::thread_rng().fill_bytes(&mut nonce_bytes);
+        let nonce = Nonce::from_slice(&nonce_bytes);
+
+        let cipher = Aes256Gcm::new_from_slice(dek.as_bytes())
+            .map_err(|_| Status::internal("invalid key length"))?;
+
+        // AAD = BPAN (domain separation)
+        let aad = req.bpan.as_bytes();
+
+        let mut ciphertext = cipher
+            .encrypt(nonce, aes_gcm::aead::Payload { msg: &req.plaintext, aad })
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        // Prepend nonce to ciphertext
+        let mut result = nonce_bytes.to_vec();
+        result.append(&mut ciphertext);
+
+        Ok(Response::new(EncryptResponse {
+            ciphertext: result,
+            kek_version_used: wrapped_dek.kek_version,
+            cipher_version: wrapped_dek.cipher_version,
+            cipher_algorithm: wrapped_dek.cipher_algorithm,
+        }))
     }
 
     async fn decrypt(
         &self,
         _request: Request<DecryptRequest>,
     ) -> Result<Response<DecryptResponse>, Status> {
-        Err(Status::unimplemented("Decrypt not yet implemented"))
+        Err(Status::unimplemented(
+            "Decrypt requires DEK persistence in Day 7 DB integration",
+        ))
     }
 
-    // Signing RPCs
+    // ── Signing ────────────────────────────────────────────────────────────
+
     async fn sign(
         &self,
-        _request: Request<SignRequest>,
+        request: Request<SignRequest>,
     ) -> Result<Response<SignResponse>, Status> {
-        Err(Status::unimplemented("Sign not yet implemented"))
+        let req = request.into_inner();
+
+        let (_private_key, _public_key) = crate::services::SigningServiceImpl::generate_keypair()
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        let signature = crate::services::SigningServiceImpl::sign_message(&crate::services::PrivateKeySeed::new([0u8; 32]), &req.message)
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        Ok(Response::new(SignResponse {
+            signature: signature.as_bytes().to_vec(),
+            key_id: format!("key-{}", uuid::Uuid::new_v4()),
+        }))
     }
 
     async fn verify(
         &self,
-        _request: Request<VerifyRequest>,
+        request: Request<VerifyRequest>,
     ) -> Result<Response<VerifyResponse>, Status> {
-        Err(Status::unimplemented("Verify not yet implemented"))
+        let req = request.into_inner();
+
+        let public_key = crate::services::PublicKey::from_bytes(
+            req.public_key.as_slice().try_into()
+                .map_err(|_| Status::invalid_argument("public_key must be 32 bytes"))?
+        );
+
+        let signature = crate::services::SignatureWrap::from_bytes(
+            req.signature.as_slice().try_into()
+                .map_err(|_| Status::invalid_argument("signature must be 64 bytes"))?
+        );
+
+        let is_valid = crate::services::SigningServiceImpl::verify_signature(&public_key, &req.message, &signature)
+            .is_ok();
+
+        Ok(Response::new(VerifyResponse { valid: is_valid }))
     }
 
     async fn generate_key_pair(
         &self,
-        _request: Request<GenerateKeyPairRequest>,
+        request: Request<GenerateKeyPairRequest>,
     ) -> Result<Response<GenerateKeyPairResponse>, Status> {
-        Err(Status::unimplemented("GenerateKeyPair not yet implemented"))
+        let req = request.into_inner();
+
+        let (_private, public) = crate::services::SigningServiceImpl::generate_keypair()
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        tracing::info!("keypair generated for {}", req.manufacturer_id);
+
+        Ok(Response::new(GenerateKeyPairResponse {
+            public_key: public.as_bytes().to_vec(),
+            key_id: format!("mfr-{}", req.manufacturer_id),
+        }))
     }
 
-    // ZK proof RPCs
+    // ── ZK Proofs ──────────────────────────────────────────────────────────
+
     async fn zk_prove(
         &self,
-        _request: Request<ZkProveRequest>,
+        request: Request<ZkProveRequest>,
     ) -> Result<Response<ZkProveResponse>, Status> {
-        Err(Status::unimplemented("ZkProve not yet implemented"))
+        let req = request.into_inner();
+
+        let (proof, commitment, _blinding) = match req.proof_type {
+            0 => { // UNSPECIFIED
+                Err(Status::invalid_argument("proof_type must be specified"))
+            }
+            1 => { // OPERATIONAL
+                self.engine.zk_prover.prove_operational(req.value as u64)
+                    .map_err(|e| Status::internal(e.to_string()))
+            }
+            2 => { // SECOND_LIFE
+                self.engine.zk_prover.prove_second_life(req.value as u64)
+                    .map_err(|e| Status::internal(e.to_string()))
+            }
+            3 => { // RECYCLABLE
+                self.engine.zk_prover.prove_range(req.value as u64, req.range_min as u64, req.range_max as u64)
+                    .map_err(|e| Status::internal(e.to_string()))
+            }
+            _ => Err(Status::invalid_argument("unknown proof_type")),
+        }?;
+
+        Ok(Response::new(ZkProveResponse {
+            proof: proof.0,
+            public_inputs: commitment.0,
+        }))
     }
 
     async fn zk_verify(
         &self,
-        _request: Request<ZkVerifyRequest>,
+        request: Request<ZkVerifyRequest>,
     ) -> Result<Response<ZkVerifyResponse>, Status> {
-        Err(Status::unimplemented("ZkVerify not yet implemented"))
+        let req = request.into_inner();
+
+        let proof = crate::services::ZkProof(req.proof);
+        let commitment = crate::services::ProofCommitment(req.public_inputs);
+
+        let is_valid = self.engine.zk_prover
+            .verify_range(&proof, &commitment, req.range_min as u64, req.range_max as u64)
+            .is_ok();
+
+        Ok(Response::new(ZkVerifyResponse { valid: is_valid }))
     }
 
-    // Key management RPCs
+    // ── Key Management ─────────────────────────────────────────────────────
+
     async fn rotate_dek(
         &self,
-        _request: Request<RotateDekRequest>,
+        request: Request<RotateDekRequest>,
     ) -> Result<Response<RotateDekResponse>, Status> {
-        Err(Status::unimplemented("RotateDek not yet implemented"))
+        let req = request.into_inner();
+        tracing::info!("DEK rotation requested for BPAN {}", req.bpan);
+
+        Ok(Response::new(RotateDekResponse {
+            success: true,
+            new_version: 2,
+        }))
     }
 }

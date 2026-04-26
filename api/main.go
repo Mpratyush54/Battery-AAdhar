@@ -16,7 +16,10 @@ import (
 )
 
 func main() {
-	// Initialize gRPC clients
+	// Initialize DB
+	config.InitDB()
+
+	// Initialize gRPC clients — non-fatal if Rust server is not yet running
 	grpcTarget := os.Getenv("GRPC_SERVICE_URL")
 	if grpcTarget == "" {
 		grpcTarget = "localhost:50051"
@@ -27,9 +30,13 @@ func main() {
 
 	microservices, err := config.InitMicroservices(ctx, grpcTarget)
 	if err != nil {
-		log.Fatalf("Failed to initialize gRPC clients: %v", err)
+		log.Printf("⚠️  gRPC connection to Rust engine failed: %v", err)
+		log.Println("⚠️  Continuing without Rust engine — crypto/ZK endpoints will return 503")
+		microservices = nil
+	} else {
+		log.Println("✅ Connected to Rust gRPC engine")
+		defer microservices.Close()
 	}
-	defer microservices.Close()
 
 	// Create router
 	router := routes.NewRouter()
@@ -44,6 +51,6 @@ func main() {
 	log.Printf("🚀 BPA API server starting on %s", addr)
 
 	if err := http.ListenAndServe(addr, router); err != nil {
-		log.Fatalf("Server error: %v", err)
+		log.Fatalf("❌ Server error: %v", err)
 	}
 }

@@ -156,7 +156,27 @@ impl CryptoService for CryptoServiceImpl {
         &self,
         request: Request<ZkProveRequest>,
     ) -> Result<Response<ZkProveResponse>, Status> {
+        // Log the incoming caller — shows Rust confirming the Go handshake
+        let peer = request
+            .remote_addr()
+            .map(|a| a.to_string())
+            .unwrap_or_else(|| "unknown".to_string());
+
         let req = request.into_inner();
+
+        let proof_label = match req.proof_type {
+            1 => "OPERATIONAL",
+            2 => "SECOND_LIFE",
+            3 => "RECYCLABLE",
+            _ => "UNKNOWN",
+        };
+
+        tracing::info!(
+            peer = %peer,
+            proof_type = proof_label,
+            value = req.value,
+            "📥 ZkProve request received"
+        );
 
         let (proof, commitment, _blinding) = match req.proof_type {
             0 => { // UNSPECIFIED
@@ -176,6 +196,13 @@ impl CryptoService for CryptoServiceImpl {
             }
             _ => Err(Status::invalid_argument("unknown proof_type")),
         }?;
+
+        tracing::info!(
+            peer = %peer,
+            proof_type = proof_label,
+            proof_bytes = proof.0.len(),
+            "✅ ZkProve complete — proof generated"
+        );
 
         Ok(Response::new(ZkProveResponse {
             proof: proof.0,

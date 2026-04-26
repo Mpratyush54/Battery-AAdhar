@@ -73,7 +73,7 @@ func NewClientConn(ctx context.Context, target string) (*ClientConn, error) {
 	} else {
 		// Insecure mode — local dev without TLS on Rust side
 		dialOpt = grpc.WithTransportCredentials(insecure.NewCredentials())
-		slog.Warn("gRPC client using INSECURE transport (dev only)", "target", target)
+		slog.Debug("gRPC client using INSECURE transport (dev only)", "target", target)
 	}
 
 	conn, err := grpc.NewClient(target, dialOpt)
@@ -104,12 +104,26 @@ func NewClientConn(ctx context.Context, target string) (*ClientConn, error) {
 	return cc, nil
 }
 
-// healthCheck verifies all services are responsive.
-// On Day 15 we'll add a formal health service, but for now this is a simple check.
+// healthCheck performs a real handshake with the Rust engine.
+// Calls ZkProve(proof_type=OPERATIONAL, value=85) — a lightweight in-memory
+// ZK proof that requires no DB and confirms the crypto engine is live.
 func (c *ClientConn) healthCheck(ctx context.Context) error {
-	// For now, just verify the connection works by making a dummy RPC.
-	// (All methods return Unimplemented on Day 2, so this will fail with a known error.)
-	// On Day 15+ we'll add a Health RPC.
+	slog.Info("🤝 Performing handshake with Rust gRPC engine...")
+
+	resp, err := c.CryptoClient.ZkProve(ctx, &cryptov1.ZkProveRequest{
+		ProofType: 1,   // OPERATIONAL
+		Value:     85,  // SoH 85% — safely within operational threshold (>80%)
+		RangeMin:  80,
+		RangeMax:  100,
+	})
+	if err != nil {
+		return fmt.Errorf("ZkProve handshake failed: %w", err)
+	}
+
+	slog.Info("✅ Rust engine handshake OK",
+		"proof_bytes", len(resp.Proof),
+		"commitment_bytes", len(resp.PublicInputs),
+	)
 	return nil
 }
 

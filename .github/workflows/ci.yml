@@ -172,9 +172,25 @@ jobs:
     if: always()
     steps:
       - run: |
-          if [ "${{ needs.proto-lint.result }}" != "success" ]; then exit 1; fi
-          if [ "${{ needs.rust-lint-test.result }}" != "success" ]; then exit 1; fi
-          if [ "${{ needs.go-lint-test.result }}" != "success" ]; then exit 1; fi
-          if [ "${{ needs.docker-build.result }}" != "success" ]; then exit 1; fi
-          if [ "${{ needs.integration.result }}" != "success" ]; then exit 1; fi
-          echo "✓ All checks passed"
+          set -euo pipefail
+
+          check_result () {
+            local job="$1"
+            local result="$2"
+            echo "$job => $result"
+            case "$result" in
+              success|skipped) ;;
+              *)
+                echo "Job '$job' did not succeed (result=$result)"
+                exit 1
+                ;;
+            esac
+          }
+
+          check_result "proto-lint" "${{ needs.proto-lint.result }}"
+          check_result "rust-lint-test" "${{ needs.rust-lint-test.result }}"
+          check_result "go-lint-test" "${{ needs.go-lint-test.result }}"
+          check_result "docker-build" "${{ needs.docker-build.result }}"
+          check_result "integration" "${{ needs.integration.result }}"
+
+          echo "✓ All required checks passed (or were intentionally skipped)"

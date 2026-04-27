@@ -216,7 +216,6 @@ impl LifecycleRepositoryImpl {
 
 #[cfg(test)]
 mod tests {
-    
 
     #[tokio::test]
     async fn test_ownership_transfer_chain() {

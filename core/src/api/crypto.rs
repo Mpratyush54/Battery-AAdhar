@@ -254,12 +254,7 @@ impl CryptoService for CryptoServiceImpl {
         let is_valid = self
             .engine
             .zk_prover
-            .verify_range(
-                &proof,
-                &commitment,
-                req.range_min,
-                req.range_max,
-            )
+            .verify_range(&proof, &commitment, req.range_min, req.range_max)
             .is_ok();
 
         Ok(Response::new(ZkVerifyResponse { valid: is_valid }))

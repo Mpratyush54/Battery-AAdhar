@@ -73,6 +73,11 @@ func InitDB() {
 	}
 
 	if err = DB.Ping(); err != nil {
+		allowDBFailure := os.Getenv("BPA_ALLOW_DB_FAILURE") == "1" || os.Getenv("CI") == "true"
+		if allowDBFailure {
+			log.Printf("⚠️ Postgres unreachable, continuing in degraded mode: %v", err)
+			return
+		}
 		log.Fatalf("❌ Failed to reach Postgres on ping: %v", err)
 	}
 

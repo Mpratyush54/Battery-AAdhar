@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	qrpkg "github.com/Mpratyush54/Battery-AAdhar/api/qr"
+	"github.com/go-chi/chi/v5"
 )
 
 // GetQRCode — GET /api/v1/batteries/{bpan}/qr

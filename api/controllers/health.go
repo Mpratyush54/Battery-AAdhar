@@ -3,8 +3,8 @@
 package controllers
 
 import (
-	"net/http"
 	"github.com/go-chi/chi/v5"
+	"net/http"
 )
 
 // GetStateOfHealth — GET /api/v1/batteries/{bpan}/health

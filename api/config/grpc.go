@@ -16,8 +16,8 @@ import (
 	"os"
 	"time"
 
-	infisical "github.com/infisical/go-sdk"
 	pb "github.com/Mpratyush54/Battery-AAdhar/api/pb"
+	infisical "github.com/infisical/go-sdk"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"

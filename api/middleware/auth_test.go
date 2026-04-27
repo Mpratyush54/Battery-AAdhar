@@ -44,7 +44,7 @@ func TestAuthenticate(t *testing.T) {
 
 	t.Run("With Authorization Header", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
-		
+
 		// Create a realistic valid JWT (unverified)
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 			"sub":  "123",

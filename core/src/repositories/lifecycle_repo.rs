@@ -1,16 +1,16 @@
 //! lifecycle_repo.rs — Battery lifecycle tracking (ownership, reuse, recycling)
 
+use super::battery_repo::RepositoryError;
+use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
-use chrono::Utc;
-use super::battery_repo::RepositoryError;
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct OwnershipRecord {
     pub id: Uuid,
     pub bpan: String,
-    pub owner_id: String,           // Stakeholder ID (manufacturer, distributor, etc.)
-    pub owner_type: String,          // "manufacturer", "distributor", "consumer", etc.
+    pub owner_id: String,   // Stakeholder ID (manufacturer, distributor, etc.)
+    pub owner_type: String, // "manufacturer", "distributor", "consumer", etc.
     pub start_time: chrono::DateTime<Utc>,
     pub end_time: Option<chrono::DateTime<Utc>>,
     pub transfer_reason: Option<String>, // "sale", "return", "refurbishment", etc.
@@ -20,7 +20,7 @@ pub struct OwnershipRecord {
 pub struct ReuseRecord {
     pub id: Uuid,
     pub bpan: String,
-    pub reuse_type: String,         // "stationary", "industrial", etc.
+    pub reuse_type: String, // "stationary", "industrial", etc.
     pub certifier_id: String,
     pub certified_at: chrono::DateTime<Utc>,
     pub expected_end_of_life: Option<chrono::DateTime<Utc>>,
@@ -32,7 +32,7 @@ pub struct RecyclingRecord {
     pub bpan: String,
     pub recycler_id: String,
     pub recovered_percentage: f32,
-    pub recovery_method: String,    // "mechanical", "hydrometallurgical", etc.
+    pub recovery_method: String, // "mechanical", "hydrometallurgical", etc.
     pub recycled_at: chrono::DateTime<Utc>,
 }
 
@@ -49,7 +49,7 @@ impl LifecycleRepositoryImpl {
     pub async fn log_ownership_transfer(
         &self,
         bpan: &str,
-        from_owner_id: &str,
+        _from_owner_id: &str,
         to_owner_id: &str,
         owner_type: &str,
         reason: Option<&str>,
@@ -99,7 +99,10 @@ impl LifecycleRepositoryImpl {
     }
 
     /// Get ownership history for a battery
-    pub async fn get_ownership_history(&self, bpan: &str) -> Result<Vec<OwnershipRecord>, RepositoryError> {
+    pub async fn get_ownership_history(
+        &self,
+        bpan: &str,
+    ) -> Result<Vec<OwnershipRecord>, RepositoryError> {
         let records = sqlx::query_as::<_, OwnershipRecord>(
             "SELECT id, bpan, owner_id, owner_type, start_time, end_time, transfer_reason FROM battery_ownership WHERE bpan = $1 ORDER BY start_time ASC",
         )
@@ -156,10 +159,11 @@ impl LifecycleRepositoryImpl {
         recovered_percentage: f32,
         recovery_method: &str,
     ) -> Result<RecyclingRecord, RepositoryError> {
-        if recovered_percentage < 0.0 || recovered_percentage > 100.0 {
-            return Err(RepositoryError::ValidationError(
-                format!("recovered_percentage must be 0–100, got {}", recovered_percentage),
-            ));
+        if !(0.0..=100.0).contains(&recovered_percentage) {
+            return Err(RepositoryError::ValidationError(format!(
+                "recovered_percentage must be 0–100, got {}",
+                recovered_percentage
+            )));
         }
 
         let id = Uuid::new_v4();
@@ -194,7 +198,10 @@ impl LifecycleRepositoryImpl {
     }
 
     /// Get all recycling records for a battery
-    pub async fn get_recycling_records(&self, bpan: &str) -> Result<Vec<RecyclingRecord>, RepositoryError> {
+    pub async fn get_recycling_records(
+        &self,
+        bpan: &str,
+    ) -> Result<Vec<RecyclingRecord>, RepositoryError> {
         let records = sqlx::query_as::<_, RecyclingRecord>(
             "SELECT id, bpan, recycler_id, recovered_percentage, recovery_method, recycled_at FROM battery_recycling WHERE bpan = $1 ORDER BY recycled_at DESC",
         )
@@ -209,14 +216,14 @@ impl LifecycleRepositoryImpl {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
 
     #[tokio::test]
     async fn test_ownership_transfer_chain() {
         // This test would require a real database
         // For now, we test the logic
-        let bpan = "MY008A6FKKKLC1DH80001";
-        
+        let _bpan = "MY008A6FKKKLC1DH80001";
+
         // Simulate: manufacturer → distributor → consumer
         println!("Ownership chain:");
         println!("1. Manufacturer creates battery");

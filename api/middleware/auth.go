@@ -17,11 +17,11 @@ import (
 
 // Claims holds parsed JWT payload
 type Claims struct {
-	Subject       string   `json:"sub"`       // user/manufacturer ID
-	Role          string   `json:"role"`      // MANUFACTURER, REGULATOR, etc.
-	ManufacturerID string   `json:"mfr_id,omitempty"`
-	Permissions   []string `json:"perms,omitempty"`
-	ExpiresAt     time.Time `json:"exp"`
+	Subject        string    `json:"sub"`  // user/manufacturer ID
+	Role           string    `json:"role"` // MANUFACTURER, REGULATOR, etc.
+	ManufacturerID string    `json:"mfr_id,omitempty"`
+	Permissions    []string  `json:"perms,omitempty"`
+	ExpiresAt      time.Time `json:"exp"`
 }
 
 // contextKey prevents collisions

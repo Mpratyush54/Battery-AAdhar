@@ -8,16 +8,16 @@ type StakeholderRole string
 
 const (
 	// BPA stakeholder roles (from spec Table 1)
-	RoleManufacturer      StakeholderRole = "manufacturer"
-	RoleImporter          StakeholderRole = "importer"
-	RoleDistributor       StakeholderRole = "distributor"
-	RoleServiceProvider   StakeholderRole = "service_provider"
-	RoleRecycler          StakeholderRole = "recycler"
-	RoleReuseOperator     StakeholderRole = "reuse_operator"
-	RoleGovernment        StakeholderRole = "government"
-	RoleAdmin             StakeholderRole = "admin"
-	RolePublic            StakeholderRole = "public"
-	RoleAuthenticated     StakeholderRole = "authenticated"
+	RoleManufacturer    StakeholderRole = "manufacturer"
+	RoleImporter        StakeholderRole = "importer"
+	RoleDistributor     StakeholderRole = "distributor"
+	RoleServiceProvider StakeholderRole = "service_provider"
+	RoleRecycler        StakeholderRole = "recycler"
+	RoleReuseOperator   StakeholderRole = "reuse_operator"
+	RoleGovernment      StakeholderRole = "government"
+	RoleAdmin           StakeholderRole = "admin"
+	RolePublic          StakeholderRole = "public"
+	RoleAuthenticated   StakeholderRole = "authenticated"
 )
 
 // Resource defines what can be accessed
@@ -37,14 +37,14 @@ const (
 type Action string
 
 const (
-	ActionCreate    Action = "create"
-	ActionRead      Action = "read"
-	ActionUpdate    Action = "update"
-	ActionDelete    Action = "delete"
-	ActionApprove   Action = "approve"
-	ActionRecycle   Action = "recycle"
-	ActionTransfer  Action = "transfer"
-	ActionVerify    Action = "verify"
+	ActionCreate   Action = "create"
+	ActionRead     Action = "read"
+	ActionUpdate   Action = "update"
+	ActionDelete   Action = "delete"
+	ActionApprove  Action = "approve"
+	ActionRecycle  Action = "recycle"
+	ActionTransfer Action = "transfer"
+	ActionVerify   Action = "verify"
 )
 
 // Permission represents a single role+resource+action grant
@@ -77,8 +77,8 @@ var AccessMatrix = map[StakeholderRole]map[Resource][]Action{
 
 	// SERVICE PROVIDER: View all data (no private), update health
 	RoleServiceProvider: {
-		ResourceBattery:      {ActionRead, ActionUpdate},
-		ResourceBatteryHealth: {ActionRead, ActionUpdate},
+		ResourceBattery:              {ActionRead, ActionUpdate},
+		ResourceBatteryHealth:        {ActionRead, ActionUpdate},
 		ResourceBatteryCertification: {ActionRead},
 	},
 
@@ -96,12 +96,12 @@ var AccessMatrix = map[StakeholderRole]map[Resource][]Action{
 
 	// GOVERNMENT: Read-only access to all (audit + verify)
 	RoleGovernment: {
-		ResourceBattery:               {ActionRead},
-		ResourceBatteryMaterial:       {ActionRead},
-		ResourceBatteryHealth:         {ActionRead},
-		ResourceBatteryCertification:  {ActionRead},
-		ResourceBatteryLifecycle:      {ActionRead},
-		ResourceAuditLog:              {ActionRead},
+		ResourceBattery:              {ActionRead},
+		ResourceBatteryMaterial:      {ActionRead},
+		ResourceBatteryHealth:        {ActionRead},
+		ResourceBatteryCertification: {ActionRead},
+		ResourceBatteryLifecycle:     {ActionRead},
+		ResourceAuditLog:             {ActionRead},
 	},
 
 	// ADMIN: Full access

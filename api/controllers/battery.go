@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/Mpratyush54/Battery-AAdhar/api/bpan"
 	"github.com/Mpratyush54/Battery-AAdhar/api/config"
 	"github.com/Mpratyush54/Battery-AAdhar/api/models"
 	pb "github.com/Mpratyush54/Battery-AAdhar/api/pb"
+	"github.com/go-chi/chi/v5"
 )
 
 // RegisterBatteryController godoc
@@ -169,18 +169,18 @@ func GetBatteryByBPAN(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"bpan":                     bpanStr,
-		"country":                  details.CountryName,
-		"manufacturer_code":        details.ManufacturerCode,
-		"capacity_kwh":             details.CapacityKwh,
-		"chemistry":                details.ChemistryType,
-		"nominal_voltage_v":        details.NominalVoltageV,
-		"cell_origin":              details.CellOrigin,
-		"extinguisher_class":       details.ExtinguisherClass,
-		"manufacturing_year":       details.ManufacturingYear,
-		"manufacturing_month":      details.ManufacturingMonth,
-		"manufacturing_day":        details.ManufacturingDay,
-		"factory_number":           details.FactoryNumber,
-		"sequential_number":        details.SequentialNumber,
+		"bpan":                bpanStr,
+		"country":             details.CountryName,
+		"manufacturer_code":   details.ManufacturerCode,
+		"capacity_kwh":        details.CapacityKwh,
+		"chemistry":           details.ChemistryType,
+		"nominal_voltage_v":   details.NominalVoltageV,
+		"cell_origin":         details.CellOrigin,
+		"extinguisher_class":  details.ExtinguisherClass,
+		"manufacturing_year":  details.ManufacturingYear,
+		"manufacturing_month": details.ManufacturingMonth,
+		"manufacturing_day":   details.ManufacturingDay,
+		"factory_number":      details.FactoryNumber,
+		"sequential_number":   details.SequentialNumber,
 	})
 }

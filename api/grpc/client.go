@@ -17,20 +17,20 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
-	cryptov1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/crypto/v1"
-	batteryv1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/battery/v1"
 	authv1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/auth/v1"
+	batteryv1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/battery/v1"
+	cryptov1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/crypto/v1"
 	lifecyclev1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/lifecycle/v1"
 )
 
 // ClientConn holds all gRPC service clients.
 // Callers retrieve clients from here rather than managing their own connections.
 type ClientConn struct {
-	conn             *grpc.ClientConn
-	CryptoClient     cryptov1.CryptoServiceClient
-	BatteryClient    batteryv1.BatteryServiceClient
-	AuthClient       authv1.AuthServiceClient
-	LifecycleClient  lifecyclev1.LifecycleServiceClient
+	conn            *grpc.ClientConn
+	CryptoClient    cryptov1.CryptoServiceClient
+	BatteryClient   batteryv1.BatteryServiceClient
+	AuthClient      authv1.AuthServiceClient
+	LifecycleClient lifecyclev1.LifecycleServiceClient
 }
 
 // NewClientConn creates a new gRPC connection to the Rust crypto service
@@ -111,8 +111,8 @@ func (c *ClientConn) healthCheck(ctx context.Context) error {
 	slog.Info("🤝 Performing handshake with Rust gRPC engine...")
 
 	resp, err := c.CryptoClient.ZkProve(ctx, &cryptov1.ZkProveRequest{
-		ProofType: 1,   // OPERATIONAL
-		Value:     85,  // SoH 85% — safely within operational threshold (>80%)
+		ProofType: 1,  // OPERATIONAL
+		Value:     85, // SoH 85% — safely within operational threshold (>80%)
 		RangeMin:  80,
 		RangeMax:  100,
 	})

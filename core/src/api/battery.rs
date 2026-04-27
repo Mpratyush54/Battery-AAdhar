@@ -14,12 +14,12 @@ use crate::BpaEngine;
 use std::sync::Arc;
 
 pub struct BatteryServiceImpl {
-    engine: Arc<BpaEngine>,
+    _engine: Arc<BpaEngine>,
 }
 
 impl BatteryServiceImpl {
     pub fn new(engine: Arc<BpaEngine>) -> Self {
-        BatteryServiceImpl { engine }
+        BatteryServiceImpl { _engine: engine }
     }
 }
 #[tonic::async_trait]

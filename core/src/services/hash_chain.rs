@@ -83,9 +83,12 @@ impl HashChainService {
 
     /// Verify the integrity of an audit chain by recomputing each entry's hash
     /// against its stored previous_hash + payload.
-    pub fn verify_chain(entries: &[(String, String, String, String, String, String)]) -> BpaResult<()> {
+    pub fn verify_chain(
+        entries: &[(String, String, String, String, String, String)],
+    ) -> BpaResult<()> {
         // entries: Vec<(entry_hash, previous_hash, action, resource, actor_id, timestamp)>
-        for (i, (stored_hash, prev_hash, action, resource, actor, ts)) in entries.iter().enumerate() {
+        for (i, (stored_hash, prev_hash, action, resource, actor, ts)) in entries.iter().enumerate()
+        {
             let computed = Self::compute_entry_hash(prev_hash, action, resource, actor, ts);
             if computed != *stored_hash {
                 return Err(BpaError::IntegrityViolation(format!(

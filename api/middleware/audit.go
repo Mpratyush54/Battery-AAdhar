@@ -4,10 +4,10 @@
 package middleware
 
 import (
+	"github.com/go-chi/chi/v5/middleware"
+	"log/slog"
 	"net/http"
 	"time"
-	"log/slog"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 // AuditService abstracts the audit log backend

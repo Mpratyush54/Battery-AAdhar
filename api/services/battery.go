@@ -23,15 +23,15 @@ func NewBatteryService(encService *EncryptionService) *BatteryService {
 
 // BatteryFull represents complete battery data with all related records
 type BatteryFull struct {
-	BPAN              string                      `json:"bpan"`
-	Manufacturer      string                      `json:"manufacturer"`
-	StaticData        map[string]interface{}      `json:"static_data"`
-	HealthRecords     []BatteryHealth             `json:"health_records"`
-	Descriptors       map[string]interface{}      `json:"descriptors"`
-	OwnershipHistory  []OwnershipRecord           `json:"ownership_history"`
-	Signatures        []SignatureRecord           `json:"signatures"`
-	ComplianceStatus  string                      `json:"compliance_status"`
-	CreatedAt         string                      `json:"created_at"`
+	BPAN             string                 `json:"bpan"`
+	Manufacturer     string                 `json:"manufacturer"`
+	StaticData       map[string]interface{} `json:"static_data"`
+	HealthRecords    []BatteryHealth        `json:"health_records"`
+	Descriptors      map[string]interface{} `json:"descriptors"`
+	OwnershipHistory []OwnershipRecord      `json:"ownership_history"`
+	Signatures       []SignatureRecord      `json:"signatures"`
+	ComplianceStatus string                 `json:"compliance_status"`
+	CreatedAt        string                 `json:"created_at"`
 }
 
 // BatteryHealth represents a State of Health record
@@ -50,10 +50,10 @@ type SignatureRecord struct {
 
 // OwnershipRecord represents ownership transfer
 type OwnershipRecord struct {
-	Owner        string `json:"owner"`
-	OwnerType    string `json:"owner_type"`
-	StartTime    string `json:"start_time"`
-	EndTime      string `json:"end_time,omitempty"`
+	Owner          string `json:"owner"`
+	OwnerType      string `json:"owner_type"`
+	StartTime      string `json:"start_time"`
+	EndTime        string `json:"end_time,omitempty"`
 	TransferReason string `json:"transfer_reason,omitempty"`
 }
 

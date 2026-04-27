@@ -28,7 +28,7 @@ func InitDB() {
 		clientSecret := os.Getenv("INFISICAL_CLIENT_SECRET")
 		projectID := os.Getenv("INFISICAL_PROJECT_ID")
 		env := os.Getenv("INFISICAL_ENV")
-		
+
 		if env == "" {
 			env = "dev"
 		}

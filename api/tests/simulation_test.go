@@ -35,12 +35,10 @@ func TestSimulation(t *testing.T) {
 
 	// Create a helper wrapper manually injecting JWT claims equivalent to a manufacturer for deep endpoint testing
 	runRequestWithRoleMock := func(method, path string, userRole string) int {
-		req, _ := http.NewRequest(method, ts.URL+path, nil)
-
 		// Wait, we need to bypass Authenticate to inject a manual role into the request lifecycle for integration mock testing.
 		// A cleaner way is using the normal chi router, but manually constructing a request directly against the mux
 		// and inserting the context directly before ServeHTTP.
-		req, _ = http.NewRequest(method, path, nil)
+		req, _ := http.NewRequest(method, path, nil)
 
 		// The custom router mounts Validate() at the top. We can't easily mock ctx via http client DO.
 		// Instead we'll hit the server via httptest.Recorder with context overrides.
@@ -78,7 +76,10 @@ func TestSimulation(t *testing.T) {
 
 	t.Run("Swagger UI exists", func(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodGet, ts.URL+"/swagger/index.html", nil)
-		resp, _ := client.Do(req)
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("Failed to make request: %v", err)
+		}
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("Expected 200 for Swagger UI, got %d", resp.StatusCode)

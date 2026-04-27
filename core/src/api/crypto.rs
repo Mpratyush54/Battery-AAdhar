@@ -15,8 +15,8 @@ pub use crypto_proto::*;
 // Import the service trait
 pub use crypto_service_server::{CryptoService, CryptoServiceServer};
 
-use std::sync::Arc;
 use crate::BpaEngine;
+use std::sync::Arc;
 
 /// CryptoServiceImpl implements the gRPC CryptoService
 pub struct CryptoServiceImpl {
@@ -40,13 +40,21 @@ impl CryptoService for CryptoServiceImpl {
         let req = request.into_inner();
 
         // Get or create DEK for this BPAN
-        let wrapped_dek = self.engine.key_manager
+        let wrapped_dek = self
+            .engine
+            .key_manager
             .create_dek_for_bpan(&req.bpan, 1)
             .map_err(|e| Status::internal(e.to_string()))?;
 
         // Unwrap DEK for encryption
-        let dek = self.engine.key_manager
-            .get_dek_for_bpan(&req.bpan, &wrapped_dek.encrypted_dek, wrapped_dek.kek_version)
+        let dek = self
+            .engine
+            .key_manager
+            .get_dek_for_bpan(
+                &req.bpan,
+                &wrapped_dek.encrypted_dek,
+                wrapped_dek.kek_version,
+            )
             .map_err(|e| Status::internal(e.to_string()))?;
 
         // Perform AES-256-GCM encryption
@@ -67,7 +75,13 @@ impl CryptoService for CryptoServiceImpl {
         let aad = req.bpan.as_bytes();
 
         let mut ciphertext = cipher
-            .encrypt(nonce, aes_gcm::aead::Payload { msg: &req.plaintext, aad })
+            .encrypt(
+                nonce,
+                aes_gcm::aead::Payload {
+                    msg: &req.plaintext,
+                    aad,
+                },
+            )
             .map_err(|e| Status::internal(e.to_string()))?;
 
         // Prepend nonce to ciphertext
@@ -93,17 +107,17 @@ impl CryptoService for CryptoServiceImpl {
 
     // ── Signing ────────────────────────────────────────────────────────────
 
-    async fn sign(
-        &self,
-        request: Request<SignRequest>,
-    ) -> Result<Response<SignResponse>, Status> {
+    async fn sign(&self, request: Request<SignRequest>) -> Result<Response<SignResponse>, Status> {
         let req = request.into_inner();
 
         let (_private_key, _public_key) = crate::services::SigningServiceImpl::generate_keypair()
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        let signature = crate::services::SigningServiceImpl::sign_message(&crate::services::PrivateKeySeed::new([0u8; 32]), &req.message)
-            .map_err(|e| Status::internal(e.to_string()))?;
+        let signature = crate::services::SigningServiceImpl::sign_message(
+            &crate::services::PrivateKeySeed::new([0u8; 32]),
+            &req.message,
+        )
+        .map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(Response::new(SignResponse {
             signature: signature.as_bytes().to_vec(),
@@ -118,17 +132,25 @@ impl CryptoService for CryptoServiceImpl {
         let req = request.into_inner();
 
         let public_key = crate::services::PublicKey::from_bytes(
-            req.public_key.as_slice().try_into()
-                .map_err(|_| Status::invalid_argument("public_key must be 32 bytes"))?
+            req.public_key
+                .as_slice()
+                .try_into()
+                .map_err(|_| Status::invalid_argument("public_key must be 32 bytes"))?,
         );
 
         let signature = crate::services::SignatureWrap::from_bytes(
-            req.signature.as_slice().try_into()
-                .map_err(|_| Status::invalid_argument("signature must be 64 bytes"))?
+            req.signature
+                .as_slice()
+                .try_into()
+                .map_err(|_| Status::invalid_argument("signature must be 64 bytes"))?,
         );
 
-        let is_valid = crate::services::SigningServiceImpl::verify_signature(&public_key, &req.message, &signature)
-            .is_ok();
+        let is_valid = crate::services::SigningServiceImpl::verify_signature(
+            &public_key,
+            &req.message,
+            &signature,
+        )
+        .is_ok();
 
         Ok(Response::new(VerifyResponse { valid: is_valid }))
     }
@@ -179,19 +201,29 @@ impl CryptoService for CryptoServiceImpl {
         );
 
         let (proof, commitment, _blinding) = match req.proof_type {
-            0 => { // UNSPECIFIED
+            0 => {
+                // UNSPECIFIED
                 Err(Status::invalid_argument("proof_type must be specified"))
             }
-            1 => { // OPERATIONAL
-                self.engine.zk_prover.prove_operational(req.value as u64)
+            1 => {
+                // OPERATIONAL
+                self.engine
+                    .zk_prover
+                    .prove_operational(req.value)
                     .map_err(|e| Status::internal(e.to_string()))
             }
-            2 => { // SECOND_LIFE
-                self.engine.zk_prover.prove_second_life(req.value as u64)
+            2 => {
+                // SECOND_LIFE
+                self.engine
+                    .zk_prover
+                    .prove_second_life(req.value)
                     .map_err(|e| Status::internal(e.to_string()))
             }
-            3 => { // RECYCLABLE
-                self.engine.zk_prover.prove_range(req.value as u64, req.range_min as u64, req.range_max as u64)
+            3 => {
+                // RECYCLABLE
+                self.engine
+                    .zk_prover
+                    .prove_range(req.value, req.range_min, req.range_max)
                     .map_err(|e| Status::internal(e.to_string()))
             }
             _ => Err(Status::invalid_argument("unknown proof_type")),
@@ -219,8 +251,15 @@ impl CryptoService for CryptoServiceImpl {
         let proof = crate::services::ZkProof(req.proof);
         let commitment = crate::services::ProofCommitment(req.public_inputs);
 
-        let is_valid = self.engine.zk_prover
-            .verify_range(&proof, &commitment, req.range_min as u64, req.range_max as u64)
+        let is_valid = self
+            .engine
+            .zk_prover
+            .verify_range(
+                &proof,
+                &commitment,
+                req.range_min,
+                req.range_max,
+            )
             .is_ok();
 
         Ok(Response::new(ZkVerifyResponse { valid: is_valid }))

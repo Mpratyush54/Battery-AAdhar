@@ -3,13 +3,12 @@
 //! HKDF-SHA256 is used for all derivations.
 //! All key material is wrapped in Zeroize types to prevent leaks.
 
-use crate::models::*;
+use chrono::Utc;
 use hkdf::Hkdf;
 use sha2::Sha256;
-use zeroize::Zeroize;
 use std::fmt;
 use uuid::Uuid;
-use chrono::Utc;
+use zeroize::Zeroize;
 
 /// Raw 32-byte key material (automatically zeroized on drop)
 #[derive(Clone, Zeroize)]
@@ -31,9 +30,10 @@ impl RawKey {
 
     pub fn from_vec(vec: Vec<u8>) -> Result<Self, KeyManagerError> {
         if vec.len() != 32 {
-            return Err(KeyManagerError::DerivationFailed(
-                format!("expected 32 bytes, got {}", vec.len()),
-            ));
+            return Err(KeyManagerError::DerivationFailed(format!(
+                "expected 32 bytes, got {}",
+                vec.len()
+            )));
         }
         let mut bytes = [0u8; 32];
         bytes.copy_from_slice(&vec);
@@ -82,7 +82,9 @@ impl fmt::Display for KeyManagerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             KeyManagerError::RootKeyUnavailable => write!(f, "root key unavailable"),
-            KeyManagerError::KekNotFound { version } => write!(f, "KEK version {} not found", version),
+            KeyManagerError::KekNotFound { version } => {
+                write!(f, "KEK version {} not found", version)
+            }
             KeyManagerError::DekNotFound { bpan } => write!(f, "DEK for BPAN {} not found", bpan),
             KeyManagerError::DerivationFailed(msg) => write!(f, "HKDF derivation failed: {}", msg),
             KeyManagerError::WrappingFailed(msg) => write!(f, "key wrapping failed: {}", msg),
@@ -162,11 +164,7 @@ impl KeyManagerImpl {
 
     /// Derive a DEK for a specific BPAN using HKDF-SHA256 with the KEK.
     /// Each DEK is unique per BPAN due to HKDF's expansion using BPAN as info.
-    pub fn derive_dek(
-        &self,
-        kek: &RawKey,
-        bpan: &str,
-    ) -> Result<RawKey, KeyManagerError> {
+    pub fn derive_dek(&self, kek: &RawKey, bpan: &str) -> Result<RawKey, KeyManagerError> {
         let hkdf = Hkdf::<Sha256>::new(None, kek.as_bytes());
 
         // Info: include BPAN so each DEK is unique
@@ -205,7 +203,13 @@ impl KeyManagerImpl {
         let aad = bpan.as_bytes();
 
         let mut ciphertext = cipher
-            .encrypt(nonce, aes_gcm::aead::Payload { msg: dek.as_bytes(), aad })
+            .encrypt(
+                nonce,
+                aes_gcm::aead::Payload {
+                    msg: dek.as_bytes(),
+                    aad,
+                },
+            )
             .map_err(|e| KeyManagerError::WrappingFailed(e.to_string()))?;
 
         // Prepend nonce to ciphertext for storage (nonce doesn't need to be secret)
@@ -243,7 +247,13 @@ impl KeyManagerImpl {
         let aad = bpan.as_bytes();
 
         let dek_bytes = cipher
-            .decrypt(nonce, aes_gcm::aead::Payload { msg: ciphertext, aad })
+            .decrypt(
+                nonce,
+                aes_gcm::aead::Payload {
+                    msg: ciphertext,
+                    aad,
+                },
+            )
             .map_err(|e| KeyManagerError::WrappingFailed(e.to_string()))?;
 
         RawKey::from_vec(dek_bytes)

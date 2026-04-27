@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
+pub mod api;
 pub mod errors;
 pub mod models;
 pub mod repositories;
 pub mod services;
-pub mod api;
 
 pub mod common_v1 {
     tonic::include_proto!("bpa.common.v1");
@@ -21,12 +21,12 @@ pub mod lifecycle_v1 {
     tonic::include_proto!("bpa.lifecycle.v1");
 }
 
-use sqlx::{Pool, Postgres};
 use services::encryption::EncryptionService;
-use services::registration::RegistrationService;
 use services::key_manager::KeyManagerImpl;
+use services::registration::RegistrationService;
 use services::signing::SigningServiceImpl;
 use services::zk_proofs::ZkProverImpl;
+use sqlx::{Pool, Postgres};
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -40,11 +40,16 @@ pub struct BpaEngine {
 }
 
 impl BpaEngine {
-    pub fn new(db_pool: Pool<Postgres>, encryption: EncryptionService, _jwt_secret: String, root_key_bytes: &[u8; 32]) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(
+        db_pool: Pool<Postgres>,
+        encryption: EncryptionService,
+        _jwt_secret: String,
+        root_key_bytes: &[u8; 32],
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let key_manager = Arc::new(KeyManagerImpl::new(root_key_bytes)?);
         let signing_service = Arc::new(SigningServiceImpl::new());
         let zk_prover = Arc::new(ZkProverImpl::new());
-        
+
         Ok(Self {
             registration: RegistrationService::new(db_pool.clone(), encryption.clone()),
             encryption,
@@ -60,8 +65,7 @@ impl BpaEngine {
         // Quick smoke tests for each service
         let (_, _) = SigningServiceImpl::generate_keypair()?;
         let _ = self.zk_prover.prove_operational(85)?;
-        
+
         Ok(())
     }
 }
-

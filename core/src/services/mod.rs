@@ -18,3 +18,5 @@ pub mod signing;
 pub use signing::{PrivateKeySeed, PublicKey, SignatureWrap, SigningServiceImpl};
 pub mod zk_proofs;
 pub use zk_proofs::{ProofCommitment, ZkError, ZkProof, ZkProverImpl};
+pub mod material;
+pub use material::{MaterialComposition, MaterialCompositionPublic, MaterialCompositionRow, MaterialService};

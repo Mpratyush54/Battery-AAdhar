@@ -22,7 +22,7 @@ var authService = services.NewAuthService()
 // @Success 200 {object} models.RegisterStakeholderResponseJSON "Successful registration"
 // @Failure 400 {string} string "Invalid payload"
 // @Failure 500 {string} string "Internal Server Error"
-// @Router /api/v1/auth/register [post]
+// @Router /auth/register [post]
 func RegisterStakeholderController(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		http.Error(res, "Method not allowed", http.StatusMethodNotAllowed)
@@ -78,7 +78,7 @@ func RegisterStakeholderController(res http.ResponseWriter, req *http.Request) {
 // @Param payload body models.LoginPayload true "Login payload"
 // @Success 200 {object} models.LoginResponseJSON "Successful login"
 // @Failure 401 {string} string "Invalid credentials"
-// @Router /api/v1/auth/login [post]
+// @Router /auth/login [post]
 func LoginController(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		http.Error(res, "Method not allowed", http.StatusMethodNotAllowed)
@@ -142,7 +142,7 @@ func LoginController(res http.ResponseWriter, req *http.Request) {
 // @Produce json
 // @Success 200 {object} models.RefreshResponseJSON "Tokens refreshed"
 // @Failure 401 {string} string "Invalid or missing refresh token"
-// @Router /api/v1/auth/refresh [post]
+// @Router /auth/refresh [post]
 func RefreshController(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		http.Error(res, "Method not allowed", http.StatusMethodNotAllowed)
@@ -196,7 +196,7 @@ func RefreshController(res http.ResponseWriter, req *http.Request) {
 // @Tags auth
 // @Produce json
 // @Success 200 {string} string "Logged out"
-// @Router /api/v1/auth/logout [post]
+// @Router /auth/logout [post]
 func LogoutController(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		http.Error(res, "Method not allowed", http.StatusMethodNotAllowed)

@@ -11,8 +11,17 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// GetQRCode — GET /api/v1/batteries/{bpan}/qr
-// Returns the QR code as PNG + metadata
+// GetQRCode godoc
+// @Summary      Generate QR code for a battery
+// @Description  Generates a QR code PNG image containing the battery's BPAN payload
+// @Tags         qr
+// @Produce      image/png
+// @Param        bpan   path   string  true  "Battery PAN"
+// @Success      200  {file}    binary  "QR Code PNG image"
+// @Failure      400  {object}  map[string]string  "Invalid BPAN"
+// @Failure      500  {object}  map[string]string  "QR generation failed"
+// @Router       /batteries/{bpan}/qr [get]
+// @Security     BearerAuth
 func GetQRCode(w http.ResponseWriter, r *http.Request) {
 	bpanStr := chi.URLParam(r, "bpan")
 
@@ -41,7 +50,17 @@ func GetQRCode(w http.ResponseWriter, r *http.Request) {
 	w.Write(pngBytes)
 }
 
-// ScanQRCode — POST /api/v1/batteries/scan (upload QR payload)
+// ScanQRCode godoc
+// @Summary      Scan and decode a QR code
+// @Description  Decodes a QR code payload and returns battery information
+// @Tags         qr
+// @Accept       json
+// @Produce      json
+// @Param        body   body   object  true  "QR payload"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]string
+// @Failure      501  {object}  map[string]string  "Not implemented"
+// @Router       /batteries/scan [post]
 func ScanQRCode(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotImplemented)

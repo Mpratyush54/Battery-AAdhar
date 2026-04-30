@@ -23,6 +23,7 @@ pub mod lifecycle_v1 {
 
 use services::encryption::EncryptionService;
 use services::key_manager::KeyManagerImpl;
+use services::material::MaterialService;
 use services::registration::RegistrationService;
 use services::signing::SigningServiceImpl;
 use services::zk_proofs::ZkProverImpl;
@@ -37,6 +38,7 @@ pub struct BpaEngine {
     pub key_manager: Arc<KeyManagerImpl>,
     pub signing_service: Arc<SigningServiceImpl>,
     pub zk_prover: Arc<ZkProverImpl>,
+    pub material_service: MaterialService,
 }
 
 impl BpaEngine {
@@ -49,6 +51,7 @@ impl BpaEngine {
         let key_manager = Arc::new(KeyManagerImpl::new(root_key_bytes)?);
         let signing_service = Arc::new(SigningServiceImpl::new());
         let zk_prover = Arc::new(ZkProverImpl::new());
+        let material_service = MaterialService::new(encryption.clone());
 
         Ok(Self {
             registration: RegistrationService::new(db_pool.clone(), encryption.clone()),
@@ -57,6 +60,7 @@ impl BpaEngine {
             key_manager,
             signing_service,
             zk_prover,
+            material_service,
         })
     }
 

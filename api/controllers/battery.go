@@ -26,7 +26,7 @@ import (
 // @Failure 400 {string} string "Invalid payload"
 // @Failure 405 {string} string "Method not allowed"
 // @Failure 500 {string} string "Internal Server/Microservice Error"
-// @Router /api/v1/battery/register [post]
+// @Router /battery/register [post]
 func RegisterBatteryController(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		http.Error(res, "Method not allowed", http.StatusMethodNotAllowed)
@@ -100,7 +100,7 @@ func RegisterBatteryController(res http.ResponseWriter, req *http.Request) {
 // @Failure 404 {string} string "Battery not found"
 // @Failure 405 {string} string "Method not allowed"
 // @Failure 500 {string} string "Internal Server/Microservice Error"
-// @Router /api/v1/battery [get]
+// @Router /battery [get]
 func GetBatteryController(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		http.Error(res, "Method not allowed", http.StatusMethodNotAllowed)
@@ -141,8 +141,15 @@ func GetBatteryController(res http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(res).Encode(jsonResponse)
 }
 
-// GetBatteryByBPAN — GET /api/v1/batteries/{bpan}
-// Public endpoint — decode BPAN and return static data
+// GetBatteryByBPAN godoc
+// @Summary      Get battery by BPAN
+// @Description  Decode BPAN and return battery static data (public endpoint)
+// @Tags         battery
+// @Produce      json
+// @Param        bpan   path   string  true  "Battery PAN (21-char)"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]string  "Invalid BPAN"
+// @Router       /batteries/{bpan} [get]
 func GetBatteryByBPAN(w http.ResponseWriter, r *http.Request) {
 	bpanStr := chi.URLParam(r, "bpan")
 

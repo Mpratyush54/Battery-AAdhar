@@ -42,7 +42,7 @@ func NewRouter() http.Handler {
 	// ── API v1 ────────────────────────────────────────────────────────────
 	r.Route("/api/v1", func(r chi.Router) {
 
-		// Auth endpoints
+		// Auth endpoints (no RBAC — public)
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/register", controllers.RegisterStakeholderController)
 			r.Post("/login", controllers.LoginController)
@@ -54,14 +54,12 @@ func NewRouter() http.Handler {
 		r.Group(func(r chi.Router) {
 			r.Get("/battery", controllers.GetBatteryController)
 			r.Get("/batteries/{bpan}", controllers.GetBatteryByBPAN)
-			r.Post("/batteries/scan", handleScanQR)
 		})
 
 		// Authenticated manufacturer endpoints
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.RequireResource(models.ResourceBattery, models.ActionCreate))
 			r.Post("/battery/register", controllers.RegisterBatteryController)
-			r.Get("/batteries/{bpan}/qr", handleGetQR)
 		})
 
 		// Service provider endpoints
@@ -70,24 +68,12 @@ func NewRouter() http.Handler {
 			r.Patch("/batteries/{bpan}/status", handleUpdateStatus)
 		})
 
-		// Government / Recycler
-		r.Group(func(r chi.Router) {
-			r.Use(middleware.RequireResource(models.ResourceBatteryLifecycle, models.ActionUpdate))
-			r.Post("/batteries/{bpan}/recycling", handleVerifyRecyclable)
-		})
-
-		// Compliance / ZK verification endpoints (IsRole for verifier)
+		// Compliance / ZK verification endpoints (verifier role)
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.IsRole("verifier"))
 			r.Post("/batteries/{bpan}/verify/operational", handleVerifyOperational)
 			r.Post("/batteries/{bpan}/verify/signature", handleVerifySignature)
 		})
-
-		// Government audit routes
-		r.With(middleware.RequireResource(
-			models.ResourceAuditLog,
-			models.ActionRead,
-		)).Get("/batteries/{bpan}/audit", handleGetAuditTrail)
 
 		// Admin-only
 		r.Group(func(r chi.Router) {
@@ -95,7 +81,8 @@ func NewRouter() http.Handler {
 			r.Post("/manufacturers", handleRegisterManufacturer)
 			r.Get("/manufacturers", handleListManufacturers)
 		})
-		// Wire all new controller routes
+
+		// ── Controller-based routes (each controller handles its own RBAC) ──
 		controllers.RegisterMaterialRoutes(r)
 		controllers.RegisterHealthRoutes(r)
 		controllers.RegisterLifecycleRoutes(r)
@@ -119,19 +106,10 @@ func handleReadyz(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(`{"status":"ready"}`))
 }
 
-func handleScanQR(w http.ResponseWriter, _ *http.Request) {
-	http.Error(w, "not implemented", http.StatusNotImplemented)
-}
-func handleGetQR(w http.ResponseWriter, _ *http.Request) {
-	http.Error(w, "not implemented", http.StatusNotImplemented)
-}
 func handleUpdateStatus(w http.ResponseWriter, _ *http.Request) {
 	http.Error(w, "not implemented", http.StatusNotImplemented)
 }
 func handleVerifyOperational(w http.ResponseWriter, _ *http.Request) {
-	http.Error(w, "not implemented", http.StatusNotImplemented)
-}
-func handleVerifyRecyclable(w http.ResponseWriter, _ *http.Request) {
 	http.Error(w, "not implemented", http.StatusNotImplemented)
 }
 func handleVerifySignature(w http.ResponseWriter, _ *http.Request) {
@@ -141,8 +119,5 @@ func handleRegisterManufacturer(w http.ResponseWriter, _ *http.Request) {
 	http.Error(w, "not implemented", http.StatusNotImplemented)
 }
 func handleListManufacturers(w http.ResponseWriter, _ *http.Request) {
-	http.Error(w, "not implemented", http.StatusNotImplemented)
-}
-func handleGetAuditTrail(w http.ResponseWriter, _ *http.Request) {
 	http.Error(w, "not implemented", http.StatusNotImplemented)
 }

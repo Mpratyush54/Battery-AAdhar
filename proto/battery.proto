@@ -102,10 +102,57 @@ message UpdateBatteryStatusResponse {
   string new_status = 2;
 }
 
+// ─── BMCS (Battery Material Composition Sheet) ─────────────────────────────
+
+message MaterialComposition {
+  string bpan                   = 1;
+
+  // Public fields (visible to all roles)
+  string cathode_material       = 2;   // e.g. "NMC811"
+  string anode_material         = 3;   // e.g. "Graphite"
+  string electrolyte_type       = 4;   // e.g. "LiPF6"
+  string separator_material     = 5;   // e.g. "PE/PP"
+  double recyclable_percentage  = 6;   // 0.0–100.0
+
+  // Private fields (encrypted at rest, role-gated)
+  double lithium_content_g      = 7;
+  double cobalt_content_g       = 8;
+  double nickel_content_g       = 9;
+  double manganese_content_g    = 10;
+  double lead_content_g         = 11;
+  double cadmium_content_g      = 12;
+  string hazardous_substances   = 13;  // CSV list
+  string supply_chain_source    = 14;  // origin traceability
+}
+
+message SubmitMaterialCompositionRequest {
+  string              bpan         = 1;
+  string              submitter_id = 2;
+  MaterialComposition composition  = 3;
+}
+
+message SubmitMaterialCompositionResponse {
+  bool   success     = 1;
+  string data_hash   = 2;  // SHA-256 of the stored record
+  string event_hash  = 3;  // hash-chain entry for audit
+}
+
+message GetMaterialCompositionRequest {
+  string bpan           = 1;
+  string requester_role = 2;  // determines which fields are returned
+}
+
+message GetMaterialCompositionResponse {
+  MaterialComposition composition = 1;
+  bool   partial                  = 2;  // true if private fields were redacted
+}
+
 // ─── Service ───────────────────────────────────────────────────────────────
 
 service BatteryService {
-  rpc RegisterBattery    (RegisterBatteryRequest)     returns (RegisterBatteryResponse);
-  rpc GetBattery         (GetBatteryRequest)          returns (GetBatteryResponse);
-  rpc UpdateBatteryStatus(UpdateBatteryStatusRequest) returns (UpdateBatteryStatusResponse);
+  rpc RegisterBattery             (RegisterBatteryRequest)              returns (RegisterBatteryResponse);
+  rpc GetBattery                  (GetBatteryRequest)                   returns (GetBatteryResponse);
+  rpc UpdateBatteryStatus         (UpdateBatteryStatusRequest)          returns (UpdateBatteryStatusResponse);
+  rpc SubmitMaterialComposition   (SubmitMaterialCompositionRequest)    returns (SubmitMaterialCompositionResponse);
+  rpc GetMaterialComposition      (GetMaterialCompositionRequest)       returns (GetMaterialCompositionResponse);
 }

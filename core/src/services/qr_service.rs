@@ -46,6 +46,7 @@ impl QrService {
     /// Build a QR payload from the battery's static data.
     /// The `data_hash` is computed over the critical fields so the QR can be
     /// verified against the server-side record without connectivity.
+    #[allow(clippy::too_many_arguments)]
     #[instrument(name = "build_qr_payload", skip_all)]
     pub fn build_payload(
         bpan: &str,
@@ -96,16 +97,14 @@ impl QrService {
 
     /// Serialize the QR payload to a compact JSON string suitable for QR encoding.
     pub fn encode_payload(payload: &QrPayload) -> BpaResult<String> {
-        serde_json::to_string(payload).map_err(|e| {
-            BpaError::QrError(format!("Failed to serialize QR payload: {}", e))
-        })
+        serde_json::to_string(payload)
+            .map_err(|e| BpaError::QrError(format!("Failed to serialize QR payload: {}", e)))
     }
 
     /// Deserialize a QR payload from a JSON string.
     pub fn decode_payload(json_str: &str) -> BpaResult<QrPayload> {
-        serde_json::from_str(json_str).map_err(|e| {
-            BpaError::QrError(format!("Failed to deserialize QR payload: {}", e))
-        })
+        serde_json::from_str(json_str)
+            .map_err(|e| BpaError::QrError(format!("Failed to deserialize QR payload: {}", e)))
     }
 
     /// Verify the integrity of a QR payload by recomputing the data hash.

@@ -3,11 +3,11 @@
 //! Concrete implementation of the BatteryRepository trait from Day 2.
 //! Uses sqlx for parameterized queries to prevent SQL injection.
 
-use crate::models::{Battery, BatteryIdentifier, BatteryDescriptor};
+use crate::models::{Battery, BatteryDescriptor, BatteryIdentifier};
 use async_trait::async_trait;
+use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
-use chrono::Utc;
 
 #[derive(Debug)]
 pub enum RepositoryError {
@@ -45,10 +45,20 @@ impl BatteryRepositoryImpl {
 pub trait BatteryRepository: Send + Sync {
     async fn create_battery(&self, bpan: &str) -> Result<Battery, RepositoryError>;
     async fn get_battery_by_bpan(&self, bpan: &str) -> Result<Option<Battery>, RepositoryError>;
-    async fn list_batteries(&self, limit: i32, offset: i32) -> Result<Vec<Battery>, RepositoryError>;
+    async fn list_batteries(
+        &self,
+        limit: i32,
+        offset: i32,
+    ) -> Result<Vec<Battery>, RepositoryError>;
     async fn update_battery_status(&self, bpan: &str, soh: f32) -> Result<(), RepositoryError>;
-    async fn upsert_battery_identifier(&self, bi: &BatteryIdentifier) -> Result<(), RepositoryError>;
-    async fn get_battery_descriptor(&self, bpan: &str) -> Result<Option<BatteryDescriptor>, RepositoryError>;
+    async fn upsert_battery_identifier(
+        &self,
+        bi: &BatteryIdentifier,
+    ) -> Result<(), RepositoryError>;
+    async fn get_battery_descriptor(
+        &self,
+        bpan: &str,
+    ) -> Result<Option<BatteryDescriptor>, RepositoryError>;
     async fn get_soh(&self, bpan: &str) -> Result<Option<f32>, RepositoryError>;
     async fn update_soh(&self, bpan: &str, new_soh: f32) -> Result<(), RepositoryError>;
 }
@@ -95,7 +105,11 @@ impl BatteryRepository for BatteryRepositoryImpl {
         Ok(battery)
     }
 
-    async fn list_batteries(&self, limit: i32, offset: i32) -> Result<Vec<Battery>, RepositoryError> {
+    async fn list_batteries(
+        &self,
+        limit: i32,
+        offset: i32,
+    ) -> Result<Vec<Battery>, RepositoryError> {
         let batteries = sqlx::query_as::<_, Battery>(
             "SELECT id, bpan, created_at, updated_at FROM batteries LIMIT $1 OFFSET $2",
         )
@@ -108,20 +122,21 @@ impl BatteryRepository for BatteryRepositoryImpl {
         Ok(batteries)
     }
 
-    async fn update_battery_status(&self, bpan: &str, soh: f32) -> Result<(), RepositoryError> {
+    async fn update_battery_status(&self, bpan: &str, _soh: f32) -> Result<(), RepositoryError> {
         let now = Utc::now();
 
-        let result = sqlx::query(
-            "UPDATE batteries SET updated_at = $1 WHERE bpan = $2",
-        )
-        .bind(now)
-        .bind(bpan)
-        .execute(&self.pool)
-        .await
-        .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
+        let result = sqlx::query("UPDATE batteries SET updated_at = $1 WHERE bpan = $2")
+            .bind(now)
+            .bind(bpan)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
         if result.rows_affected() == 0 {
-            return Err(RepositoryError::NotFound(format!("BPAN {} not found", bpan)));
+            return Err(RepositoryError::NotFound(format!(
+                "BPAN {} not found",
+                bpan
+            )));
         }
 
         Ok(())
@@ -178,10 +193,11 @@ impl BatteryRepository for BatteryRepositoryImpl {
     }
 
     async fn update_soh(&self, bpan: &str, new_soh: f32) -> Result<(), RepositoryError> {
-        if new_soh < 0.0 || new_soh > 100.0 {
-            return Err(RepositoryError::ValidationError(
-                format!("SoH must be between 0 and 100, got {}", new_soh),
-            ));
+        if !(0.0..=100.0).contains(&new_soh) {
+            return Err(RepositoryError::ValidationError(format!(
+                "SoH must be between 0 and 100, got {}",
+                new_soh
+            )));
         }
 
         let id = Uuid::new_v4();

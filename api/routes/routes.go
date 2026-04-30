@@ -11,17 +11,17 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 
 	"github.com/Mpratyush54/Battery-AAdhar/api/controllers"
+	_ "github.com/Mpratyush54/Battery-AAdhar/api/docs"
 	"github.com/Mpratyush54/Battery-AAdhar/api/middleware"
 	"github.com/Mpratyush54/Battery-AAdhar/api/models"
-	_ "github.com/Mpratyush54/Battery-AAdhar/api/docs"
 )
 
 // NewRouter constructs and returns the application chi.Router.
 // All middleware is applied here in the correct order:
-//   1. chi built-ins (request ID, real IP, recoverer)
-//   2. custom logging   (structured zap/slog output)
-//   3. custom auth      (JWT parse + attach claims to context)
-//   4. custom RBAC      (role enforcement per route group)
+//  1. chi built-ins (request ID, real IP, recoverer)
+//  2. custom logging   (structured zap/slog output)
+//  3. custom auth      (JWT parse + attach claims to context)
+//  4. custom RBAC      (role enforcement per route group)
 func NewRouter() http.Handler {
 	r := chi.NewRouter()
 
@@ -29,12 +29,12 @@ func NewRouter() http.Handler {
 	r.Use(chiMiddleware.RequestID)
 	r.Use(chiMiddleware.RealIP)
 	r.Use(chiMiddleware.Recoverer)
-	r.Use(middleware.Logger)      // structured logging stub
+	r.Use(middleware.Logger)       // structured logging stub
 	r.Use(middleware.Authenticate) // JWT parse — does NOT reject; just attaches claims
 
 	// ── Health / readiness ────────────────────────────────────────────────
 	r.Get("/healthz", handleHealthz)
-	r.Get("/readyz",  handleReadyz)
+	r.Get("/readyz", handleReadyz)
 
 	// ── Swagger UI ────────────────────────────────────────────────────────
 	r.Get("/swagger/*", httpSwagger.Handler())
@@ -42,60 +42,47 @@ func NewRouter() http.Handler {
 	// ── API v1 ────────────────────────────────────────────────────────────
 	r.Route("/api/v1", func(r chi.Router) {
 
-		// Auth endpoints
+		// Auth endpoints (no RBAC — public)
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/register", controllers.RegisterStakeholderController)
-			r.Post("/login",    controllers.LoginController)
-			r.Post("/refresh",  controllers.RefreshController)
-			r.Post("/logout",   controllers.LogoutController)
+			r.Post("/login", controllers.LoginController)
+			r.Post("/refresh", controllers.RefreshController)
+			r.Post("/logout", controllers.LogoutController)
 		})
 
 		// Public endpoints — no auth required beyond claim parse
 		r.Group(func(r chi.Router) {
 			r.Get("/battery", controllers.GetBatteryController)
 			r.Get("/batteries/{bpan}", controllers.GetBatteryByBPAN)
-			r.Post("/batteries/scan",  handleScanQR)
 		})
 
 		// Authenticated manufacturer endpoints
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.RequireResource(models.ResourceBattery, models.ActionCreate))
-			r.Post("/battery/register",       controllers.RegisterBatteryController)
-			r.Get("/batteries/{bpan}/qr",     handleGetQR)
+			r.Post("/battery/register", controllers.RegisterBatteryController)
 		})
 
 		// Service provider endpoints
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.RequireResource(models.ResourceBatteryHealth, models.ActionUpdate))
-			r.Patch("/batteries/{bpan}/status",         handleUpdateStatus)
+			r.Patch("/batteries/{bpan}/status", handleUpdateStatus)
 		})
 
-		// Government / Recycler
-		r.Group(func(r chi.Router) {
-			r.Use(middleware.RequireResource(models.ResourceBatteryLifecycle, models.ActionUpdate))
-			r.Post("/batteries/{bpan}/recycling", handleVerifyRecyclable)
-		})
-
-		// Compliance / ZK verification endpoints (IsRole for verifier)
+		// Compliance / ZK verification endpoints (verifier role)
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.IsRole("verifier"))
 			r.Post("/batteries/{bpan}/verify/operational", handleVerifyOperational)
-			r.Post("/batteries/{bpan}/verify/signature",   handleVerifySignature)
+			r.Post("/batteries/{bpan}/verify/signature", handleVerifySignature)
 		})
-
-		// Government audit routes
-		r.With(middleware.RequireResource(
-			models.ResourceAuditLog,
-			models.ActionRead,
-		)).Get("/batteries/{bpan}/audit", handleGetAuditTrail)
 
 		// Admin-only
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.IsRole("admin"))
-			r.Post("/manufacturers",       handleRegisterManufacturer)
-			r.Get("/manufacturers",        handleListManufacturers)
+			r.Post("/manufacturers", handleRegisterManufacturer)
+			r.Get("/manufacturers", handleListManufacturers)
 		})
-		// Wire all new controller routes
+
+		// ── Controller-based routes (each controller handles its own RBAC) ──
 		controllers.RegisterMaterialRoutes(r)
 		controllers.RegisterHealthRoutes(r)
 		controllers.RegisterLifecycleRoutes(r)
@@ -119,13 +106,18 @@ func handleReadyz(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(`{"status":"ready"}`))
 }
 
-func handleScanQR(w http.ResponseWriter, _ *http.Request)              { http.Error(w, "not implemented", http.StatusNotImplemented) }
-func handleGetQR(w http.ResponseWriter, _ *http.Request)               { http.Error(w, "not implemented", http.StatusNotImplemented) }
-func handleGetPrivateData(w http.ResponseWriter, _ *http.Request)      { http.Error(w, "not implemented", http.StatusNotImplemented) }
-func handleUpdateStatus(w http.ResponseWriter, _ *http.Request)        { http.Error(w, "not implemented", http.StatusNotImplemented) }
-func handleVerifyOperational(w http.ResponseWriter, _ *http.Request)   { http.Error(w, "not implemented", http.StatusNotImplemented) }
-func handleVerifyRecyclable(w http.ResponseWriter, _ *http.Request)    { http.Error(w, "not implemented", http.StatusNotImplemented) }
-func handleVerifySignature(w http.ResponseWriter, _ *http.Request)     { http.Error(w, "not implemented", http.StatusNotImplemented) }
-func handleRegisterManufacturer(w http.ResponseWriter, _ *http.Request){ http.Error(w, "not implemented", http.StatusNotImplemented) }
-func handleListManufacturers(w http.ResponseWriter, _ *http.Request)   { http.Error(w, "not implemented", http.StatusNotImplemented) }
-func handleGetAuditTrail(w http.ResponseWriter, _ *http.Request)       { http.Error(w, "not implemented", http.StatusNotImplemented) }
+func handleUpdateStatus(w http.ResponseWriter, _ *http.Request) {
+	http.Error(w, "not implemented", http.StatusNotImplemented)
+}
+func handleVerifyOperational(w http.ResponseWriter, _ *http.Request) {
+	http.Error(w, "not implemented", http.StatusNotImplemented)
+}
+func handleVerifySignature(w http.ResponseWriter, _ *http.Request) {
+	http.Error(w, "not implemented", http.StatusNotImplemented)
+}
+func handleRegisterManufacturer(w http.ResponseWriter, _ *http.Request) {
+	http.Error(w, "not implemented", http.StatusNotImplemented)
+}
+func handleListManufacturers(w http.ResponseWriter, _ *http.Request) {
+	http.Error(w, "not implemented", http.StatusNotImplemented)
+}

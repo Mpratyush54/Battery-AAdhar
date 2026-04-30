@@ -46,12 +46,12 @@ func TestDecodeSpecPilot(t *testing.T) {
 func TestEncodeSpecPilot(t *testing.T) {
 	// Reverse of Decode test: encode the same components
 	encoded, err := Encode(
-		"MY", "008",           
-		"A", "6", "F", "K", "K",  
-		"K", "L", "C",               
-		"1", "D", "H", "8", "0001", 
+		"MY", "008",
+		"A", "6", "F", "K", "K",
+		"K", "L", "C",
+		"1", "D", "H", "8", "0001",
 	)
-	
+
 	if err != nil {
 		t.Fatalf("Encode failed: %v", err)
 	}

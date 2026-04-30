@@ -19,15 +19,15 @@ type BPAN struct {
 	ManufacturerCode string // 3 chars, e.g., "008"
 
 	// BDS (battery descriptor)
-	CapacityCode    string // 1 char, e.g., "A" (lookup to kWh)
-	ChemistryCode   string // 1 char, e.g., "6" (lookup to chemistry type)
-	VoltageCode     string // 1 char, e.g., "F" (lookup to volts)
-	CellOriginCode  string // 1 char, e.g., "K" (lookup to country)
+	CapacityCode     string // 1 char, e.g., "A" (lookup to kWh)
+	ChemistryCode    string // 1 char, e.g., "6" (lookup to chemistry type)
+	VoltageCode      string // 1 char, e.g., "F" (lookup to volts)
+	CellOriginCode   string // 1 char, e.g., "K" (lookup to country)
 	ExtinguisherCode string // 1 char, e.g., "K" (lookup to class)
 	// 3 more BDS chars in the spec (Table 4 lists 5 BDS parameters)
-	BDSExtra1       string // 1 char (reserved/placeholder)
-	BDSExtra2       string // 1 char (reserved/placeholder)
-	BDSExtra3       string // 1 char (reserved/placeholder)
+	BDSExtra1 string // 1 char (reserved/placeholder)
+	BDSExtra2 string // 1 char (reserved/placeholder)
+	BDSExtra3 string // 1 char (reserved/placeholder)
 
 	// BI (battery identifier)
 	ManufacturingYear  string // 1 char, e.g., "1" (2025)

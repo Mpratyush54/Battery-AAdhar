@@ -40,10 +40,10 @@ func (e *EncryptionService) Encrypt(
 	plaintext []byte,
 ) (*EncryptedData, error) {
 	req := &cryptov1.EncryptRequest{
-		Bpan:        bpan,
-		FieldName:   fieldName,
-		Plaintext:   plaintext,
-		KekVersion:  0, // Use current version
+		Bpan:       bpan,
+		FieldName:  fieldName,
+		Plaintext:  plaintext,
+		KekVersion: 0, // Use current version
 	}
 
 	resp, err := e.cryptoClient.Encrypt(ctx, req)
@@ -70,11 +70,11 @@ func (e *EncryptionService) Decrypt(
 	cipherAlgorithm string,
 ) ([]byte, error) {
 	req := &cryptov1.DecryptRequest{
-		Bpan:             bpan,
-		FieldName:        fieldName,
-		Ciphertext:       ciphertext,
-		KekVersion:       kekVersion,
-		CipherAlgorithm:  cipherAlgorithm,
+		Bpan:            bpan,
+		FieldName:       fieldName,
+		Ciphertext:      ciphertext,
+		KekVersion:      kekVersion,
+		CipherAlgorithm: cipherAlgorithm,
 	}
 
 	resp, err := e.cryptoClient.Decrypt(ctx, req)

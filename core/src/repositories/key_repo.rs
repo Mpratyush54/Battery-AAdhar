@@ -2,11 +2,11 @@
 //!
 //! Handles storage and retrieval of root keys, KEKs, and DEKs.
 
+use super::battery_repo::RepositoryError;
 use async_trait::async_trait;
+use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
-use chrono::Utc;
-use super::battery_repo::RepositoryError;
 
 pub struct KeyRepositoryImpl {
     pool: PgPool,
@@ -43,8 +43,11 @@ pub trait KeyRepository: Send + Sync {
         new_version: i32,
         rotated_by: &str,
     ) -> Result<(), RepositoryError>;
-    async fn store_root_key(&self, encrypted_key: &[u8], hardware_backed: bool)
-        -> Result<Uuid, RepositoryError>;
+    async fn store_root_key(
+        &self,
+        encrypted_key: &[u8],
+        hardware_backed: bool,
+    ) -> Result<Uuid, RepositoryError>;
     async fn get_active_root_key(&self) -> Result<Option<Vec<u8>>, RepositoryError>;
     async fn store_kek(
         &self,

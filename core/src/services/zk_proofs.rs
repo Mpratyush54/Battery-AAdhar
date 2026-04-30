@@ -44,7 +44,7 @@ impl std::error::Error for ZkError {}
 /// Metadata about a range proof (for audit purposes)
 #[derive(Debug, Clone)]
 pub struct ProofMetadata {
-    pub proof_type: String,        // e.g., "soh_operational", "recyclability"
+    pub proof_type: String, // e.g., "soh_operational", "recyclability"
     pub min: u64,
     pub max: u64,
     pub timestamp: i64,
@@ -89,7 +89,7 @@ impl ZkProverImpl {
 
         // Shift value so that 0 is at min (makes proof more efficient)
         let shifted_value = value - min;
-        let shifted_max = max - min;
+        let _shifted_max = max - min;
 
         // Generate a random blinding factor
         let mut bytes = [0u8; 32];
@@ -114,7 +114,8 @@ impl ZkProverImpl {
             shifted_value,
             &blinding,
             64,
-        ).map_err(|e| ZkError::ProvingFailed(format!("bulletproof failed: {}", e)))?;
+        )
+        .map_err(|e| ZkError::ProvingFailed(format!("bulletproof failed: {}", e)))?;
 
         Ok((
             ZkProof(proof.to_bytes().to_vec()),
@@ -138,13 +139,19 @@ impl ZkProverImpl {
         max: u64,
     ) -> Result<(), ZkError> {
         // Deserialize proof
-        let proof_bytes: [u8; 672] = proof.0.as_slice().try_into()
+        let proof_bytes: [u8; 672] = proof
+            .0
+            .as_slice()
+            .try_into()
             .map_err(|_| ZkError::VerificationFailed)?;
-        let proof = RangeProof::from_bytes(&proof_bytes)
-            .map_err(|_| ZkError::VerificationFailed)?;
+        let proof =
+            RangeProof::from_bytes(&proof_bytes).map_err(|_| ZkError::VerificationFailed)?;
 
         // Deserialize commitment
-        let commitment_bytes: [u8; 32] = commitment.0.as_slice().try_into()
+        let commitment_bytes: [u8; 32] = commitment
+            .0
+            .as_slice()
+            .try_into()
             .map_err(|_| ZkError::VerificationFailed)?;
         let commitment = curve25519_dalek_ng::ristretto::CompressedRistretto(commitment_bytes);
 
@@ -153,18 +160,17 @@ impl ZkProverImpl {
         transcript.append_u64(b"range_min", min);
         transcript.append_u64(b"range_max", max);
 
-        proof.verify_single(
-            &self.gens,
-            &self.pc_gens,
-            &mut transcript,
-            &commitment,
-            64,
-        ).map_err(|_| ZkError::VerificationFailed)
+        proof
+            .verify_single(&self.gens, &self.pc_gens, &mut transcript, &commitment, 64)
+            .map_err(|_| ZkError::VerificationFailed)
     }
 
     /// Convenience method: Prove SoH is operational (> 80%)
-    pub fn prove_operational(&self, soh: u64) -> Result<(ZkProof, ProofCommitment, Scalar), ZkError> {
-        if soh < 80 || soh > 100 {
+    pub fn prove_operational(
+        &self,
+        soh: u64,
+    ) -> Result<(ZkProof, ProofCommitment, Scalar), ZkError> {
+        if !(80..=100).contains(&soh) {
             return Err(ZkError::OutOfRange {
                 value: soh,
                 min: 80,
@@ -175,8 +181,11 @@ impl ZkProverImpl {
     }
 
     /// Convenience method: Prove SoH is second-life eligible (60–80%)
-    pub fn prove_second_life(&self, soh: u64) -> Result<(ZkProof, ProofCommitment, Scalar), ZkError> {
-        if soh < 60 || soh > 80 {
+    pub fn prove_second_life(
+        &self,
+        soh: u64,
+    ) -> Result<(ZkProof, ProofCommitment, Scalar), ZkError> {
+        if !(60..=80).contains(&soh) {
             return Err(ZkError::OutOfRange {
                 value: soh,
                 min: 60,
@@ -214,7 +223,8 @@ mod tests {
         let prover = ZkProverImpl::new();
 
         // SoH = 87 (operational)
-        let (proof, commitment, _blinding) = prover.prove_operational(87)
+        let (proof, commitment, _blinding) = prover
+            .prove_operational(87)
             .expect("prove_operational failed");
 
         // Verify should succeed
@@ -227,7 +237,8 @@ mod tests {
         let prover = ZkProverImpl::new();
 
         // SoH = 72 (second-life eligible)
-        let (proof, commitment, _blinding) = prover.prove_second_life(72)
+        let (proof, commitment, _blinding) = prover
+            .prove_second_life(72)
             .expect("prove_second_life failed");
 
         let result = prover.verify_range(&proof, &commitment, 60, 80);
@@ -276,7 +287,10 @@ mod tests {
         }
 
         let result = prover.verify_range(&proof, &commitment, 80, 100);
-        assert!(result.is_err(), "verification should fail for tampered proof");
+        assert!(
+            result.is_err(),
+            "verification should fail for tampered proof"
+        );
     }
 
     #[test]
@@ -320,11 +334,15 @@ mod tests {
 
         // Test min boundary (80)
         let (proof_min, commit_min, _) = prover.prove_range(80, 80, 100).unwrap();
-        assert!(prover.verify_range(&proof_min, &commit_min, 80, 100).is_ok());
+        assert!(prover
+            .verify_range(&proof_min, &commit_min, 80, 100)
+            .is_ok());
 
         // Test max boundary (100)
         let (proof_max, commit_max, _) = prover.prove_range(100, 80, 100).unwrap();
-        assert!(prover.verify_range(&proof_max, &commit_max, 80, 100).is_ok());
+        assert!(prover
+            .verify_range(&proof_max, &commit_max, 80, 100)
+            .is_ok());
 
         // Test just outside (79)
         let result = prover.prove_range(79, 80, 100);

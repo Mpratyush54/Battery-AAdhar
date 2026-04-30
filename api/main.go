@@ -1,6 +1,25 @@
 // main.go — Battery Aadhaar API server
 // HTTP router + gRPC client factory
 
+// @title           Battery Pack Aadhaar (BPA) API
+// @version         2.0
+// @description     Zero-Knowledge Battery Authentication Platform — REST API Gateway
+// @termsOfService  https://bpa.pratyushes.dev/terms
+
+// @contact.name   BPA Engineering Team
+// @contact.email  bpa-dev@bpa.pratyushes.dev
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:8080
+// @BasePath  /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description JWT Bearer token (access_token cookie or Authorization header)
+
 package main
 
 import (

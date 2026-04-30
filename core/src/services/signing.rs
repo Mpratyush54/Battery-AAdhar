@@ -4,11 +4,11 @@
 //! the static data is signed with the manufacturer's private key.
 //! This signature is stored and can be verified by any stakeholder later.
 
-use ed25519_dalek::{SigningKey, VerifyingKey, Signature, SignatureError};
-use zeroize::Zeroize;
+use chrono::Utc;
+use ed25519_dalek::{SignatureError, SigningKey, VerifyingKey};
 use std::fmt;
 use uuid::Uuid;
-use chrono::Utc;
+use zeroize::Zeroize;
 
 /// A 32-byte Ed25519 signing key (private key seed)
 #[derive(Clone, Zeroize)]
@@ -45,12 +45,11 @@ impl PublicKey {
     }
 
     pub fn to_hex(&self) -> String {
-        hex::encode(&self.0)
+        hex::encode(self.0)
     }
 
     pub fn from_hex(hex_str: &str) -> Result<Self, String> {
-        let bytes = hex::decode(hex_str)
-            .map_err(|e| format!("hex decode failed: {}", e))?;
+        let bytes = hex::decode(hex_str).map_err(|e| format!("hex decode failed: {}", e))?;
         if bytes.len() != 32 {
             return Err(format!("expected 32 bytes, got {}", bytes.len()));
         }
@@ -74,12 +73,11 @@ impl SignatureWrap {
     }
 
     pub fn to_hex(&self) -> String {
-        hex::encode(&self.0)
+        hex::encode(self.0)
     }
 
     pub fn from_hex(hex_str: &str) -> Result<Self, String> {
-        let bytes = hex::decode(hex_str)
-            .map_err(|e| format!("hex decode failed: {}", e))?;
+        let bytes = hex::decode(hex_str).map_err(|e| format!("hex decode failed: {}", e))?;
         if bytes.len() != 64 {
             return Err(format!("expected 64 bytes, got {}", bytes.len()));
         }
@@ -132,6 +130,12 @@ pub struct KeypairMetadata {
 pub struct SigningServiceImpl {
     // In production, this would cache the active keypairs
     // For Day 4, we'll retrieve them from DB via a repository
+}
+
+impl Default for SigningServiceImpl {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl SigningServiceImpl {

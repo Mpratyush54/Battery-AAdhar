@@ -10,8 +10,8 @@ pub mod lifecycle_proto {
 pub use lifecycle_proto::*;
 pub use lifecycle_service_server::{LifecycleService, LifecycleServiceServer};
 
-use std::sync::Arc;
 use crate::BpaEngine;
+use std::sync::Arc;
 
 pub struct LifecycleServiceImpl {
     engine: Arc<BpaEngine>,
@@ -33,7 +33,9 @@ impl LifecycleService for LifecycleServiceImpl {
         // For now, generate proof for a test value
         let test_soh = 87u64;
 
-        let (proof, commitment, _) = self.engine.zk_prover
+        let (proof, commitment, _) = self
+            .engine
+            .zk_prover
             .prove_operational(test_soh)
             .map_err(|e| Status::internal(e.to_string()))?;
 
@@ -61,7 +63,9 @@ impl LifecycleService for LifecycleServiceImpl {
         let test_recyclability = 75.0;
 
         let min = req.min_recyclability_percent as u64;
-        let (proof, commitment, _) = self.engine.zk_prover
+        let (proof, commitment, _) = self
+            .engine
+            .zk_prover
             .prove_range(test_recyclability as u64, min, 100)
             .map_err(|e| Status::internal(e.to_string()))?;
 

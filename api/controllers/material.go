@@ -100,12 +100,7 @@ func GetMaterialComposition(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-// GetCarbonFootprint — GET /api/v1/batteries/{bpan}/carbon
-func GetCarbonFootprint(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusNotImplemented)
-	w.Write([]byte(`{"error":"not_implemented"}`))
-}
+
 
 // UpdateMaterialComposition — PATCH /api/v1/batteries/{bpan}/material (admin/manufacturer)
 func UpdateMaterialComposition(w http.ResponseWriter, r *http.Request) {
@@ -122,9 +117,6 @@ func RegisterMaterialRoutes(r chi.Router) {
 
 	// GET: all authenticated roles can read (Rust layer controls field visibility)
 	r.Get("/batteries/{bpan}/material", GetMaterialComposition)
-
-	// Carbon footprint (stub)
-	r.Get("/batteries/{bpan}/carbon", GetCarbonFootprint)
 
 	// PATCH: manufacturer/admin only
 	r.With(middleware.HasAnyRole("manufacturer", "admin")).

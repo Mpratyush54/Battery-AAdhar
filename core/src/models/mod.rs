@@ -24,3 +24,6 @@ pub struct BatteryDescriptor {
 pub struct Stakeholder {
     pub id: String,
 }
+
+pub mod carbon;
+pub use carbon::{CarbonFootprint, CarbonFootprintRequest, CarbonFootprintPublic, CarbonComparison};

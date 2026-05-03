@@ -84,6 +84,7 @@ func NewRouter() http.Handler {
 
 		// ── Controller-based routes (each controller handles its own RBAC) ──
 		controllers.RegisterMaterialRoutes(r)
+		controllers.RegisterCarbonRoutes(r)
 		controllers.RegisterHealthRoutes(r)
 		controllers.RegisterLifecycleRoutes(r)
 		controllers.RegisterComplianceRoutes(r)

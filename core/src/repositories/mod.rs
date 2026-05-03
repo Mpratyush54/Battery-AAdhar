@@ -16,3 +16,6 @@ pub use key_repo::{KeyRepository, KeyRepositoryImpl};
 pub use lifecycle_repo::{LifecycleRepositoryImpl, OwnershipRecord, RecyclingRecord, ReuseRecord};
 pub use material_repo::MaterialRepository;
 pub use stakeholder_repo::StakeholderRepository;
+
+pub mod carbon_repo;
+pub use carbon_repo::CarbonRepositoryImpl;

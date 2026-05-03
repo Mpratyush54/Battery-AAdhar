@@ -20,3 +20,6 @@ pub mod zk_proofs;
 pub use zk_proofs::{ProofCommitment, ZkError, ZkProof, ZkProverImpl};
 pub mod material;
 pub use material::{MaterialComposition, MaterialCompositionPublic, MaterialCompositionRow, MaterialService};
+
+pub mod carbon;
+pub use carbon::{CarbonService, CarbonServiceImpl, CarbonError};

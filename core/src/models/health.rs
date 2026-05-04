@@ -4,6 +4,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use uuid::Uuid;
 
 /// Health status thresholds (SoH %)
@@ -20,20 +21,23 @@ impl HealthStatus {
     pub fn from_soh(soh: f32) -> Self {
         match soh {
             s if s > 80.0 => HealthStatus::Operational,
-            s if s >= 60.0 && s <= 80.0 => HealthStatus::SecondLife,
-            s if s >= 30.0 && s < 60.0 => HealthStatus::EolProcess,
+            s if (60.0..=80.0).contains(&s) => HealthStatus::SecondLife,
+            s if (30.0..60.0).contains(&s) => HealthStatus::EolProcess,
             s if s < 30.0 => HealthStatus::Waste,
             _ => HealthStatus::Unknown,
         }
     }
 
-    pub fn to_string(&self) -> String {
+}
+
+impl fmt::Display for HealthStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            HealthStatus::Operational => "OPERATIONAL".to_string(),
-            HealthStatus::SecondLife => "SECOND_LIFE".to_string(),
-            HealthStatus::EolProcess => "EOL_PROCESS".to_string(),
-            HealthStatus::Waste => "WASTE".to_string(),
-            HealthStatus::Unknown => "UNKNOWN".to_string(),
+            HealthStatus::Operational => write!(f, "OPERATIONAL"),
+            HealthStatus::SecondLife => write!(f, "SECOND_LIFE"),
+            HealthStatus::EolProcess => write!(f, "EOL_PROCESS"),
+            HealthStatus::Waste => write!(f, "WASTE"),
+            HealthStatus::Unknown => write!(f, "UNKNOWN"),
         }
     }
 }

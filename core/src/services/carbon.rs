@@ -57,11 +57,17 @@ pub trait CarbonService: Send + Sync {
 
 #[derive(Debug)]
 pub enum CarbonFootprintOrPublic {
-    Full(CarbonFootprint),
+    Full(Box<CarbonFootprint>),
     Public(CarbonFootprintPublic),
 }
 
 pub struct CarbonServiceImpl;
+
+impl Default for CarbonServiceImpl {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl CarbonServiceImpl {
     pub fn new() -> Self {
@@ -188,7 +194,7 @@ impl CarbonService for CarbonServiceImpl {
         };
 
         if self.can_see_full(requester_role) {
-            Ok(CarbonFootprintOrPublic::Full(cf))
+            Ok(CarbonFootprintOrPublic::Full(Box::new(cf)))
         } else {
             Ok(CarbonFootprintOrPublic::Public((&cf).into()))
         }

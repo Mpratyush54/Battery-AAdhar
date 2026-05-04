@@ -10,7 +10,7 @@ fn test_health_update_and_zk_proof_generation() {
     println!("Testing health update flow...");
 
     let zk_prover = Arc::new(ZkProverImpl::new());
-    let health_service = HealthServiceImpl::new(zk_prover.clone());
+    let _health_service = HealthServiceImpl::new(zk_prover.clone());
 
     // Simulate health update
     let req = HealthUpdateRequest {

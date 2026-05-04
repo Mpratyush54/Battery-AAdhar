@@ -27,7 +27,6 @@ impl HealthStatus {
             _ => HealthStatus::Unknown,
         }
     }
-
 }
 
 impl fmt::Display for HealthStatus {

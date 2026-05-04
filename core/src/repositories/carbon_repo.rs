@@ -2,11 +2,11 @@
 //!
 //! Stores BCF data + verification status + audit trail.
 
+use super::battery_repo::RepositoryError;
+use crate::models::CarbonFootprint;
+use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
-use chrono::Utc;
-use crate::models::CarbonFootprint;
-use super::battery_repo::RepositoryError;
 
 pub struct CarbonRepositoryImpl {
     pool: PgPool,
@@ -48,7 +48,8 @@ impl CarbonRepositoryImpl {
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
         // Log to submission log
-        self.log_carbon_submission(bpan, &cf.submitted_by, 1, &cf.carbon_hash).await?;
+        self.log_carbon_submission(bpan, &cf.submitted_by, 1, &cf.carbon_hash)
+            .await?;
 
         Ok(id)
     }
@@ -84,7 +85,16 @@ impl CarbonRepositoryImpl {
     pub async fn get_carbon_footprint(
         &self,
         bpan: &str,
-    ) -> Result<Option<(f32, String, bool, Option<String>, Option<chrono::DateTime<Utc>>)>, RepositoryError> {
+    ) -> Result<
+        Option<(
+            f32,
+            String,
+            bool,
+            Option<String>,
+            Option<chrono::DateTime<Utc>>,
+        )>,
+        RepositoryError,
+    > {
         use sqlx::Row;
         let row = sqlx::query(
             r#"
@@ -121,7 +131,10 @@ impl CarbonRepositoryImpl {
         .fetch_optional(&self.pool)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?
-        .ok_or(RepositoryError::NotFound(format!("BPAN {} not found", bpan)))?;
+        .ok_or(RepositoryError::NotFound(format!(
+            "BPAN {} not found",
+            bpan
+        )))?;
 
         Ok(stored_hash == expected_hash)
     }
@@ -182,10 +195,10 @@ impl CarbonRepositoryImpl {
                 let id: uuid::Uuid = r.get("id");
                 let version: i32 = r.get("version");
                 (
-                    id.to_string(), 
-                    r.get("submitted_by"), 
-                    version, 
-                    r.get("encrypted_hash")
+                    id.to_string(),
+                    r.get("submitted_by"),
+                    version,
+                    r.get("encrypted_hash"),
                 )
             })
             .collect())

@@ -121,9 +121,7 @@ impl BatteryService for BatteryServiceImpl {
             .get_by_bpan(&req.bpan)
             .await
             .map_err(|e| Status::internal(format!("db query failed: {}", e)))?
-            .ok_or_else(|| {
-                Status::not_found(format!("no BMCS found for BPAN {}", req.bpan))
-            })?;
+            .ok_or_else(|| Status::not_found(format!("no BMCS found for BPAN {}", req.bpan)))?;
 
         let can_see_private = MaterialService::can_see_private(&req.requester_role);
 

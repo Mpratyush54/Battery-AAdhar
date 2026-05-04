@@ -3,12 +3,12 @@
 //! Like audit log, but for per-battery runtime data.
 //! Each health update creates a hash-chained entry.
 
-use sqlx::PgPool;
-use uuid::Uuid;
-use chrono::Utc;
-use sqlx::Row;
-use sha2::{Sha256, Digest};
 use super::battery_repo::RepositoryError;
+use chrono::Utc;
+use sha2::{Digest, Sha256};
+use sqlx::PgPool;
+use sqlx::Row;
+use uuid::Uuid;
 
 pub struct DynamicDataRepositoryImpl {
     pool: PgPool,
@@ -70,10 +70,7 @@ impl DynamicDataRepositoryImpl {
         Ok(id)
     }
 
-    pub async fn verify_hash_chain(
-        &self,
-        bpan: &str,
-    ) -> Result<bool, RepositoryError> {
+    pub async fn verify_hash_chain(&self, bpan: &str) -> Result<bool, RepositoryError> {
         let entries = sqlx::query(
             "SELECT entry_hash, entry_hash_prev FROM dynamic_data_log WHERE bpan = $1 ORDER BY created_at ASC",
         )

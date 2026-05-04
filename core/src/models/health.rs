@@ -2,18 +2,18 @@
 //!
 //! Represents Table 6 (BDD — Battery Dynamic Data) from spec.
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 /// Health status thresholds (SoH %)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HealthStatus {
-    Operational,   // SoH > 80%
-    SecondLife,    // 60% <= SoH <= 80%
-    EolProcess,    // 30% <= SoH < 60%
-    Waste,         // SoH < 30%
-    Unknown,       // Not yet classified
+    Operational, // SoH > 80%
+    SecondLife,  // 60% <= SoH <= 80%
+    EolProcess,  // 30% <= SoH < 60%
+    Waste,       // SoH < 30%
+    Unknown,     // Not yet classified
 }
 
 impl HealthStatus {
@@ -54,18 +54,18 @@ pub struct HealthRecord {
     pub degradation_class: String, // "fast", "normal", "slow"
 
     // === Temperature ===
-    pub min_temperature_celsius: f32, // Minimum experienced
-    pub max_temperature_celsius: f32, // Maximum experienced
+    pub min_temperature_celsius: f32,     // Minimum experienced
+    pub max_temperature_celsius: f32,     // Maximum experienced
     pub average_temperature_celsius: f32, // Average during operation
 
     // === Electrical ===
-    pub cell_voltage_min_mv: f32, // Minimum cell voltage observed
-    pub cell_voltage_max_mv: f32, // Maximum cell voltage observed
+    pub cell_voltage_min_mv: f32,      // Minimum cell voltage observed
+    pub cell_voltage_max_mv: f32,      // Maximum cell voltage observed
     pub internal_resistance_mohm: f32, // Impedance increase (indicator of degradation)
 
     // === Flags ===
     pub error_flags: String, // Comma-separated: "OVER_TEMP", "OVER_CURRENT", "SHORT_CIRCUIT", etc.
-    pub is_healthy: bool, // No critical errors
+    pub is_healthy: bool,    // No critical errors
 
     // === Metadata ===
     pub reported_by: String, // BMS ID or manufacturer
@@ -214,6 +214,9 @@ mod tests {
         let recovered = HealthRecord::from_bytes(&bytes).expect("deserialize failed");
 
         assert_eq!(record.bpan, recovered.bpan);
-        assert_eq!(record.state_of_health_percent, recovered.state_of_health_percent);
+        assert_eq!(
+            record.state_of_health_percent,
+            recovered.state_of_health_percent
+        );
     }
 }

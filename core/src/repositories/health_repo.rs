@@ -1,10 +1,10 @@
 //! health_repo.rs — Health record persistence
 
-use sqlx::PgPool;
-use uuid::Uuid;
-use chrono::Utc;
-use crate::models::HealthRecord;
 use super::battery_repo::RepositoryError;
+use crate::models::HealthRecord;
+use chrono::Utc;
+use sqlx::{PgPool, Row};
+use uuid::Uuid;
 
 pub struct HealthRepositoryImpl {
     pool: PgPool,
@@ -59,14 +59,68 @@ impl HealthRepositoryImpl {
         &self,
         bpan: &str,
     ) -> Result<Option<HealthRecord>, RepositoryError> {
-        // TODO: Fetch and deserialize
-        Ok(None)
+        let row = sqlx::query(
+            r#"
+            SELECT * FROM battery_health 
+            WHERE bpan = $1 
+            ORDER BY reported_at DESC LIMIT 1
+            "#,
+        )
+        .bind(bpan)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
+
+        match row {
+            Some(r) => {
+                let status_str: String = r.try_get("health_status").unwrap_or_default();
+                let health_status = match status_str.as_str() {
+                    "OPERATIONAL" => crate::models::HealthStatus::Operational,
+                    "SECOND_LIFE" => crate::models::HealthStatus::SecondLife,
+                    "EOL_PROCESS" => crate::models::HealthStatus::EolProcess,
+                    "WASTE" => crate::models::HealthStatus::Waste,
+                    _ => crate::models::HealthStatus::Unknown,
+                };
+
+                let id_str: String = r.try_get("id").unwrap_or_default();
+                let id = Uuid::parse_str(&id_str).unwrap_or_else(|_| Uuid::new_v4());
+                let bpan_str: String = r.try_get("bpan").unwrap_or_default();
+                let soh: f32 = r.try_get("state_of_health_percent").unwrap_or(0.0);
+                let cycle_count: i32 = r.try_get("cycle_count").unwrap_or(0);
+
+                Ok(Some(HealthRecord {
+                    id,
+                    bpan: bpan_str,
+                    state_of_health_percent: soh,
+                    health_status,
+                    cycle_count: cycle_count as u32,
+                    degradation_rate_percent_per_cycle: 0.1, // Default
+                    degradation_class: "normal".to_string(), // Default
+                    min_temperature_celsius: r.try_get("min_temperature_celsius").unwrap_or(0.0),
+                    max_temperature_celsius: r.try_get("max_temperature_celsius").unwrap_or(0.0),
+                    average_temperature_celsius: 0.0, // Default
+                    cell_voltage_min_mv: 0.0,         // Default
+                    cell_voltage_max_mv: 0.0,         // Default
+                    internal_resistance_mohm: r.try_get("internal_resistance_mohm").unwrap_or(0.0),
+                    error_flags: r.try_get("error_flags").unwrap_or_default(),
+                    is_healthy: r.try_get("is_healthy").unwrap_or(true),
+                    reported_by: r.try_get("reported_by").unwrap_or_default(),
+                    reported_at: r.try_get("reported_at").unwrap_or_else(|_| Utc::now()),
+                    record_number: r.try_get::<i32, _>("record_number").unwrap_or(1) as u32,
+                    zk_proof_soh_gt_80: r.try_get("zk_proof_operational").unwrap_or_default(),
+                    zk_proof_soh_gte_60: r.try_get("zk_proof_second_life").unwrap_or_default(),
+                    zk_proof_soh_gte_30: r.try_get("zk_proof_recyclable").unwrap_or_default(),
+                    proofs_generated_at: r.try_get("proofs_generated_at").unwrap_or_default(),
+                }))
+            }
+            None => Ok(None),
+        }
     }
 
     pub async fn get_health_history(
         &self,
-        bpan: &str,
-        limit: i32,
+        _bpan: &str,
+        _limit: i32,
     ) -> Result<Vec<HealthRecord>, RepositoryError> {
         // TODO: Fetch ordered by reported_at DESC
         Ok(vec![])
@@ -117,10 +171,7 @@ impl HealthRepositoryImpl {
         Ok(avg)
     }
 
-    pub async fn check_rate_limit(
-        &self,
-        bpan: &str,
-    ) -> Result<bool, RepositoryError> {
+    pub async fn check_rate_limit(&self, bpan: &str) -> Result<bool, RepositoryError> {
         // Check if there was a health update in the last hour
         let recent_count = sqlx::query_scalar::<_, i64>(
             r#"

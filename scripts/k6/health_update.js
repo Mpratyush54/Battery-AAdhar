@@ -28,7 +28,7 @@ export const options = {
 };
 
 const BASE_URL = 'http://localhost:8080';
-const MANUFACTURER_TOKEN = 'Bearer test-mfr-token';
+const MANUFACTURER_TOKEN = 'Bearer eyJhbGciOiJub25lIn0.eyJyb2xlIjoibWFudWZhY3R1cmVyIn0.';
 
 // Generate test battery BPAN
 function randomBPAN() {

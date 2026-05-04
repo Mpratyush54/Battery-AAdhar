@@ -6,10 +6,10 @@
 //! 3. Store proofs in proof table
 //! 4. Add to dynamic data log with hash chain
 
-use crate::models::{HealthRecord, HealthStatus, HealthUpdateRequest};
+use crate::models::{HealthRecord, HealthUpdateRequest};
 use crate::services::ZkProverImpl;
-use std::sync::Arc;
 use async_trait::async_trait;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub enum HealthError {
@@ -45,10 +45,7 @@ pub trait HealthService: Send + Sync {
     ) -> Result<String, HealthError>; // Returns record ID
 
     /// Get current health status
-    async fn get_current_health(
-        &self,
-        bpan: &str,
-    ) -> Result<HealthRecord, HealthError>;
+    async fn get_current_health(&self, bpan: &str) -> Result<HealthRecord, HealthError>;
 
     /// Get health history (time-series)
     async fn get_health_history(
@@ -58,16 +55,10 @@ pub trait HealthService: Send + Sync {
     ) -> Result<Vec<HealthRecord>, HealthError>;
 
     /// Get average SoH by manufacturer
-    async fn get_avg_soh_by_manufacturer(
-        &self,
-        manufacturer_id: &str,
-    ) -> Result<f32, HealthError>;
+    async fn get_avg_soh_by_manufacturer(&self, manufacturer_id: &str) -> Result<f32, HealthError>;
 
     /// Get average SoH by chemistry type
-    async fn get_avg_soh_by_chemistry(
-        &self,
-        chemistry_type: &str,
-    ) -> Result<f32, HealthError>;
+    async fn get_avg_soh_by_chemistry(&self, chemistry_type: &str) -> Result<f32, HealthError>;
 }
 
 pub struct HealthServiceImpl {
@@ -91,25 +82,31 @@ impl HealthServiceImpl {
     ) -> Result<(Option<Vec<u8>>, Option<Vec<u8>>, Option<Vec<u8>>), HealthError> {
         // Proof 1: SoH > 80% (Operational)
         let proof_gt_80 = if soh > 80.0 {
-            let (proof, _, _) = self.zk_prover.prove_operational(soh as u64)
+            let (proof, _, _) = self
+                .zk_prover
+                .prove_operational(soh as u64)
                 .map_err(|e| HealthError::ZkProofFailed(e.to_string()))?;
             Some(proof.0)
         } else {
             None
         };
 
-        // Proof 2: SoH >= 60% (Second Life)
+        // Proof 2: SoH >= 60% (Second Life OR Operational) — prove SoH in [60, 100]
         let proof_gte_60 = if soh >= 60.0 {
-            let (proof, _, _) = self.zk_prover.prove_second_life(soh as u64)
+            let (proof, _, _) = self
+                .zk_prover
+                .prove_range(soh as u64, 60, 100)
                 .map_err(|e| HealthError::ZkProofFailed(e.to_string()))?;
             Some(proof.0)
         } else {
             None
         };
 
-        // Proof 3: SoH >= 30% (EOL Process)
+        // Proof 3: SoH >= 30% (EOL Process) — prove SoH in [30, 100]
         let proof_gte_30 = if soh >= 30.0 {
-            let (proof, _, _) = self.zk_prover.prove_range(soh as u64, 30, 100)
+            let (proof, _, _) = self
+                .zk_prover
+                .prove_range(soh as u64, 30, 100)
                 .map_err(|e| HealthError::ZkProofFailed(e.to_string()))?;
             Some(proof.0)
         } else {
@@ -177,7 +174,7 @@ impl HealthService for HealthServiceImpl {
         }
 
         // Generate ZK proofs automatically
-        let (proof_gt_80, proof_gte_60, proof_gte_30) = 
+        let (proof_gt_80, proof_gte_60, proof_gte_30) =
             self.generate_zk_proofs(req.state_of_health_percent).await?;
 
         record.zk_proof_soh_gt_80 = proof_gt_80;
@@ -200,10 +197,7 @@ impl HealthService for HealthServiceImpl {
         Ok(record_id)
     }
 
-    async fn get_current_health(
-        &self,
-        bpan: &str,
-    ) -> Result<HealthRecord, HealthError> {
+    async fn get_current_health(&self, bpan: &str) -> Result<HealthRecord, HealthError> {
         // TODO Day 7: Fetch latest from DB
         // For now, return mock data
 
@@ -219,7 +213,7 @@ impl HealthService for HealthServiceImpl {
     async fn get_health_history(
         &self,
         bpan: &str,
-        limit: i32,
+        _limit: i32,
     ) -> Result<Vec<HealthRecord>, HealthError> {
         // TODO Day 7: Fetch from DB ordered by date DESC
 
@@ -243,16 +237,13 @@ impl HealthService for HealthServiceImpl {
 
     async fn get_avg_soh_by_manufacturer(
         &self,
-        manufacturer_id: &str,
+        _manufacturer_id: &str,
     ) -> Result<f32, HealthError> {
         // TODO Day 7: Query aggregated SoH by manufacturer
         Ok(80.5)
     }
 
-    async fn get_avg_soh_by_chemistry(
-        &self,
-        chemistry_type: &str,
-    ) -> Result<f32, HealthError> {
+    async fn get_avg_soh_by_chemistry(&self, _chemistry_type: &str) -> Result<f32, HealthError> {
         // TODO Day 7: Query aggregated SoH by chemistry
         Ok(81.2)
     }

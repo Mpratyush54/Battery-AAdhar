@@ -2,8 +2,8 @@
 
 #[test]
 fn test_health_update_and_zk_proof_generation() {
-    use battery_aadhaar::services::{HealthServiceImpl, ZkProverImpl};
-    use battery_aadhaar::models::HealthUpdateRequest;
+    use bpa_engine::models::HealthUpdateRequest;
+    use bpa_engine::services::{HealthServiceImpl, ZkProverImpl};
     use std::sync::Arc;
 
     // Sync test (would be async in production)
@@ -35,10 +35,7 @@ fn test_health_update_and_zk_proof_generation() {
     println!("✓ Test 2: SoH > 80% → ZK proof for OPERATIONAL will be generated");
 
     // Verify secondary thresholds
-    let thresholds = vec![
-        (60.0, "SECOND_LIFE"),
-        (30.0, "EOL_PROCESS"),
-    ];
+    let thresholds = vec![(60.0, "SECOND_LIFE"), (30.0, "EOL_PROCESS")];
 
     for (threshold, status) in thresholds {
         assert!(req.state_of_health_percent >= threshold);

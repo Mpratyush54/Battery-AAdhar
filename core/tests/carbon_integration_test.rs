@@ -40,7 +40,10 @@ fn test_bcf_full_flow_and_tamper_detection() {
     // Test 1: Total computation
     let expected_total = 45.0 + 35.0 + 12.0 + 80.0 + (-15.0_f32);
     assert_eq!(cf.total_emissions_kg_co2e, expected_total);
-    println!("✓ Test 1: Total emissions = {} kg CO₂e", cf.total_emissions_kg_co2e);
+    println!(
+        "✓ Test 1: Total emissions = {} kg CO₂e",
+        cf.total_emissions_kg_co2e
+    );
 
     // Test 2: Hash integrity (unmodified)
     assert!(cf.verify_hash_integrity());
@@ -60,33 +63,42 @@ fn test_bcf_full_flow_and_tamper_detection() {
     // Test 4: Multiple tamper scenarios
     let tamper_tests = vec![
         ("raw_material", 50.0_f32, cf.raw_material_emissions_kg_co2e),
-        ("transport",    20.0_f32, cf.transport_emissions_kg_co2e),
-        ("usage",        90.0_f32, cf.usage_emissions_kg_co2e),
+        ("transport", 20.0_f32, cf.transport_emissions_kg_co2e),
+        ("usage", 90.0_f32, cf.usage_emissions_kg_co2e),
     ];
 
     for (field, tampered_val, original_val) in tamper_tests {
         let mut cf_test = cf.clone();
         match field {
             "raw_material" => cf_test.raw_material_emissions_kg_co2e = tampered_val,
-            "transport"    => cf_test.transport_emissions_kg_co2e    = tampered_val,
-            "usage"        => cf_test.usage_emissions_kg_co2e        = tampered_val,
+            "transport" => cf_test.transport_emissions_kg_co2e = tampered_val,
+            "usage" => cf_test.usage_emissions_kg_co2e = tampered_val,
             _ => (),
         }
-        assert!(!cf_test.verify_hash_integrity(), "{} tampering not detected", field);
-        println!("✓ Test 4: {} tampering detected ({} → {})", field, original_val, tampered_val);
+        assert!(
+            !cf_test.verify_hash_integrity(),
+            "{} tampering not detected",
+            field
+        );
+        println!(
+            "✓ Test 4: {} tampering detected ({} → {})",
+            field, original_val, tampered_val
+        );
     }
 
     // Test 5: Verified flag (simulation)
     let mut cf_verified = cf.clone();
-    cf_verified.verified              = true;
-    cf_verified.verified_by           = Some("TUV-INDIA".to_string());
-    cf_verified.verified_at           = Some(chrono::Utc::now());
+    cf_verified.verified = true;
+    cf_verified.verified_by = Some("TUV-INDIA".to_string());
+    cf_verified.verified_at = Some(chrono::Utc::now());
     cf_verified.verification_standard = Some("ISO 14040".to_string());
 
     assert!(cf_verified.verified);
     assert_eq!(cf_verified.verified_by, Some("TUV-INDIA".to_string()));
-    println!("✓ Test 5: Verification status: verified={}, by={:?}",
-        cf_verified.verified, cf_verified.verified_by);
+    println!(
+        "✓ Test 5: Verification status: verified={}, by={:?}",
+        cf_verified.verified, cf_verified.verified_by
+    );
 
     println!("\n✅ All BCF integration tests passed!");
     println!("BPAN:              {}", cf.bpan);

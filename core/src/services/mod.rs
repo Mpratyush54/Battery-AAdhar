@@ -19,9 +19,10 @@ pub use signing::{PrivateKeySeed, PublicKey, SignatureWrap, SigningServiceImpl};
 pub mod zk_proofs;
 pub use zk_proofs::{ProofCommitment, ZkError, ZkProof, ZkProverImpl};
 pub mod material;
-pub use material::{MaterialComposition, MaterialCompositionPublic, MaterialCompositionRow, MaterialService};
-
+pub use material::{
+    MaterialComposition, MaterialCompositionPublic, MaterialCompositionRow, MaterialService,
+};
 pub mod carbon;
-pub use carbon::{CarbonService, CarbonServiceImpl, CarbonError};
+pub use carbon::{CarbonError, CarbonService, CarbonServiceImpl};
 pub mod health;
-pub use health::{HealthService, HealthServiceImpl, HealthError};
+pub use health::{HealthError, HealthService, HealthServiceImpl};

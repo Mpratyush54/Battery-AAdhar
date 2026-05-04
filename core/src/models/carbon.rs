@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 use chrono::{DateTime, Utc};
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 
 /// Raw carbon footprint data (5 stages)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -16,36 +16,52 @@ pub struct CarbonFootprint {
     // === Stage 1: Raw Material Extraction ===
     pub raw_material_emissions_kg_co2e: f32, // kg CO₂e to extract and process raw materials
     pub raw_material_source_country: String, // Origin of lithium, cobalt, nickel, etc.
-    pub mining_method: String, // "Hard Rock Mining", "Brine Evaporation", etc.
+    pub mining_method: String,
+    // "Hard Rock Mining", "Brine Evaporation", etc.
 
     // === Stage 2: Manufacturing ===
-    pub manufacturing_emissions_kg_co2e: f32, // kg CO₂e for cell + pack production
-    pub manufacturing_location: String, // Factory location (affects grid emissions)
-    pub factory_energy_source: String, // "Coal", "NG", "Renewable", "Mixed"
-    pub cell_production_method: String, // "Wet Coating", "Dry Coating", etc.
+    pub manufacturing_emissions_kg_co2e: f32,
+    // kg CO₂e for cell + pack production
+    pub manufacturing_location: String,
+    // Factory location (affects grid emissions)
+    pub factory_energy_source: String,
+    // "Coal", "NG", "Renewable", "Mixed"
+    pub cell_production_method: String,
+    // "Wet Coating", "Dry Coating", etc.
 
     // === Stage 3: Transport ===
-    pub transport_emissions_kg_co2e: f32, // kg CO₂e for logistics to market
-    pub transport_distance_km: f32, // Distance traveled (port → customer)
-    pub transport_mode: String, // "Sea", "Air", "Rail", "Truck"
-    pub transport_packaging: String, // Packaging type (affects return trip emissions)
+    pub transport_emissions_kg_co2e: f32,
+    // kg CO₂e for logistics to market
+    pub transport_distance_km: f32,
+    // Distance traveled (port → customer)
+    pub transport_mode: String,
+    // "Sea", "Air", "Rail", "Truck"
+    pub transport_packaging: String,
+    // Packaging type (affects return trip emissions)
 
     // === Stage 4: Usage Phase ===
-    pub usage_emissions_kg_co2e: f32, // kg CO₂e per kWh over battery lifetime
-    pub usage_years: i32, // Assumed useful life (typically 8–10 years)
+    pub usage_emissions_kg_co2e: f32,
+    // kg CO₂e per kWh over battery lifetime
+    pub usage_years: i32,
+    // Assumed useful life (typically 8–10 years)
     pub usage_grid_emissions_factor: f32, // g CO₂e per kWh (grid mix)
-    pub usage_annual_km: i32, // Assumed annual vehicle km (EV context)
+    pub usage_annual_km: i32,
+    // Assumed annual vehicle km (EV context)
 
     // === Stage 5: Recycling/EOL ===
-    pub recycling_emissions_kg_co2e: f32, // kg CO₂e for recycling + material recovery
-    pub recycling_recovery_rate: f32, // % of materials recovered (0–100)
-    pub recycling_avoided_mining: f32, // Negative emissions (avoided virgin mining)
-    pub recycling_method: String, // "Mechanical", "Hydrometallurgical", "Pyrometallurgical"
+    pub recycling_emissions_kg_co2e: f32,
+    // kg CO₂e for recycling + material recovery
+    pub recycling_recovery_rate: f32,
+    // % of materials recovered (0–100)
+    pub recycling_avoided_mining: f32,
+    // Negative emissions (avoided virgin mining)
+    pub recycling_method: String,
+    // "Mechanical", "Hydrometallurgical", "Pyrometallurgical"
 
     // === Totals ===
     pub total_emissions_kg_co2e: f32, // Sum of all 5 stages (computed)
-    pub emissions_per_kwh: f32, // Normalized to capacity
-    pub carbon_hash: String, // SHA256(stage1||stage2||stage3||stage4||stage5||timestamp)
+    pub emissions_per_kwh: f32,       // Normalized to capacity
+    pub carbon_hash: String,          // SHA256(stage1||stage2||stage3||stage4||stage5||timestamp)
 
     // === Metadata ===
     pub submitted_by: String, // Manufacturer ID
@@ -59,11 +75,7 @@ pub struct CarbonFootprint {
 
 impl CarbonFootprint {
     /// Create from request
-    pub fn from_request(
-        bpan: String,
-        data: CarbonFootprintRequest,
-        submitted_by: String,
-    ) -> Self {
+    pub fn from_request(bpan: String, data: CarbonFootprintRequest, submitted_by: String) -> Self {
         // Compute total emissions (simple sum, in production may use weighted model)
         let total_emissions_kg_co2e = data.raw_material_emissions_kg_co2e
             + data.manufacturing_emissions_kg_co2e
@@ -130,7 +142,7 @@ impl CarbonFootprint {
         timestamp: &DateTime<Utc>,
     ) -> String {
         let mut hasher = Sha256::new();
-        
+
         // Hash all stages as bytes + timestamp
         hasher.update(stage1.to_le_bytes());
         hasher.update(stage2.to_le_bytes());
@@ -323,7 +335,10 @@ mod tests {
         let recovered = CarbonFootprint::from_bytes(&bytes).expect("deserialize failed");
 
         assert_eq!(cf.bpan, recovered.bpan);
-        assert_eq!(cf.total_emissions_kg_co2e, recovered.total_emissions_kg_co2e);
+        assert_eq!(
+            cf.total_emissions_kg_co2e,
+            recovered.total_emissions_kg_co2e
+        );
         assert_eq!(cf.carbon_hash, recovered.carbon_hash);
     }
 
@@ -348,7 +363,8 @@ mod tests {
             bpan_a: cf_a.bpan.clone(),
             bpan_b: cf_b.bpan.clone(),
             stage1_delta: cf_a.raw_material_emissions_kg_co2e - cf_b.raw_material_emissions_kg_co2e,
-            stage2_delta: cf_a.manufacturing_emissions_kg_co2e - cf_b.manufacturing_emissions_kg_co2e,
+            stage2_delta: cf_a.manufacturing_emissions_kg_co2e
+                - cf_b.manufacturing_emissions_kg_co2e,
             stage3_delta: cf_a.transport_emissions_kg_co2e - cf_b.transport_emissions_kg_co2e,
             stage4_delta: cf_a.usage_emissions_kg_co2e - cf_b.usage_emissions_kg_co2e,
             stage5_delta: cf_a.recycling_emissions_kg_co2e - cf_b.recycling_emissions_kg_co2e,

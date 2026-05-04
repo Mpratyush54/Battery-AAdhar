@@ -2,7 +2,7 @@
 //!
 //! Handles submission, verification, and integrity checks.
 
-use crate::models::{CarbonFootprint, CarbonFootprintRequest, CarbonFootprintPublic};
+use crate::models::{CarbonFootprint, CarbonFootprintPublic, CarbonFootprintRequest};
 
 use async_trait::async_trait;
 
@@ -52,10 +52,7 @@ pub trait CarbonService: Send + Sync {
         requester_role: &str,
     ) -> Result<CarbonFootprintOrPublic, CarbonError>;
 
-    async fn check_tamper(
-        &self,
-        bpan: &str,
-    ) -> Result<bool, CarbonError>;
+    async fn check_tamper(&self, bpan: &str) -> Result<bool, CarbonError>;
 }
 
 #[derive(Debug)]
@@ -80,7 +77,10 @@ impl CarbonServiceImpl {
     }
 
     fn can_see_full(&self, role: &str) -> bool {
-        matches!(role, "manufacturer" | "importer" | "verifier" | "regulator" | "admin")
+        matches!(
+            role,
+            "manufacturer" | "importer" | "verifier" | "regulator" | "admin"
+        )
     }
 }
 
@@ -137,11 +137,7 @@ impl CarbonService for CarbonServiceImpl {
         // If hash doesn't match, raise TamperDetected error
         // Otherwise, mark verified=true, set verified_by and verified_at
 
-        tracing::info!(
-            "carbon footprint verified for BPAN {}: {}",
-            bpan,
-            standard
-        );
+        tracing::info!("carbon footprint verified for BPAN {}: {}", bpan, standard);
 
         Ok(())
     }
@@ -198,10 +194,7 @@ impl CarbonService for CarbonServiceImpl {
         }
     }
 
-    async fn check_tamper(
-        &self,
-        _bpan: &str,
-    ) -> Result<bool, CarbonError> {
+    async fn check_tamper(&self, _bpan: &str) -> Result<bool, CarbonError> {
         // TODO Day 7: Fetch from DB, recompute hash
         // If stored_hash != computed_hash, return true (tamper detected)
         // Otherwise false
@@ -257,12 +250,7 @@ mod tests {
 
         // Consumer cannot verify
         let result = service
-            .verify_carbon_footprint(
-                "MY008A6FKKKLC1DH80001",
-                "consumer",
-                "ISO 14040",
-                "consumer",
-            )
+            .verify_carbon_footprint("MY008A6FKKKLC1DH80001", "consumer", "ISO 14040", "consumer")
             .await;
 
         assert!(result.is_err());

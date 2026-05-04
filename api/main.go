@@ -35,8 +35,9 @@ import (
 )
 
 func main() {
-	// Initialize DB
+	// Initialize DB & Redis
 	config.InitDB()
+	config.InitRedis()
 
 	// Initialize gRPC clients — non-fatal if Rust server is not yet running
 	grpcTarget := os.Getenv("GRPC_SERVICE_URL")

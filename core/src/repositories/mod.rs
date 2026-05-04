@@ -19,3 +19,7 @@ pub use stakeholder_repo::StakeholderRepository;
 
 pub mod carbon_repo;
 pub use carbon_repo::CarbonRepositoryImpl;
+pub mod health_repo;
+pub mod dynamic_data_repo;
+pub use health_repo::HealthRepositoryImpl;
+pub use dynamic_data_repo::DynamicDataRepositoryImpl;

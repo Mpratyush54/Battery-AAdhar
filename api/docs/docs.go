@@ -23,6 +23,340 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/batteries/{bpan_a}/carbon/compare/{bpan_b}": {
+            "get": {
+                "description": "Emission delta per stage, identify lower-emission battery",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "carbon"
+                ],
+                "summary": "Compare carbon footprints (A vs B)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "First BPAN",
+                        "name": "bpan_a",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Second BPAN",
+                        "name": "bpan_b",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Comparison result",
+                        "schema": {
+                            "$ref": "#/definitions/models.CarbonComparison"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/batteries/{bpan}/carbon": {
+            "get": {
+                "description": "Retrieve BCF (all roles can view verified data)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "carbon"
+                ],
+                "summary": "Get battery carbon footprint",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "BPAN",
+                        "name": "bpan",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Carbon footprint",
+                        "schema": {
+                            "$ref": "#/definitions/models.CarbonFootprintResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Submit BCF with raw material, manufacturing, transport, usage, recycling emissions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "carbon"
+                ],
+                "summary": "Submit battery carbon footprint (5-stage emissions)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "BPAN",
+                        "name": "bpan",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Carbon data (5 stages)",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CarbonFootprintRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Submission ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized (non-manufacturer)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/batteries/{bpan}/carbon/verify": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Mark carbon data as verified against standard (ISO 14040, PEF, EU ETS)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "carbon"
+                ],
+                "summary": "Verify carbon footprint (third-party verifier only)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "BPAN",
+                        "name": "bpan",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Verification details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.VerificationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Verified",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized (non-verifier)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/batteries/{bpan}/health": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Get current battery health status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "BPAN",
+                        "name": "bpan",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.HealthRecord"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Submit health update from BMS or manufacturer",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Update battery health (SoH, cycles, degradation)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "BPAN",
+                        "name": "bpan",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Health data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.HealthUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Record ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limited",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/batteries/{bpan}/health/history": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Get battery health time-series",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "BPAN",
+                        "name": "bpan",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Max records (default 100)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.HealthRecord"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/health/dashboard": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Get battery health dashboard metrics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.HealthDashboard"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Logs in a stakeholder and sets HttpOnly cookies",
@@ -346,187 +680,6 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Battery not found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "501": {
-                        "description": "Not implemented",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/batteries/{bpan}/health": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns the latest SoH value and status for a battery",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "health"
-                ],
-                "summary": "Get current State of Health",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Battery PAN",
-                        "name": "bpan",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "404": {
-                        "description": "Battery not found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "501": {
-                        "description": "Not implemented",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Records a new SoH reading for a battery (service provider only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "health"
-                ],
-                "summary": "Update State of Health",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Battery PAN",
-                        "name": "bpan",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "SoH update payload",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "501": {
-                        "description": "Not implemented",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/batteries/{bpan}/health/history": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns the full history of SoH readings for a battery",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "health"
-                ],
-                "summary": "Get SoH history",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Battery PAN",
-                        "name": "bpan",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "additionalProperties": true
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1295,6 +1448,129 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "models.CarbonComparison": {
+            "type": "object",
+            "properties": {
+                "bpan_a": {
+                    "type": "string"
+                },
+                "bpan_a_lower": {
+                    "type": "boolean"
+                },
+                "bpan_b": {
+                    "type": "string"
+                },
+                "emissions_per_kwh_delta": {
+                    "type": "number"
+                },
+                "stage1_delta": {
+                    "type": "number"
+                },
+                "stage2_delta": {
+                    "type": "number"
+                },
+                "stage3_delta": {
+                    "type": "number"
+                },
+                "stage4_delta": {
+                    "type": "number"
+                },
+                "stage5_delta": {
+                    "type": "number"
+                },
+                "total_delta": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.CarbonFootprintRequest": {
+            "type": "object",
+            "properties": {
+                "cell_production_method": {
+                    "type": "string"
+                },
+                "factory_energy_source": {
+                    "type": "string"
+                },
+                "manufacturing_emissions_kg_co2e": {
+                    "type": "number"
+                },
+                "manufacturing_location": {
+                    "type": "string"
+                },
+                "mining_method": {
+                    "type": "string"
+                },
+                "raw_material_emissions_kg_co2e": {
+                    "type": "number"
+                },
+                "raw_material_source_country": {
+                    "type": "string"
+                },
+                "recycling_avoided_mining": {
+                    "type": "number"
+                },
+                "recycling_emissions_kg_co2e": {
+                    "type": "number"
+                },
+                "recycling_method": {
+                    "type": "string"
+                },
+                "recycling_recovery_rate": {
+                    "type": "number"
+                },
+                "transport_distance_km": {
+                    "type": "number"
+                },
+                "transport_emissions_kg_co2e": {
+                    "type": "number"
+                },
+                "transport_mode": {
+                    "type": "string"
+                },
+                "transport_packaging": {
+                    "type": "string"
+                },
+                "usage_annual_km": {
+                    "type": "integer"
+                },
+                "usage_emissions_kg_co2e": {
+                    "type": "number"
+                },
+                "usage_grid_emissions_factor_gco2e_per_kwh": {
+                    "type": "number"
+                },
+                "usage_years": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.CarbonFootprintResponse": {
+            "type": "object",
+            "properties": {
+                "bpan": {
+                    "type": "string"
+                },
+                "emissions_per_kwh": {
+                    "type": "number"
+                },
+                "total_emissions_kg_co2e": {
+                    "type": "number"
+                },
+                "verification_standard": {
+                    "type": "string"
+                },
+                "verified": {
+                    "type": "boolean"
+                },
+                "verified_at": {
+                    "type": "string"
+                },
+                "verified_by": {
+                    "type": "string"
+                }
+            }
+        },
         "models.GetBatteryResponseJSON": {
             "type": "object",
             "properties": {
@@ -1306,6 +1582,99 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                }
+            }
+        },
+        "models.HealthDashboard": {
+            "type": "object",
+            "properties": {
+                "avg_soh_by_chemistry": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number",
+                        "format": "float32"
+                    }
+                },
+                "avg_soh_by_manufacturer": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number",
+                        "format": "float32"
+                    }
+                },
+                "eol_count": {
+                    "type": "integer"
+                },
+                "operational_count": {
+                    "type": "integer"
+                },
+                "second_life_count": {
+                    "type": "integer"
+                },
+                "waste_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.HealthRecord": {
+            "type": "object",
+            "properties": {
+                "average_temperature_celsius": {
+                    "type": "number"
+                },
+                "bpan": {
+                    "type": "string"
+                },
+                "cycle_count": {
+                    "type": "integer"
+                },
+                "health_status": {
+                    "description": "OPERATIONAL, SECOND_LIFE, etc.",
+                    "type": "string"
+                },
+                "proofs_generated": {
+                    "type": "boolean"
+                },
+                "reported_at": {
+                    "type": "string"
+                },
+                "state_of_health_percent": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.HealthUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "average_temperature_celsius": {
+                    "type": "number"
+                },
+                "cell_voltage_max_mv": {
+                    "type": "number"
+                },
+                "cell_voltage_min_mv": {
+                    "type": "number"
+                },
+                "cycle_count": {
+                    "type": "integer"
+                },
+                "degradation_class": {
+                    "type": "string"
+                },
+                "error_flags": {
+                    "type": "string"
+                },
+                "internal_resistance_mohm": {
+                    "type": "number"
+                },
+                "max_temperature_celsius": {
+                    "type": "number"
+                },
+                "min_temperature_celsius": {
+                    "type": "number"
+                },
+                "state_of_health_percent": {
+                    "type": "number"
                 }
             }
         },
@@ -1598,6 +1967,15 @@ const docTemplate = `{
                 },
                 "success": {
                     "type": "boolean"
+                }
+            }
+        },
+        "models.VerificationRequest": {
+            "type": "object",
+            "properties": {
+                "standard": {
+                    "description": "ISO 14040, PEF, EU ETS",
+                    "type": "string"
                 }
             }
         }

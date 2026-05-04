@@ -23,3 +23,5 @@ pub use material::{MaterialComposition, MaterialCompositionPublic, MaterialCompo
 
 pub mod carbon;
 pub use carbon::{CarbonService, CarbonServiceImpl, CarbonError};
+pub mod health;
+pub use health::{HealthService, HealthServiceImpl, HealthError};

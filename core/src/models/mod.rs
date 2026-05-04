@@ -27,3 +27,5 @@ pub struct Stakeholder {
 
 pub mod carbon;
 pub use carbon::{CarbonFootprint, CarbonFootprintRequest, CarbonFootprintPublic, CarbonComparison};
+pub mod health;
+pub use health::{HealthRecord, HealthStatus, HealthUpdateRequest, HealthHistory, HealthAggregate};

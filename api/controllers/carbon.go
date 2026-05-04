@@ -83,7 +83,7 @@ func SubmitCarbonFootprint(carbonService *services.CarbonService) http.HandlerFu
 // @Param bpan path string true "BPAN"
 // @Accept json
 // @Produce json
-// @Success 200 {object} models.CarbonFootprintPublic "Carbon footprint"
+// @Success 200 {object} models.CarbonFootprintResponse "Carbon footprint"
 // @Router /api/v1/batteries/{bpan}/carbon [get]
 func GetCarbonFootprint(carbonService *services.CarbonService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

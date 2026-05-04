@@ -14,6 +14,7 @@ import (
 	_ "github.com/Mpratyush54/Battery-AAdhar/api/docs"
 	"github.com/Mpratyush54/Battery-AAdhar/api/middleware"
 	"github.com/Mpratyush54/Battery-AAdhar/api/models"
+	"github.com/Mpratyush54/Battery-AAdhar/api/services"
 )
 
 // NewRouter constructs and returns the application chi.Router.
@@ -85,7 +86,7 @@ func NewRouter() http.Handler {
 		// ── Controller-based routes (each controller handles its own RBAC) ──
 		controllers.RegisterMaterialRoutes(r)
 		controllers.RegisterCarbonRoutes(r)
-		controllers.RegisterHealthRoutes(r)
+		controllers.RegisterHealthRoutes(r, services.NewHealthService())
 		controllers.RegisterLifecycleRoutes(r)
 		controllers.RegisterComplianceRoutes(r)
 		controllers.RegisterTelemetryRoutes(r)

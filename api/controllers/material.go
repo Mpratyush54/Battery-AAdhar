@@ -100,8 +100,6 @@ func GetMaterialComposition(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-
-
 // UpdateMaterialComposition — PATCH /api/v1/batteries/{bpan}/material (admin/manufacturer)
 func UpdateMaterialComposition(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")

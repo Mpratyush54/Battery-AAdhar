@@ -11,10 +11,10 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/Mpratyush54/Battery-AAdhar/api/models"
 	"github.com/Mpratyush54/Battery-AAdhar/api/middleware"
+	"github.com/Mpratyush54/Battery-AAdhar/api/models"
 	"github.com/Mpratyush54/Battery-AAdhar/api/services"
+	"github.com/go-chi/chi/v5"
 )
 
 // SubmitCarbonFootprint — POST /api/v1/batteries/{bpan}/carbon
@@ -69,8 +69,8 @@ func SubmitCarbonFootprint(carbonService *services.CarbonService) http.HandlerFu
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"submission_id": submissionID,
-			"bpan":          bpan,
+			"submission_id":           submissionID,
+			"bpan":                    bpan,
 			"total_emissions_kg_co2e": req.RawMaterialEmissionsKgCo2e + req.ManufacturingEmissionsKgCo2e + req.TransportEmissionsKgCo2e + req.UsageEmissionsKgCo2e + req.RecyclingEmissionsKgCo2e,
 		})
 	}
@@ -155,9 +155,9 @@ func VerifyCarbonFootprint(carbonService *services.CarbonService) http.HandlerFu
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{
-			"verified":  "true",
+			"verified":    "true",
 			"verified_by": claims.Subject,
-			"standard": req.Standard,
+			"standard":    req.Standard,
 		})
 	}
 }

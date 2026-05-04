@@ -5,9 +5,9 @@ package models
 import "time"
 
 type HealthUpdateRequest struct {
-	StateOfHealthPercent      float32 `json:"state_of_health_percent"`
-	CycleCount                uint32  `json:"cycle_count"`
-	DegradationClass          string  `json:"degradation_class"`
+	StateOfHealthPercent      float32  `json:"state_of_health_percent"`
+	CycleCount                uint32   `json:"cycle_count"`
+	DegradationClass          string   `json:"degradation_class"`
 	MinTemperatureCelsius     *float32 `json:"min_temperature_celsius,omitempty"`
 	MaxTemperatureCelsius     *float32 `json:"max_temperature_celsius,omitempty"`
 	AverageTemperatureCelsius *float32 `json:"average_temperature_celsius,omitempty"`
@@ -18,13 +18,13 @@ type HealthUpdateRequest struct {
 }
 
 type HealthRecord struct {
-	BPAN                  string    `json:"bpan"`
-	StateOfHealthPercent  float32   `json:"state_of_health_percent"`
-	HealthStatus          string    `json:"health_status"` // OPERATIONAL, SECOND_LIFE, etc.
-	CycleCount            uint32    `json:"cycle_count"`
-	Temperature           float32   `json:"average_temperature_celsius"`
-	ProofsGenerated       bool      `json:"proofs_generated"`
-	ReportedAt            time.Time `json:"reported_at"`
+	BPAN                 string    `json:"bpan"`
+	StateOfHealthPercent float32   `json:"state_of_health_percent"`
+	HealthStatus         string    `json:"health_status"` // OPERATIONAL, SECOND_LIFE, etc.
+	CycleCount           uint32    `json:"cycle_count"`
+	Temperature          float32   `json:"average_temperature_celsius"`
+	ProofsGenerated      bool      `json:"proofs_generated"`
+	ReportedAt           time.Time `json:"reported_at"`
 }
 
 type HealthDashboard struct {

@@ -8,11 +8,11 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/Mpratyush54/Battery-AAdhar/api/models"
-	"github.com/Mpratyush54/Battery-AAdhar/api/middleware"
-	"github.com/Mpratyush54/Battery-AAdhar/api/services"
 	"github.com/Mpratyush54/Battery-AAdhar/api/config"
+	"github.com/Mpratyush54/Battery-AAdhar/api/middleware"
+	"github.com/Mpratyush54/Battery-AAdhar/api/models"
+	"github.com/Mpratyush54/Battery-AAdhar/api/services"
+	"github.com/go-chi/chi/v5"
 )
 
 // UpdateHealth — PATCH /api/v1/batteries/{bpan}/health

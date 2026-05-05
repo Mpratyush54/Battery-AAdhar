@@ -1,10 +1,15 @@
-// lifecycle.go — Battery lifecycle transitions
+// lifecycle.go — Battery lifecycle transitions (HTTP handlers)
 
 package controllers
 
 import (
-	"github.com/go-chi/chi/v5"
+	"encoding/json"
 	"net/http"
+
+	"github.com/Mpratyush54/Battery-AAdhar/api/middleware"
+	"github.com/Mpratyush54/Battery-AAdhar/api/models"
+	"github.com/Mpratyush54/Battery-AAdhar/api/services"
+	"github.com/go-chi/chi/v5"
 )
 
 // TransferOwnership godoc
@@ -22,10 +27,14 @@ import (
 // @Router       /batteries/{bpan}/ownership/transfer [post]
 // @Security     BearerAuth
 func TransferOwnership(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusNotImplemented)
-	w.Write([]byte(`{"error":"not_implemented"}`))
-}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"transfer_id": transferID,
+			"is_complete": complete,
+			"message":     "Transfer confirmed",
+		})
+	}
+
 
 // GetOwnershipHistory godoc
 // @Summary      Get ownership history
@@ -39,10 +48,10 @@ func TransferOwnership(w http.ResponseWriter, r *http.Request) {
 // @Router       /batteries/{bpan}/ownership/history [get]
 // @Security     BearerAuth
 func GetOwnershipHistory(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusNotImplemented)
-	w.Write([]byte(`{"error":"not_implemented"}`))
-}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp)
+	}
+
 
 // CertifyReuse godoc
 // @Summary      Certify battery for second-life reuse
@@ -58,9 +67,18 @@ func GetOwnershipHistory(w http.ResponseWriter, r *http.Request) {
 // @Router       /batteries/{bpan}/reuse [post]
 // @Security     BearerAuth
 func CertifyReuse(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusNotImplemented)
-	w.Write([]byte(`{"error":"not_implemented"}`))
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp)
+	}
+}
+
+// GetOwnershipHistory — GET /api/v1/batteries/{bpan}/ownership/history
+func GetOwnershipHistory(s *services.LifecycleService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// TODO Day 13: Implement history retrieval from audit log
+		w.WriteHeader(http.StatusNotImplemented)
+		json.NewEncoder(w).Encode(map[string]string{"error": "not_implemented"})
+	}
 }
 
 // RecordRecycling godoc
@@ -77,14 +95,50 @@ func CertifyReuse(w http.ResponseWriter, r *http.Request) {
 // @Router       /batteries/{bpan}/recycling [post]
 // @Security     BearerAuth
 func RecordRecycling(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusNotImplemented)
-	w.Write([]byte(`{"error":"not_implemented"}`))
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp)
+	}
 }
 
-func RegisterLifecycleRoutes(r chi.Router) {
-	r.Post("/batteries/{bpan}/ownership/transfer", TransferOwnership)
-	r.Get("/batteries/{bpan}/ownership/history", GetOwnershipHistory)
-	r.Post("/batteries/{bpan}/reuse", CertifyReuse)
-	r.Post("/batteries/{bpan}/recycling", RecordRecycling)
+// VerifySignature — POST /api/v1/batteries/{bpan}/verify/signature
+func VerifySignature(s *services.LifecycleService) http.HandlerFunc {
+	return func(r http.ResponseWriter, req *http.Request) {
+		if s == nil {
+			r.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		bpan := chi.URLParam(req, "bpan")
+
+		resp, err := s.VerifySignature(req.Context(), bpan)
+		if err != nil {
+			r.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(r).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		r.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(r).Encode(resp)
+	}
+}
+
+func RegisterLifecycleRoutes(r chi.Router, s *services.LifecycleService) {
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.Authenticate)
+
+		// Ownership Transfers
+		r.Post("/batteries/{bpan}/ownership/transfer", TransferOwnership(s))
+		r.Post("/ownership/transfer/{id}/confirm", ConfirmTransfer(s))
+		r.Post("/ownership/transfer/{id}/reject", RejectTransfer(s))
+		r.Get("/batteries/{bpan}/ownership/history", GetOwnershipHistory(s))
+
+		// Lifecycle Transitions
+		r.Post("/batteries/{bpan}/reuse", CertifyReuse(s))
+		r.Post("/batteries/{bpan}/recycling", RecordRecycling(s))
+
+		// Verification (Verifier only)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.IsRole("verifier"))
+			r.Post("/batteries/{bpan}/verify/operational", VerifyOperational(s))
+			r.Post("/batteries/{bpan}/verify/signature", VerifySignature(s))
+		})
+	})
 }

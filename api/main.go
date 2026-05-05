@@ -59,7 +59,7 @@ func main() {
 	}
 
 	// Create router
-	router := routes.NewRouter()
+	router := routes.NewRouter(microservices)
 
 	// Start HTTP server
 	port := os.Getenv("PORT")

@@ -28,6 +28,9 @@ pub async fn sync_database_schema(pool: &Pool<Postgres>) -> Result<(), sqlx::Err
             production_year INT NOT NULL,
             battery_category VARCHAR(50) NOT NULL,
             compliance_class VARCHAR(50) NOT NULL,
+            current_owner_id VARCHAR(255),
+            current_owner_role VARCHAR(50),
+            current_lifecycle_state VARCHAR(50) NOT NULL DEFAULT 'REGISTERED',
             static_hash VARCHAR(64) NOT NULL,
             carbon_hash VARCHAR(64) NOT NULL DEFAULT 'PENDING',
             created_at TIMESTAMP NOT NULL DEFAULT NOW()
@@ -596,6 +599,46 @@ pub async fn sync_database_schema(pool: &Pool<Postgres>) -> Result<(), sqlx::Err
         );
     "#).execute(pool).await?;
 
+    // --- Lifecycle & Ownership ---
+
+    sqlx::query(r#"
+        CREATE TABLE IF NOT EXISTS ownership_transfers (
+            id UUID PRIMARY KEY,
+            bpan VARCHAR(21) NOT NULL REFERENCES batteries(bpan),
+            from_owner_id VARCHAR(255) NOT NULL,
+            to_owner_id VARCHAR(255) NOT NULL,
+            from_owner_role VARCHAR(50) NOT NULL,
+            to_owner_role VARCHAR(50) NOT NULL,
+            reason TEXT NOT NULL,
+            from_owner_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
+            from_owner_confirmed_at TIMESTAMP,
+            to_owner_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
+            to_owner_confirmed_at TIMESTAMP,
+            rejected BOOLEAN NOT NULL DEFAULT FALSE,
+            rejection_reason TEXT,
+            rejected_by VARCHAR(255),
+            rejected_at TIMESTAMP,
+            initiated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+            transferred_at TIMESTAMP
+        );
+    "#).execute(pool).await?;
+
+    sqlx::query(r#"
+        CREATE TABLE IF NOT EXISTS lifecycle_events (
+            id UUID PRIMARY KEY,
+            bpan VARCHAR(21) NOT NULL REFERENCES batteries(bpan),
+            event_type VARCHAR(50) NOT NULL,
+            from_state VARCHAR(50),
+            to_state VARCHAR(50),
+            actor_id VARCHAR(255) NOT NULL,
+            actor_role VARCHAR(50) NOT NULL,
+            details TEXT NOT NULL,
+            entry_hash VARCHAR(64) NOT NULL,
+            entry_hash_prev VARCHAR(64) NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+    "#).execute(pool).await?;
+
     // --- Performance indexes ---
 
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_battery_identifiers_bpan ON battery_identifiers(bpan)").execute(pool).await?;
@@ -612,7 +655,9 @@ pub async fn sync_database_schema(pool: &Pool<Postgres>) -> Result<(), sqlx::Err
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_reuse_history_bpan ON reuse_history(bpan)").execute(pool).await?;
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_qr_records_bpan ON qr_records(bpan)").execute(pool).await?;
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_battery_registration_bpan ON battery_registration_log(bpan)").execute(pool).await?;
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_ownership_transfers_bpan ON ownership_transfers(bpan)").execute(pool).await?;
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_lifecycle_events_bpan ON lifecycle_events(bpan)").execute(pool).await?;
 
-    info!("✅ Database schema synchronized — {} tables created/verified", 42);
+    info!("✅ Database schema synchronized — {} tables created/verified", 44);
     Ok(())
 }

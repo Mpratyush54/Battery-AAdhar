@@ -40,8 +40,60 @@ message VerifySignatureResponse {
   google.protobuf.Timestamp signed_at = 3;
 }
 
+message TransitionStateRequest {
+  string bpan       = 1;
+  string new_state  = 2; // REGISTERED, OPERATIONAL, etc.
+  string actor_id   = 3;
+  string actor_role = 4;
+  string details    = 5;
+}
+
+message TransitionStateResponse {
+  bool   success    = 1;
+  string event_id   = 2;
+  string entry_hash = 3;
+}
+
+message InitiateTransferRequest {
+  string bpan            = 1;
+  string from_owner_id   = 2;
+  string to_owner_id     = 3;
+  string from_owner_role = 4;
+  string to_owner_role   = 5;
+  string reason          = 6;
+}
+
+message InitiateTransferResponse {
+  string transfer_id = 1;
+}
+
+message ConfirmTransferRequest {
+  string transfer_id         = 1;
+  string confirming_owner_id = 2;
+}
+
+message ConfirmTransferResponse {
+  bool is_complete = 1;
+}
+
+message RejectTransferRequest {
+  string transfer_id         = 1;
+  string rejecting_owner_id  = 2;
+  string reason              = 3;
+}
+
+message RejectTransferResponse {
+  bool success = 1;
+}
+
 service LifecycleService {
   rpc VerifyOperational (VerifyOperationalRequest) returns (VerifyOperationalResponse);
   rpc VerifyRecyclable  (VerifyRecyclableRequest)  returns (VerifyRecyclableResponse);
   rpc VerifySignature   (VerifySignatureRequest)   returns (VerifySignatureResponse);
+
+  // New methods for Day 12
+  rpc TransitionState  (TransitionStateRequest)  returns (TransitionStateResponse);
+  rpc InitiateTransfer (InitiateTransferRequest) returns (InitiateTransferResponse);
+  rpc ConfirmTransfer  (ConfirmTransferRequest)  returns (ConfirmTransferResponse);
+  rpc RejectTransfer   (RejectTransferRequest)   returns (RejectTransferResponse);
 }

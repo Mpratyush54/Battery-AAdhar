@@ -1,6 +1,20 @@
+//! battery_lifecycle.rs — Battery lifecycle finite state machine
+//!
+//! Manages state transitions and ownership transfers.
+//! Day 11: BatteryState FSM (pure in-memory validation)
+//! Day 12: BatteryLifecycleService wired to OwnershipRepositoryImpl + hash-chain
+
+use chrono::Utc;
+use sha2::{Digest as Sha256Digest, Sha256};
+use std::sync::Arc;
 use tracing::{info, instrument};
 
 use crate::errors::{BpaError, BpaResult};
+use crate::models::LifecycleState;
+use crate::repositories::OwnershipRepositoryImpl;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BatteryState FSM (─────────────────────────────────────────────────
 
 /// Battery lifecycle states per the BPA guideline.
 /// A battery progresses through these states from manufacturing to end-of-life.
@@ -74,11 +88,17 @@ impl BatteryState {
     }
 }
 
-pub struct BatteryLifecycleService;
+impl std::fmt::Display for BatteryState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
 
-impl BatteryLifecycleService {
+/// Static BatteryState FSM helpers (Day 11)
+pub struct BatteryStateMachine;
+
+impl BatteryStateMachine {
     /// Check whether a state transition is valid per the BPA lifecycle rules.
-    /// Returns Ok(()) if valid, Err with reason if not allowed.
     #[instrument(name = "check_transition", skip_all)]
     pub fn check_transition(from: &BatteryState, to: &BatteryState) -> BpaResult<()> {
         let allowed = match from {
@@ -127,7 +147,6 @@ impl BatteryLifecycleService {
     }
 
     /// Determine if the battery should be flagged for reuse based on SoH.
-    /// Per BPA guidelines, batteries with SoH between 60-80% are reuse candidates.
     pub fn evaluate_soh(state_of_health: f64) -> BpaResult<SohEvaluation> {
         if !(0.0..=100.0).contains(&state_of_health) {
             return Err(BpaError::Validation(
@@ -149,7 +168,7 @@ impl BatteryLifecycleService {
         Ok(evaluation)
     }
 
-    /// Check if a battery is in a terminal state (no further transitions possible).
+    /// Check if a battery is in a terminal state.
     pub fn is_terminal(state: &BatteryState) -> bool {
         matches!(state, BatteryState::Recycled | BatteryState::Decommissioned)
     }
@@ -198,4 +217,193 @@ pub enum SohEvaluation {
     DegradedRecycleRecommended,
     /// SoH < 30%: Battery has reached end of life
     EndOfLife,
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Day 12: BatteryLifecycleService — Repository-backed lifecycle operations
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Service for battery lifecycle management and ownership transfers.
+/// Wires the FSM checks with `OwnershipRepositoryImpl` for DB persistence
+/// and maintains the SHA-256 hash-chain for auditability.
+pub struct BatteryLifecycleService {
+    repo: Arc<OwnershipRepositoryImpl>,
+}
+
+impl BatteryLifecycleService {
+    /// Create a new `BatteryLifecycleService` with an ownership repository.
+    pub fn new(repo: Arc<OwnershipRepositoryImpl>) -> Self {
+        BatteryLifecycleService { repo }
+    }
+
+    /// Compute SHA-256 hash for a lifecycle event (hash-chain entry).
+    fn compute_event_hash(
+        bpan: &str,
+        event_type: &str,
+        prev_hash: &str,
+        actor_id: &str,
+        timestamp: &chrono::DateTime<Utc>,
+    ) -> String {
+        let mut hasher = Sha256::new();
+        hasher.update(bpan.as_bytes());
+        hasher.update(event_type.as_bytes());
+        hasher.update(prev_hash.as_bytes());
+        hasher.update(actor_id.as_bytes());
+        hasher.update(timestamp.to_rfc3339().as_bytes());
+        format!("{:x}", hasher.finalize())
+    }
+
+    /// Transition battery to a new lifecycle state.
+    ///
+    /// Validates the FSM transition, computes the hash-chain entry, and
+    /// persists the event via the repository.
+    #[instrument(name = "lifecycle.transition_state", skip(self))]
+    pub async fn transition_state(
+        &self,
+        bpan: &str,
+        new_state: LifecycleState,
+        actor_id: &str,
+        actor_role: &str,
+        details: &str,
+    ) -> BpaResult<String> {
+        let now = Utc::now();
+        let event_type = "STATE_TRANSITION";
+        let new_state_str = new_state.to_string();
+
+        // Get previous hash for chain integrity
+        let prev_hash = self
+            .repo
+            .get_last_event_hash(bpan)
+            .await
+            .map_err(|e| BpaError::Internal(e.to_string()))?;
+
+        let entry_hash = Self::compute_event_hash(bpan, event_type, &prev_hash, actor_id, &now);
+
+        // Record lifecycle event in hash-chained log
+        self.repo
+            .record_lifecycle_event(
+                bpan,
+                event_type,
+                None,
+                Some(&new_state_str),
+                actor_id,
+                actor_role,
+                details,
+                &entry_hash,
+                &prev_hash,
+            )
+            .await
+            .map_err(|e| BpaError::Internal(e.to_string()))?;
+
+        info!(
+            bpan = bpan,
+            new_state = %new_state_str,
+            actor_id = actor_id,
+            entry_hash = %entry_hash,
+            "Lifecycle state transition recorded"
+        );
+
+        Ok(entry_hash)
+    }
+
+    /// Initiate an ownership transfer (dual-party consent model).
+    ///
+    /// Checks for pending transfers and persists the new transfer record.
+    #[instrument(name = "lifecycle.initiate_ownership_transfer", skip(self))]
+    pub async fn initiate_ownership_transfer(
+        &self,
+        bpan: &str,
+        from_owner_id: &str,
+        to_owner_id: &str,
+        from_owner_role: &str,
+        to_owner_role: &str,
+        reason: &str,
+    ) -> BpaResult<String> {
+        let transfer_id = self
+            .repo
+            .initiate_transfer(
+                bpan,
+                from_owner_id,
+                to_owner_id,
+                from_owner_role,
+                to_owner_role,
+                reason,
+            )
+            .await
+            .map_err(|e| BpaError::Internal(e.to_string()))?;
+
+        info!(
+            bpan = bpan,
+            from_owner_id = from_owner_id,
+            to_owner_id = to_owner_id,
+            transfer_id = %transfer_id,
+            "Ownership transfer initiated"
+        );
+
+        Ok(transfer_id)
+    }
+
+    /// Confirm a pending ownership transfer (called by either party).
+    ///
+    /// Returns `true` when both parties have confirmed (transfer complete).
+    #[instrument(name = "lifecycle.confirm_ownership_transfer", skip(self))]
+    pub async fn confirm_ownership_transfer(
+        &self,
+        transfer_id: &str,
+        confirming_owner_id: &str,
+    ) -> BpaResult<bool> {
+        let is_complete = self
+            .repo
+            .confirm_transfer(transfer_id, confirming_owner_id)
+            .await
+            .map_err(|e| BpaError::Internal(e.to_string()))?;
+
+        info!(
+            transfer_id = transfer_id,
+            confirming_owner_id = confirming_owner_id,
+            is_complete = is_complete,
+            "Ownership transfer confirmation recorded"
+        );
+
+        if is_complete {
+            info!(
+                transfer_id = transfer_id,
+                "Ownership transfer completed — both parties confirmed"
+            );
+        }
+
+        Ok(is_complete)
+    }
+
+    /// Reject a pending ownership transfer.
+    #[instrument(name = "lifecycle.reject_ownership_transfer", skip(self))]
+    pub async fn reject_ownership_transfer(
+        &self,
+        transfer_id: &str,
+        rejecting_owner_id: &str,
+        reason: &str,
+    ) -> BpaResult<()> {
+        self.repo
+            .reject_transfer(transfer_id, rejecting_owner_id, reason)
+            .await
+            .map_err(|e| BpaError::Internal(e.to_string()))?;
+
+        info!(
+            transfer_id = transfer_id,
+            rejecting_owner_id = rejecting_owner_id,
+            reason = reason,
+            "Ownership transfer rejected"
+        );
+
+        Ok(())
+    }
+
+    /// Get the current owner of a battery.
+    #[instrument(name = "lifecycle.get_current_owner", skip(self))]
+    pub async fn get_current_owner(&self, bpan: &str) -> BpaResult<(String, String)> {
+        self.repo
+            .get_current_owner(bpan)
+            .await
+            .map_err(|e| BpaError::Internal(e.to_string()))
+    }
 }

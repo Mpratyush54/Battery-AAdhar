@@ -25,6 +25,10 @@ pub struct Stakeholder {
     pub id: String,
 }
 
+pub mod lifecycle;
+pub use lifecycle::{
+    BatteryOwner, LifecycleEvent, LifecycleState, LifecycleTimeline, OwnershipTransfer,
+};
 pub mod carbon;
 pub use carbon::{
     CarbonComparison, CarbonFootprint, CarbonFootprintPublic, CarbonFootprintRequest,

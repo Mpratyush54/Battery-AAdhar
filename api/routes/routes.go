@@ -23,7 +23,9 @@ import (
 //  2. custom logging   (structured zap/slog output)
 //  3. custom auth      (JWT parse + attach claims to context)
 //  4. custom RBAC      (role enforcement per route group)
-func NewRouter() http.Handler {
+//  4. custom RBAC      (role enforcement per route group)
+func NewRouter(microservices *config.MicroserviceClients) http.Handler {
+
 	r := chi.NewRouter()
 
 	// ── Global middleware (runs on every request) ─────────────────────────
@@ -69,12 +71,6 @@ func NewRouter() http.Handler {
 			r.Patch("/batteries/{bpan}/status", handleUpdateStatus)
 		})
 
-		// Compliance / ZK verification endpoints (verifier role)
-		r.Group(func(r chi.Router) {
-			r.Use(middleware.IsRole("verifier"))
-			r.Post("/batteries/{bpan}/verify/operational", handleVerifyOperational)
-			r.Post("/batteries/{bpan}/verify/signature", handleVerifySignature)
-		})
 
 		// Admin-only
 		r.Group(func(r chi.Router) {
@@ -87,7 +83,14 @@ func NewRouter() http.Handler {
 		controllers.RegisterMaterialRoutes(r)
 		controllers.RegisterCarbonRoutes(r)
 		controllers.RegisterHealthRoutes(r, services.NewHealthService())
-		controllers.RegisterLifecycleRoutes(r)
+
+		// Only register if microservices are connected
+		if microservices != nil {
+			controllers.RegisterLifecycleRoutes(r, services.NewLifecycleService(microservices.GrpcConn))
+		} else {
+			controllers.RegisterLifecycleRoutes(r, nil) // Will return 503 for gRPC-dependent routes
+		}
+
 		controllers.RegisterComplianceRoutes(r)
 		controllers.RegisterTelemetryRoutes(r)
 		controllers.RegisterQRRoutes(r)
@@ -109,12 +112,6 @@ func handleReadyz(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleUpdateStatus(w http.ResponseWriter, _ *http.Request) {
-	http.Error(w, "not implemented", http.StatusNotImplemented)
-}
-func handleVerifyOperational(w http.ResponseWriter, _ *http.Request) {
-	http.Error(w, "not implemented", http.StatusNotImplemented)
-}
-func handleVerifySignature(w http.ResponseWriter, _ *http.Request) {
 	http.Error(w, "not implemented", http.StatusNotImplemented)
 }
 func handleRegisterManufacturer(w http.ResponseWriter, _ *http.Request) {

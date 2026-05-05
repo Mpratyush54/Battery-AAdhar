@@ -9,6 +9,7 @@ pub mod key_repo;
 pub mod lifecycle_repo;
 pub mod material_repo;
 pub mod stakeholder_repo;
+pub mod ownership_repo;
 
 pub use audit_repo::{AuditLogEntry, AuditRepositoryImpl};
 pub use battery_repo::{BatteryRepository, BatteryRepositoryImpl, RepositoryError};
@@ -16,6 +17,7 @@ pub use key_repo::{KeyRepository, KeyRepositoryImpl};
 pub use lifecycle_repo::{LifecycleRepositoryImpl, OwnershipRecord, RecyclingRecord, ReuseRecord};
 pub use material_repo::MaterialRepository;
 pub use stakeholder_repo::StakeholderRepository;
+pub use ownership_repo::OwnershipRepositoryImpl;
 
 pub mod carbon_repo;
 pub use carbon_repo::CarbonRepositoryImpl;

@@ -1,0 +1,129 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'       # e.g. v0.2.0
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'     # e.g. v0.2.0-rc.1
+
+permissions:
+  contents: write
+
+jobs:
+  # ── Validate tag matches crate version ──────────────────────────────────
+  validate-version:
+    name: Validate semver tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.parse.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse version from tag
+        id: parse
+        run: |
+          TAG="${GITHUB_REF#refs/tags/v}"
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"
+          echo "📦 Release version: $TAG"
+
+      - name: Verify Cargo.toml version
+        working-directory: core
+        run: |
+          CARGO_VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          # Strip pre-release suffix for comparison (v0.2.0-rc.1 → 0.2.0)
+          TAG_BASE=$(echo "$TAG_VERSION" | sed 's/-.*//')
+          echo "Cargo.toml version: $CARGO_VERSION"
+          echo "Tag base version:   $TAG_BASE"
+          if [ "$CARGO_VERSION" != "$TAG_BASE" ]; then
+            echo "❌ Version mismatch! Cargo.toml=$CARGO_VERSION, tag=$TAG_BASE"
+            echo "   Update core/Cargo.toml version before tagging."
+            exit 1
+          fi
+          echo "✅ Version match confirmed"
+
+  # ── Run full CI suite before releasing ──────────────────────────────────
+  ci-gate:
+    name: CI gate
+    needs: validate-version
+    uses: ./.github/workflows/ci.yml
+
+  # ── Create GitHub Release ───────────────────────────────────────────────
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [validate-version, ci-gate]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for changelog
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Find the previous tag
+          PREV_TAG=$(git tag --sort=-version:refname | grep '^v' | head -2 | tail -1)
+          CURRENT_TAG="${GITHUB_REF#refs/tags/}"
+
+          echo "## What's Changed" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+
+          if [ -n "$PREV_TAG" ] && [ "$PREV_TAG" != "$CURRENT_TAG" ]; then
+            echo "Changes since $PREV_TAG:" >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+
+            # Features
+            FEATS=$(git log "$PREV_TAG".."$CURRENT_TAG" --pretty=format:"- %s (%h)" --grep="^feat" || true)
+            if [ -n "$FEATS" ]; then
+              echo "### ✨ Features" >> CHANGELOG.md
+              echo "$FEATS" >> CHANGELOG.md
+              echo "" >> CHANGELOG.md
+            fi
+
+            # Fixes
+            FIXES=$(git log "$PREV_TAG".."$CURRENT_TAG" --pretty=format:"- %s (%h)" --grep="^fix" || true)
+            if [ -n "$FIXES" ]; then
+              echo "### 🐛 Bug Fixes" >> CHANGELOG.md
+              echo "$FIXES" >> CHANGELOG.md
+              echo "" >> CHANGELOG.md
+            fi
+
+            # Docs
+            DOCS=$(git log "$PREV_TAG".."$CURRENT_TAG" --pretty=format:"- %s (%h)" --grep="^docs" || true)
+            if [ -n "$DOCS" ]; then
+              echo "### 📝 Documentation" >> CHANGELOG.md
+              echo "$DOCS" >> CHANGELOG.md
+              echo "" >> CHANGELOG.md
+            fi
+
+            # CI
+            CI=$(git log "$PREV_TAG".."$CURRENT_TAG" --pretty=format:"- %s (%h)" --grep="^ci" || true)
+            if [ -n "$CI" ]; then
+              echo "### 🔧 CI/CD" >> CHANGELOG.md
+              echo "$CI" >> CHANGELOG.md
+              echo "" >> CHANGELOG.md
+            fi
+
+            # All other commits
+            echo "### 📋 All Commits" >> CHANGELOG.md
+            git log "$PREV_TAG".."$CURRENT_TAG" --pretty=format:"- %s (%h)" >> CHANGELOG.md
+          else
+            echo "🎉 Initial release" >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            git log --pretty=format:"- %s (%h)" -20 >> CHANGELOG.md
+          fi
+
+          echo "" >> CHANGELOG.md
+          echo "---" >> CHANGELOG.md
+          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG:-HEAD~20}...$CURRENT_TAG" >> CHANGELOG.md
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "🔋 BPA ${{ github.ref_name }}"
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -103,14 +103,18 @@ impl LifecycleService for LifecycleServiceImpl {
         let state = crate::models::LifecycleState::from_string(&req.new_state)
             .ok_or_else(|| Status::invalid_argument("invalid lifecycle state"))?;
 
-        let entry_hash = self.engine.lifecycle_service.transition_state(
-            &req.bpan,
-            state,
-            &req.actor_id,
-            &req.actor_role,
-            &req.details
-        ).await
-        .map_err(|e| Status::internal(e.to_string()))?;
+        let entry_hash = self
+            .engine
+            .lifecycle_service
+            .transition_state(
+                &req.bpan,
+                state,
+                &req.actor_id,
+                &req.actor_role,
+                &req.details,
+            )
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(Response::new(TransitionStateResponse {
             success: true,
@@ -124,20 +128,22 @@ impl LifecycleService for LifecycleServiceImpl {
         request: Request<InitiateTransferRequest>,
     ) -> Result<Response<InitiateTransferResponse>, Status> {
         let req = request.into_inner();
-        
-        let transfer_id = self.engine.lifecycle_service.initiate_ownership_transfer(
-            &req.bpan,
-            &req.from_owner_id,
-            &req.to_owner_id,
-            &req.from_owner_role,
-            &req.to_owner_role,
-            &req.reason
-        ).await
-        .map_err(|e| Status::internal(e.to_string()))?;
 
-        Ok(Response::new(InitiateTransferResponse {
-            transfer_id,
-        }))
+        let transfer_id = self
+            .engine
+            .lifecycle_service
+            .initiate_ownership_transfer(
+                &req.bpan,
+                &req.from_owner_id,
+                &req.to_owner_id,
+                &req.from_owner_role,
+                &req.to_owner_role,
+                &req.reason,
+            )
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        Ok(Response::new(InitiateTransferResponse { transfer_id }))
     }
 
     async fn confirm_transfer(
@@ -146,15 +152,14 @@ impl LifecycleService for LifecycleServiceImpl {
     ) -> Result<Response<ConfirmTransferResponse>, Status> {
         let req = request.into_inner();
 
-        let is_complete = self.engine.lifecycle_service.confirm_ownership_transfer(
-            &req.transfer_id,
-            &req.confirming_owner_id
-        ).await
-        .map_err(|e| Status::internal(e.to_string()))?;
+        let is_complete = self
+            .engine
+            .lifecycle_service
+            .confirm_ownership_transfer(&req.transfer_id, &req.confirming_owner_id)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
-        Ok(Response::new(ConfirmTransferResponse {
-            is_complete,
-        }))
+        Ok(Response::new(ConfirmTransferResponse { is_complete }))
     }
 
     async fn reject_transfer(
@@ -163,15 +168,12 @@ impl LifecycleService for LifecycleServiceImpl {
     ) -> Result<Response<RejectTransferResponse>, Status> {
         let req = request.into_inner();
 
-        self.engine.lifecycle_service.reject_ownership_transfer(
-            &req.transfer_id,
-            &req.rejecting_owner_id,
-            &req.reason
-        ).await
-        .map_err(|e| Status::internal(e.to_string()))?;
+        self.engine
+            .lifecycle_service
+            .reject_ownership_transfer(&req.transfer_id, &req.rejecting_owner_id, &req.reason)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
-        Ok(Response::new(RejectTransferResponse {
-            success: true,
-        }))
+        Ok(Response::new(RejectTransferResponse { success: true }))
     }
 }

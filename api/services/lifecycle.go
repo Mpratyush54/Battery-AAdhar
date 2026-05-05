@@ -93,7 +93,7 @@ func (s *LifecycleService) ConfirmTransfer(
 	)
 
 	resp, err := s.lifecycleClient.ConfirmTransfer(ctx, &lifecyclev1.ConfirmTransferRequest{
-		TransferId:         transferID,
+		TransferId:        transferID,
 		ConfirmingOwnerId: confirmingOwnerID,
 	})
 	if err != nil {
@@ -116,9 +116,9 @@ func (s *LifecycleService) RejectTransfer(
 	)
 
 	resp, err := s.lifecycleClient.RejectTransfer(ctx, &lifecyclev1.RejectTransferRequest{
-		TransferId:        transferID,
+		TransferId:       transferID,
 		RejectingOwnerId: rejectingOwnerID,
-		Reason:            reason,
+		Reason:           reason,
 	})
 	if err != nil {
 		return fmt.Errorf("gRPC error: %w", err)

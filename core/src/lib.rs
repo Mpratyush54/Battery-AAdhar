@@ -53,9 +53,13 @@ impl BpaEngine {
         let signing_service = Arc::new(SigningServiceImpl::new());
         let zk_prover = Arc::new(ZkProverImpl::new());
         let material_service = MaterialService::new(encryption.clone());
-        
-        let ownership_repo = Arc::new(crate::repositories::ownership_repo::OwnershipRepositoryImpl::new(db_pool.clone()));
-        let lifecycle_service = Arc::new(crate::services::battery_lifecycle::BatteryLifecycleService::new(ownership_repo));
+
+        let ownership_repo = Arc::new(
+            crate::repositories::ownership_repo::OwnershipRepositoryImpl::new(db_pool.clone()),
+        );
+        let lifecycle_service = Arc::new(
+            crate::services::battery_lifecycle::BatteryLifecycleService::new(ownership_repo),
+        );
 
         Ok(Self {
             registration: RegistrationService::new(db_pool.clone(), encryption.clone()),

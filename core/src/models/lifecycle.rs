@@ -5,6 +5,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use uuid::Uuid;
 
 /// Battery lifecycle states
@@ -18,18 +19,21 @@ pub enum LifecycleState {
     Destroyed,   // 6
 }
 
-impl LifecycleState {
-    pub fn to_string(&self) -> String {
-        match self {
-            LifecycleState::Registered => "REGISTERED".to_string(),
-            LifecycleState::Operational => "OPERATIONAL".to_string(),
-            LifecycleState::SecondLife => "SECOND_LIFE".to_string(),
-            LifecycleState::EndOfLife => "END_OF_LIFE".to_string(),
-            LifecycleState::Recycled => "RECYCLED".to_string(),
-            LifecycleState::Destroyed => "DESTROYED".to_string(),
-        }
+impl fmt::Display for LifecycleState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            LifecycleState::Registered => "REGISTERED",
+            LifecycleState::Operational => "OPERATIONAL",
+            LifecycleState::SecondLife => "SECOND_LIFE",
+            LifecycleState::EndOfLife => "END_OF_LIFE",
+            LifecycleState::Recycled => "RECYCLED",
+            LifecycleState::Destroyed => "DESTROYED",
+        };
+        write!(f, "{s}")
     }
+}
 
+impl LifecycleState {
     pub fn from_string(s: &str) -> Option<Self> {
         match s {
             "REGISTERED" => Some(LifecycleState::Registered),
@@ -61,7 +65,7 @@ impl LifecycleState {
             // From RECYCLED
             (LifecycleState::Recycled, LifecycleState::Destroyed) => true,
 
-            // Self-transitions allowed (e.g., OPERATIONAL → OPERATIONAL for different ownership)
+            // Self-transitions allowed (e.g., OPERATIONAL -> OPERATIONAL for different ownership)
             (current, next) if current == next => true,
 
             // All other transitions invalid

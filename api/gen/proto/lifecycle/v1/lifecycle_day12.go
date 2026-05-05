@@ -18,14 +18,14 @@ type TransitionStateRequest struct {
 }
 
 func (x *TransitionStateRequest) Reset()         {}
-func (x *TransitionStateRequest) String() string  { return x.Bpan + "→" + x.NewState }
-func (x *TransitionStateRequest) ProtoMessage()   {}
+func (x *TransitionStateRequest) String() string { return x.Bpan + "→" + x.NewState }
+func (x *TransitionStateRequest) ProtoMessage()  {}
 
 func (x *TransitionStateRequest) GetBpan() string      { return x.Bpan }
-func (x *TransitionStateRequest) GetNewState() string   { return x.NewState }
-func (x *TransitionStateRequest) GetActorId() string    { return x.ActorId }
-func (x *TransitionStateRequest) GetActorRole() string  { return x.ActorRole }
-func (x *TransitionStateRequest) GetDetails() string    { return x.Details }
+func (x *TransitionStateRequest) GetNewState() string  { return x.NewState }
+func (x *TransitionStateRequest) GetActorId() string   { return x.ActorId }
+func (x *TransitionStateRequest) GetActorRole() string { return x.ActorRole }
+func (x *TransitionStateRequest) GetDetails() string   { return x.Details }
 
 type TransitionStateResponse struct {
 	Success   bool   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
@@ -34,12 +34,12 @@ type TransitionStateResponse struct {
 }
 
 func (x *TransitionStateResponse) Reset()         {}
-func (x *TransitionStateResponse) String() string  { return x.EventId }
-func (x *TransitionStateResponse) ProtoMessage()   {}
+func (x *TransitionStateResponse) String() string { return x.EventId }
+func (x *TransitionStateResponse) ProtoMessage()  {}
 
-func (x *TransitionStateResponse) GetSuccess() bool      { return x.Success }
-func (x *TransitionStateResponse) GetEventId() string    { return x.EventId }
-func (x *TransitionStateResponse) GetEntryHash() string  { return x.EntryHash }
+func (x *TransitionStateResponse) GetSuccess() bool     { return x.Success }
+func (x *TransitionStateResponse) GetEventId() string   { return x.EventId }
+func (x *TransitionStateResponse) GetEntryHash() string { return x.EntryHash }
 
 // ── InitiateTransfer ─────────────────────────────────────────────────────────
 
@@ -53,8 +53,8 @@ type InitiateTransferRequest struct {
 }
 
 func (x *InitiateTransferRequest) Reset()         {}
-func (x *InitiateTransferRequest) String() string  { return x.Bpan }
-func (x *InitiateTransferRequest) ProtoMessage()   {}
+func (x *InitiateTransferRequest) String() string { return x.Bpan }
+func (x *InitiateTransferRequest) ProtoMessage()  {}
 
 func (x *InitiateTransferRequest) GetBpan() string          { return x.Bpan }
 func (x *InitiateTransferRequest) GetFromOwnerId() string   { return x.FromOwnerId }
@@ -68,8 +68,8 @@ type InitiateTransferResponse struct {
 }
 
 func (x *InitiateTransferResponse) Reset()         {}
-func (x *InitiateTransferResponse) String() string  { return x.TransferId }
-func (x *InitiateTransferResponse) ProtoMessage()   {}
+func (x *InitiateTransferResponse) String() string { return x.TransferId }
+func (x *InitiateTransferResponse) ProtoMessage()  {}
 
 func (x *InitiateTransferResponse) GetTransferId() string { return x.TransferId }
 
@@ -81,8 +81,8 @@ type ConfirmTransferRequest struct {
 }
 
 func (x *ConfirmTransferRequest) Reset()         {}
-func (x *ConfirmTransferRequest) String() string  { return x.TransferId }
-func (x *ConfirmTransferRequest) ProtoMessage()   {}
+func (x *ConfirmTransferRequest) String() string { return x.TransferId }
+func (x *ConfirmTransferRequest) ProtoMessage()  {}
 
 func (x *ConfirmTransferRequest) GetTransferId() string        { return x.TransferId }
 func (x *ConfirmTransferRequest) GetConfirmingOwnerId() string { return x.ConfirmingOwnerId }
@@ -92,8 +92,8 @@ type ConfirmTransferResponse struct {
 }
 
 func (x *ConfirmTransferResponse) Reset()         {}
-func (x *ConfirmTransferResponse) String() string  { return "" }
-func (x *ConfirmTransferResponse) ProtoMessage()   {}
+func (x *ConfirmTransferResponse) String() string { return "" }
+func (x *ConfirmTransferResponse) ProtoMessage()  {}
 
 func (x *ConfirmTransferResponse) GetIsComplete() bool { return x.IsComplete }
 
@@ -106,8 +106,8 @@ type RejectTransferRequest struct {
 }
 
 func (x *RejectTransferRequest) Reset()         {}
-func (x *RejectTransferRequest) String() string  { return x.TransferId }
-func (x *RejectTransferRequest) ProtoMessage()   {}
+func (x *RejectTransferRequest) String() string { return x.TransferId }
+func (x *RejectTransferRequest) ProtoMessage()  {}
 
 func (x *RejectTransferRequest) GetTransferId() string       { return x.TransferId }
 func (x *RejectTransferRequest) GetRejectingOwnerId() string { return x.RejectingOwnerId }
@@ -118,7 +118,7 @@ type RejectTransferResponse struct {
 }
 
 func (x *RejectTransferResponse) Reset()         {}
-func (x *RejectTransferResponse) String() string  { return "" }
-func (x *RejectTransferResponse) ProtoMessage()   {}
+func (x *RejectTransferResponse) String() string { return "" }
+func (x *RejectTransferResponse) ProtoMessage()  {}
 
 func (x *RejectTransferResponse) GetSuccess() bool { return x.Success }

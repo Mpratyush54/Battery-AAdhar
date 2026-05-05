@@ -20,20 +20,20 @@ type TransferRejectRequest struct {
 }
 
 type LifecycleEvent struct {
-	EventID    string    `json:"event_id"`
-	BPAN       string    `json:"bpan"`
-	EventType  string    `json:"event_type"` // STATE_TRANSITION, OWNERSHIP_TRANSFER, etc.
-	FromState  *string   `json:"from_state,omitempty"`
-	ToState    *string   `json:"to_state,omitempty"`
-	ActorID    string    `json:"actor_id"`
-	ActorRole  string    `json:"actor_role"`
-	Details    string    `json:"details"`
-	CreatedAt  time.Time `json:"created_at"`
+	EventID   string    `json:"event_id"`
+	BPAN      string    `json:"bpan"`
+	EventType string    `json:"event_type"` // STATE_TRANSITION, OWNERSHIP_TRANSFER, etc.
+	FromState *string   `json:"from_state,omitempty"`
+	ToState   *string   `json:"to_state,omitempty"`
+	ActorID   string    `json:"actor_id"`
+	ActorRole string    `json:"actor_role"`
+	Details   string    `json:"details"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type LifecycleTimeline struct {
-	BPAN           string            `json:"bpan"`
-	CurrentState   string            `json:"current_state"`
-	CurrentOwner   string            `json:"current_owner"`
-	Events         []LifecycleEvent  `json:"events"`
+	BPAN         string           `json:"bpan"`
+	CurrentState string           `json:"current_state"`
+	CurrentOwner string           `json:"current_owner"`
+	Events       []LifecycleEvent `json:"events"`
 }

@@ -1,6 +1,6 @@
 //! ownership_repo.rs — Dual-party consent ownership transfers and lifecycle hash-chain storage
 //!
-//! This repository handles the multi-step ownership transfer process and 
+//! This repository handles the multi-step ownership transfer process and
 //! ensures that all battery events are hash-chained for integrity.
 
 use super::battery_repo::RepositoryError;
@@ -40,7 +40,9 @@ impl OwnershipRepositoryImpl {
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
         if pending_count > 0 {
-            return Err(RepositoryError::DatabaseError("pending transfer already exists for this battery".to_string()));
+            return Err(RepositoryError::DatabaseError(
+                "pending transfer already exists for this battery".to_string(),
+            ));
         }
 
         sqlx::query(
@@ -101,15 +103,21 @@ impl OwnershipRepositoryImpl {
         let bpan_db = transfer.2.clone();
 
         // Determine who is confirming
-        let (is_from_owner, is_to_owner) =
-            (confirming_owner_id == from_owner_id_db.as_str(), confirming_owner_id == to_owner_id_db.as_str());
+        let (is_from_owner, is_to_owner) = (
+            confirming_owner_id == from_owner_id_db.as_str(),
+            confirming_owner_id == to_owner_id_db.as_str(),
+        );
 
         if !is_from_owner && !is_to_owner {
-            return Err(RepositoryError::DatabaseError("not a party to this transfer".to_string()));
+            return Err(RepositoryError::DatabaseError(
+                "not a party to this transfer".to_string(),
+            ));
         }
 
         let now = Utc::now();
-        let mut tx = self.pool.begin()
+        let mut tx = self
+            .pool
+            .begin()
             .await
             .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -141,14 +149,12 @@ impl OwnershipRepositoryImpl {
 
         if both_confirmed {
             // Update transferred_at timestamp
-            sqlx::query(
-                "UPDATE ownership_transfers SET transferred_at = $1 WHERE id = $2"
-            )
-            .bind(now)
-            .bind(transfer_id)
-            .execute(&mut *tx)
-            .await
-            .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
+            sqlx::query("UPDATE ownership_transfers SET transferred_at = $1 WHERE id = $2")
+                .bind(now)
+                .bind(transfer_id)
+                .execute(&mut *tx)
+                .await
+                .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
             // Update battery's current owner
             sqlx::query(
@@ -159,7 +165,7 @@ impl OwnershipRepositoryImpl {
                         SELECT to_owner_role FROM ownership_transfers WHERE id = $2
                     )
                 WHERE bpan = $3
-                "#
+                "#,
             )
             .bind(to_owner_id_db)
             .bind(transfer_id)
@@ -185,7 +191,7 @@ impl OwnershipRepositoryImpl {
     ) -> Result<(), RepositoryError> {
         let transfer_id = Uuid::parse_str(transfer_id)
             .map_err(|_| RepositoryError::ValidationError("invalid transfer id".to_string()))?;
-        
+
         let now = Utc::now();
 
         sqlx::query(
@@ -207,6 +213,7 @@ impl OwnershipRepositoryImpl {
     }
 
     /// Record a lifecycle event in the hash-chained log
+    #[allow(clippy::too_many_arguments)]
     pub async fn record_lifecycle_event(
         &self,
         bpan: &str,
@@ -266,7 +273,7 @@ impl OwnershipRepositoryImpl {
     /// Get current owner of a battery
     pub async fn get_current_owner(&self, bpan: &str) -> Result<(String, String), RepositoryError> {
         let res = sqlx::query_as::<_, (Option<String>, Option<String>)>(
-            "SELECT current_owner_id, current_owner_role FROM batteries WHERE bpan = $1"
+            "SELECT current_owner_id, current_owner_role FROM batteries WHERE bpan = $1",
         )
         .bind(bpan)
         .fetch_optional(&self.pool)
@@ -274,9 +281,6 @@ impl OwnershipRepositoryImpl {
         .map_err(|e: sqlx::Error| RepositoryError::DatabaseError(e.to_string()))?
         .ok_or_else(|| RepositoryError::DatabaseError("battery not found".to_string()))?;
 
-        Ok((
-            res.0.unwrap_or_default(),
-            res.1.unwrap_or_default(),
-        ))
+        Ok((res.0.unwrap_or_default(), res.1.unwrap_or_default()))
     }
 }

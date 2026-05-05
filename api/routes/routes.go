@@ -10,6 +10,7 @@ import (
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	httpSwagger "github.com/swaggo/http-swagger"
 
+	"github.com/Mpratyush54/Battery-AAdhar/api/config"
 	"github.com/Mpratyush54/Battery-AAdhar/api/controllers"
 	_ "github.com/Mpratyush54/Battery-AAdhar/api/docs"
 	"github.com/Mpratyush54/Battery-AAdhar/api/middleware"
@@ -71,6 +72,12 @@ func NewRouter(microservices *config.MicroserviceClients) http.Handler {
 			r.Patch("/batteries/{bpan}/status", handleUpdateStatus)
 		})
 
+		// Compliance / ZK verification endpoints (verifier role)
+		// r.Group(func(r chi.Router) {
+		// 	r.Use(middleware.IsRole("verifier"))
+		// 	r.Post("/batteries/{bpan}/verify/operational", handleVerifyOperational)
+		// 	r.Post("/batteries/{bpan}/verify/signature", handleVerifySignature)
+		// })
 
 		// Admin-only
 		r.Group(func(r chi.Router) {

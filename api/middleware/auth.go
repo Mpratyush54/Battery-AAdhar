@@ -111,6 +111,16 @@ func ClaimsFromContext(ctx context.Context) *Claims {
 	return v
 }
 
+// GetUserID returns the authenticated user's subject (ID) from the request context.
+func GetUserID(r *http.Request) string {
+	return ClaimsFromContext(r.Context()).Subject
+}
+
+// GetUserRole returns the authenticated user's role from the request context.
+func GetUserRole(r *http.Request) string {
+	return ClaimsFromContext(r.Context()).Role
+}
+
 // IsExpired checks if the JWT has expired.
 func (c *Claims) IsExpired() bool {
 	return time.Now().After(c.ExpiresAt)

@@ -12,7 +12,7 @@ import (
 // TestFullAppEndpoints runs integration tests over the actual configured HTTP Router
 // verifying that handlers map correctly to their HTTP methods and return proper HTTP headers.
 func TestFullAppEndpoints(t *testing.T) {
-	mux := routes.NewRouter()
+	mux := routes.NewRouter(nil)
 
 	// Spin up a test HTTP server
 	ts := httptest.NewServer(mux)

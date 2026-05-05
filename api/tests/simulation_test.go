@@ -11,7 +11,7 @@ import (
 
 // TestSimulation verifies an end-to-end simulation of the HTTP routes, including how the RBAC middleware correctly filters and allows requests across different endpoints.
 func TestSimulation(t *testing.T) {
-	mux := routes.NewRouter()
+	mux := routes.NewRouter(nil)
 
 	// Spin up a test HTTP server
 	ts := httptest.NewServer(mux)

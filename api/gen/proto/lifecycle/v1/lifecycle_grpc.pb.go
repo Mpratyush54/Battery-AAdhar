@@ -22,6 +22,10 @@ const (
 	LifecycleService_VerifyOperational_FullMethodName = "/bpa.lifecycle.v1.LifecycleService/VerifyOperational"
 	LifecycleService_VerifyRecyclable_FullMethodName  = "/bpa.lifecycle.v1.LifecycleService/VerifyRecyclable"
 	LifecycleService_VerifySignature_FullMethodName   = "/bpa.lifecycle.v1.LifecycleService/VerifySignature"
+	LifecycleService_TransitionState_FullMethodName   = "/bpa.lifecycle.v1.LifecycleService/TransitionState"
+	LifecycleService_InitiateTransfer_FullMethodName  = "/bpa.lifecycle.v1.LifecycleService/InitiateTransfer"
+	LifecycleService_ConfirmTransfer_FullMethodName   = "/bpa.lifecycle.v1.LifecycleService/ConfirmTransfer"
+	LifecycleService_RejectTransfer_FullMethodName    = "/bpa.lifecycle.v1.LifecycleService/RejectTransfer"
 )
 
 // LifecycleServiceClient is the client API for LifecycleService service.
@@ -31,6 +35,10 @@ type LifecycleServiceClient interface {
 	VerifyOperational(ctx context.Context, in *VerifyOperationalRequest, opts ...grpc.CallOption) (*VerifyOperationalResponse, error)
 	VerifyRecyclable(ctx context.Context, in *VerifyRecyclableRequest, opts ...grpc.CallOption) (*VerifyRecyclableResponse, error)
 	VerifySignature(ctx context.Context, in *VerifySignatureRequest, opts ...grpc.CallOption) (*VerifySignatureResponse, error)
+	TransitionState(ctx context.Context, in *TransitionStateRequest, opts ...grpc.CallOption) (*TransitionStateResponse, error)
+	InitiateTransfer(ctx context.Context, in *InitiateTransferRequest, opts ...grpc.CallOption) (*InitiateTransferResponse, error)
+	ConfirmTransfer(ctx context.Context, in *ConfirmTransferRequest, opts ...grpc.CallOption) (*ConfirmTransferResponse, error)
+	RejectTransfer(ctx context.Context, in *RejectTransferRequest, opts ...grpc.CallOption) (*RejectTransferResponse, error)
 }
 
 type lifecycleServiceClient struct {
@@ -71,6 +79,46 @@ func (c *lifecycleServiceClient) VerifySignature(ctx context.Context, in *Verify
 	return out, nil
 }
 
+func (c *lifecycleServiceClient) TransitionState(ctx context.Context, in *TransitionStateRequest, opts ...grpc.CallOption) (*TransitionStateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TransitionStateResponse)
+	err := c.cc.Invoke(ctx, LifecycleService_TransitionState_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lifecycleServiceClient) InitiateTransfer(ctx context.Context, in *InitiateTransferRequest, opts ...grpc.CallOption) (*InitiateTransferResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(InitiateTransferResponse)
+	err := c.cc.Invoke(ctx, LifecycleService_InitiateTransfer_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lifecycleServiceClient) ConfirmTransfer(ctx context.Context, in *ConfirmTransferRequest, opts ...grpc.CallOption) (*ConfirmTransferResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ConfirmTransferResponse)
+	err := c.cc.Invoke(ctx, LifecycleService_ConfirmTransfer_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lifecycleServiceClient) RejectTransfer(ctx context.Context, in *RejectTransferRequest, opts ...grpc.CallOption) (*RejectTransferResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RejectTransferResponse)
+	err := c.cc.Invoke(ctx, LifecycleService_RejectTransfer_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LifecycleServiceServer is the server API for LifecycleService service.
 // All implementations must embed UnimplementedLifecycleServiceServer
 // for forward compatibility.
@@ -78,6 +126,10 @@ type LifecycleServiceServer interface {
 	VerifyOperational(context.Context, *VerifyOperationalRequest) (*VerifyOperationalResponse, error)
 	VerifyRecyclable(context.Context, *VerifyRecyclableRequest) (*VerifyRecyclableResponse, error)
 	VerifySignature(context.Context, *VerifySignatureRequest) (*VerifySignatureResponse, error)
+	TransitionState(context.Context, *TransitionStateRequest) (*TransitionStateResponse, error)
+	InitiateTransfer(context.Context, *InitiateTransferRequest) (*InitiateTransferResponse, error)
+	ConfirmTransfer(context.Context, *ConfirmTransferRequest) (*ConfirmTransferResponse, error)
+	RejectTransfer(context.Context, *RejectTransferRequest) (*RejectTransferResponse, error)
 	mustEmbedUnimplementedLifecycleServiceServer()
 }
 
@@ -96,6 +148,18 @@ func (UnimplementedLifecycleServiceServer) VerifyRecyclable(context.Context, *Ve
 }
 func (UnimplementedLifecycleServiceServer) VerifySignature(context.Context, *VerifySignatureRequest) (*VerifySignatureResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method VerifySignature not implemented")
+}
+func (UnimplementedLifecycleServiceServer) TransitionState(context.Context, *TransitionStateRequest) (*TransitionStateResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method TransitionState not implemented")
+}
+func (UnimplementedLifecycleServiceServer) InitiateTransfer(context.Context, *InitiateTransferRequest) (*InitiateTransferResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method InitiateTransfer not implemented")
+}
+func (UnimplementedLifecycleServiceServer) ConfirmTransfer(context.Context, *ConfirmTransferRequest) (*ConfirmTransferResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ConfirmTransfer not implemented")
+}
+func (UnimplementedLifecycleServiceServer) RejectTransfer(context.Context, *RejectTransferRequest) (*RejectTransferResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RejectTransfer not implemented")
 }
 func (UnimplementedLifecycleServiceServer) mustEmbedUnimplementedLifecycleServiceServer() {}
 func (UnimplementedLifecycleServiceServer) testEmbeddedByValue()                          {}
@@ -191,7 +255,97 @@ var LifecycleService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "VerifySignature",
 			Handler:    _LifecycleService_VerifySignature_Handler,
 		},
+		{
+			MethodName: "TransitionState",
+			Handler:    _LifecycleService_TransitionState_Handler,
+		},
+		{
+			MethodName: "InitiateTransfer",
+			Handler:    _LifecycleService_InitiateTransfer_Handler,
+		},
+		{
+			MethodName: "ConfirmTransfer",
+			Handler:    _LifecycleService_ConfirmTransfer_Handler,
+		},
+		{
+			MethodName: "RejectTransfer",
+			Handler:    _LifecycleService_RejectTransfer_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "proto/lifecycle.proto",
+}
+
+// ── Day 12 server handlers ────────────────────────────────────────────────────
+
+func _LifecycleService_TransitionState_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TransitionStateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LifecycleServiceServer).TransitionState(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LifecycleService_TransitionState_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LifecycleServiceServer).TransitionState(ctx, req.(*TransitionStateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LifecycleService_InitiateTransfer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InitiateTransferRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LifecycleServiceServer).InitiateTransfer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LifecycleService_InitiateTransfer_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LifecycleServiceServer).InitiateTransfer(ctx, req.(*InitiateTransferRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LifecycleService_ConfirmTransfer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfirmTransferRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LifecycleServiceServer).ConfirmTransfer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LifecycleService_ConfirmTransfer_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LifecycleServiceServer).ConfirmTransfer(ctx, req.(*ConfirmTransferRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LifecycleService_RejectTransfer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RejectTransferRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LifecycleServiceServer).RejectTransfer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LifecycleService_RejectTransfer_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LifecycleServiceServer).RejectTransfer(ctx, req.(*RejectTransferRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }

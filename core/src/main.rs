@@ -39,13 +39,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let project_id =
                 env::var("INFISICAL_PROJECT_ID").expect("INFISICAL_PROJECT_ID must be set");
-            let environment =
-                env::var("INFISICAL_ENV").unwrap_or_else(|_| "dev".to_string());
+            let environment = env::var("INFISICAL_ENV").unwrap_or_else(|_| "dev".to_string());
             let host = env::var("INFISICAL_BASE_URL")
                 .unwrap_or_else(|_| "https://app.infisical.com".to_string());
 
-            use infisical::{AuthMethod, Client};
             use infisical::secrets::GetSecretRequest;
+            use infisical::{AuthMethod, Client};
 
             let mut client = Client::builder()
                 .base_url(host)

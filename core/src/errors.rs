@@ -71,7 +71,9 @@ impl From<BpaError> for tonic::Status {
             BpaError::Unauthorized(_) => tonic::Status::permission_denied(err.to_string()),
             BpaError::NotFound(_) => tonic::Status::not_found(err.to_string()),
             BpaError::Conflict(_) => tonic::Status::already_exists(err.to_string()),
-            BpaError::InvalidStateTransition(_) => tonic::Status::failed_precondition(err.to_string()),
+            BpaError::InvalidStateTransition(_) => {
+                tonic::Status::failed_precondition(err.to_string())
+            }
             BpaError::IntegrityViolation(_) => tonic::Status::data_loss(err.to_string()),
             BpaError::QrError(_) => tonic::Status::internal(err.to_string()),
             BpaError::CarbonCalculation(_) => tonic::Status::internal(err.to_string()),

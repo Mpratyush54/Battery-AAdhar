@@ -16,9 +16,9 @@ import (
 )
 
 var (
-	ErrUserExists        = errors.New("user already exists with this email")
-	ErrInvalidCreds      = errors.New("invalid credentials")
-	ErrInvalidToken      = errors.New("invalid or expired token")
+	ErrUserExists   = errors.New("user already exists with this email")
+	ErrInvalidCreds = errors.New("invalid credentials")
+	ErrInvalidToken = errors.New("invalid or expired token")
 )
 
 type AuthService struct{}

@@ -2,6 +2,8 @@ package tests
 
 import (
 	"context"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -29,6 +31,13 @@ func TestGrpcConnection(t *testing.T) {
 	// NewClientConn auto-detects mTLS vs insecure based on env vars
 	clientConn, err := bpa_grpc.NewClientConn(ctx, microserviceUrl)
 	if err != nil {
+		if os.Getenv("REQUIRE_LIVE_GRPC") == "1" {
+			t.Fatalf("Failed to initialize gRPC client: %v", err)
+		}
+		if strings.Contains(strings.ToLower(err.Error()), "connectex") ||
+			strings.Contains(strings.ToLower(err.Error()), "unavailable") {
+			t.Skipf("Skipping live gRPC connection test; Rust core not reachable at %s: %v", microserviceUrl, err)
+		}
 		t.Fatalf("Failed to initialize gRPC client: %v", err)
 	}
 	defer clientConn.Close()

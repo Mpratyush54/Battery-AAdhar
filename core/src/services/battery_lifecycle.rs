@@ -83,12 +83,13 @@ impl BatteryLifecycleService {
     pub fn check_transition(from: &BatteryState, to: &BatteryState) -> BpaResult<()> {
         let allowed = match from {
             BatteryState::Registered => matches!(to, BatteryState::Active),
-            BatteryState::Active => matches!(to, BatteryState::InService | BatteryState::Recalled | BatteryState::Decommissioned),
+            BatteryState::Active => matches!(
+                to,
+                BatteryState::InService | BatteryState::Recalled | BatteryState::Decommissioned
+            ),
             BatteryState::InService => matches!(
                 to,
-                BatteryState::ReuseCandidate
-                    | BatteryState::EndOfLife
-                    | BatteryState::Recalled
+                BatteryState::ReuseCandidate | BatteryState::EndOfLife | BatteryState::Recalled
             ),
             BatteryState::ReuseCandidate => matches!(
                 to,
@@ -98,14 +99,15 @@ impl BatteryLifecycleService {
                 to,
                 BatteryState::InService | BatteryState::EndOfLife | BatteryState::Recalled
             ),
-            BatteryState::Recalled => matches!(
-                to,
-                BatteryState::EndOfLife | BatteryState::Decommissioned
-            ),
-            BatteryState::EndOfLife => matches!(to, BatteryState::Recycling | BatteryState::Decommissioned),
+            BatteryState::Recalled => {
+                matches!(to, BatteryState::EndOfLife | BatteryState::Decommissioned)
+            }
+            BatteryState::EndOfLife => {
+                matches!(to, BatteryState::Recycling | BatteryState::Decommissioned)
+            }
             BatteryState::Recycling => matches!(to, BatteryState::Recycled),
-            BatteryState::Recycled => false,        // terminal state
-            BatteryState::Decommissioned => false,  // terminal state
+            BatteryState::Recycled => false,       // terminal state
+            BatteryState::Decommissioned => false, // terminal state
         };
 
         if !allowed {
@@ -127,7 +129,7 @@ impl BatteryLifecycleService {
     /// Determine if the battery should be flagged for reuse based on SoH.
     /// Per BPA guidelines, batteries with SoH between 60-80% are reuse candidates.
     pub fn evaluate_soh(state_of_health: f64) -> BpaResult<SohEvaluation> {
-        if state_of_health < 0.0 || state_of_health > 100.0 {
+        if !(0.0..=100.0).contains(&state_of_health) {
             return Err(BpaError::Validation(
                 "State of Health must be between 0 and 100".into(),
             ));
@@ -143,10 +145,7 @@ impl BatteryLifecycleService {
             SohEvaluation::EndOfLife
         };
 
-        info!(
-            "SoH evaluation: {:.1}% → {:?}",
-            state_of_health, evaluation
-        );
+        info!("SoH evaluation: {:.1}% → {:?}", state_of_health, evaluation);
         Ok(evaluation)
     }
 
@@ -179,14 +178,8 @@ impl BatteryLifecycleService {
                 BatteryState::EndOfLife,
                 BatteryState::Recalled,
             ],
-            BatteryState::Recalled => vec![
-                BatteryState::EndOfLife,
-                BatteryState::Decommissioned,
-            ],
-            BatteryState::EndOfLife => vec![
-                BatteryState::Recycling,
-                BatteryState::Decommissioned,
-            ],
+            BatteryState::Recalled => vec![BatteryState::EndOfLife, BatteryState::Decommissioned],
+            BatteryState::EndOfLife => vec![BatteryState::Recycling, BatteryState::Decommissioned],
             BatteryState::Recycling => vec![BatteryState::Recycled],
             BatteryState::Recycled => vec![],
             BatteryState::Decommissioned => vec![],

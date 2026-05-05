@@ -11,8 +11,20 @@ impl ValidationService {
     /// Validate chemistry type string (human-readable form).
     pub fn validate_chemistry_type(chemistry: &str) -> BpaResult<()> {
         let valid = [
-            "LFP", "NMC", "NCA", "LTO", "Solid-State", "NaIon", "Other",
-            "lfp", "nmc", "nca", "lto", "solid-state", "naion", "other",
+            "LFP",
+            "NMC",
+            "NCA",
+            "LTO",
+            "Solid-State",
+            "NaIon",
+            "Other",
+            "lfp",
+            "nmc",
+            "nca",
+            "lto",
+            "solid-state",
+            "naion",
+            "other",
         ];
         if !valid.iter().any(|v| v.eq_ignore_ascii_case(chemistry)) {
             return Err(BpaError::Validation(format!(
@@ -71,7 +83,14 @@ impl ValidationService {
 
     /// Validate form factor.
     pub fn validate_form_factor(form_factor: &str) -> BpaResult<()> {
-        let valid = ["cylindrical", "prismatic", "pouch", "blade", "module", "other"];
+        let valid = [
+            "cylindrical",
+            "prismatic",
+            "pouch",
+            "blade",
+            "module",
+            "other",
+        ];
         if !valid.iter().any(|v| v.eq_ignore_ascii_case(form_factor)) {
             return Err(BpaError::Validation(format!(
                 "Invalid form factor '{}'. Valid: cylindrical, prismatic, pouch, blade, module, other",
@@ -96,7 +115,7 @@ impl ValidationService {
 
     /// Validate recyclable percentage (0-100).
     pub fn validate_percentage(name: &str, value: f64) -> BpaResult<()> {
-        if value < 0.0 || value > 100.0 {
+        if !(0.0..=100.0).contains(&value) {
             return Err(BpaError::Validation(format!(
                 "{} must be between 0 and 100%, got {:.2}",
                 name, value
@@ -152,7 +171,14 @@ impl ValidationService {
 
     /// Validate compliance class.
     pub fn validate_compliance_class(class: &str) -> BpaResult<()> {
-        let valid = ["AIS-156", "AIS-038", "IS-16893", "IEC-62660", "UN-38.3", "OTHER"];
+        let valid = [
+            "AIS-156",
+            "AIS-038",
+            "IS-16893",
+            "IEC-62660",
+            "UN-38.3",
+            "OTHER",
+        ];
         if !valid.iter().any(|v| v.eq_ignore_ascii_case(class)) {
             return Err(BpaError::Validation(format!(
                 "Invalid compliance class '{}'. Valid: AIS-156, AIS-038, IS-16893, IEC-62660, UN-38.3, OTHER",

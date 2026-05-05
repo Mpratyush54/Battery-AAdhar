@@ -1,8 +1,8 @@
 //! stakeholder_repo.rs — Manufacturer, recycler, government access control
 
+use super::battery_repo::RepositoryError;
 use crate::models::Stakeholder;
 use async_trait::async_trait;
-use super::battery_repo::RepositoryError;
 
 #[async_trait]
 pub trait StakeholderRepository: Send + Sync {

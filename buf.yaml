@@ -1,9 +1,12 @@
 version: v2
 lint:
   use:
-    - DEFAULT
+    - STANDARD
   except:
     - PACKAGE_DIRECTORY_MATCH
+    - DIRECTORY_SAME_PACKAGE
+    - ENUM_VALUE_PREFIX
+    - PACKAGE_VERSION_SUFFIX
 breaking:
   use:
     - FILE

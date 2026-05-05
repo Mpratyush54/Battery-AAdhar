@@ -14,12 +14,12 @@ use crate::BpaEngine;
 use std::sync::Arc;
 
 pub struct AuthServiceImpl {
-    engine: Arc<BpaEngine>,
+    _engine: Arc<BpaEngine>,
 }
 
 impl AuthServiceImpl {
     pub fn new(engine: Arc<BpaEngine>) -> Self {
-        AuthServiceImpl { engine }
+        AuthServiceImpl { _engine: engine }
     }
 }
 

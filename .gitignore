@@ -35,3 +35,4 @@ api/api.exe
 # Certificates (generated locally, never commit)
 certs/
 !certs/.gitkeep
+tools/

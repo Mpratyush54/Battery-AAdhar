@@ -3,8 +3,8 @@
 package models
 
 import (
-	"time"
 	"github.com/google/uuid"
+	"time"
 )
 
 // StakeholderType represents the type of stakeholder
@@ -24,18 +24,18 @@ const (
 
 // Stakeholder represents a single entity in the BPA ecosystem
 type Stakeholder struct {
-	ID                uuid.UUID
-	StakeholderType   StakeholderType
-	OrganizationName  string
-	CountryCode       string // 2-letter ISO code
-	RegulationCode    string // Manufacturer code (BMI), if applicable
-	ContactEmail      string
-	ContactPhone      string
-	AadhaarEncrypted  []byte // KYC document (encrypted by Rust service)
-	PublicKey         []byte // Ed25519 public key (for verification)
-	Status            string // "active", "pending", "suspended"
-	CreatedAt         time.Time
-	UpdatedAt         time.Time
+	ID               uuid.UUID
+	StakeholderType  StakeholderType
+	OrganizationName string
+	CountryCode      string // 2-letter ISO code
+	RegulationCode   string // Manufacturer code (BMI), if applicable
+	ContactEmail     string
+	ContactPhone     string
+	AadhaarEncrypted []byte // KYC document (encrypted by Rust service)
+	PublicKey        []byte // Ed25519 public key (for verification)
+	Status           string // "active", "pending", "suspended"
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }
 
 // StakeholderRegistration is the request to register a new stakeholder

@@ -25,8 +25,9 @@ impl EncryptionService {
             // 64 hex chars → 32 bytes
             (0..32)
                 .map(|i| {
-                    u8::from_str_radix(&master_key[i * 2..i * 2 + 2], 16)
-                        .map_err(|_| BpaError::Encryption("ENCRYPTION_KEY hex decode failed".into()))
+                    u8::from_str_radix(&master_key[i * 2..i * 2 + 2], 16).map_err(|_| {
+                        BpaError::Encryption("ENCRYPTION_KEY hex decode failed".into())
+                    })
                 })
                 .collect::<Result<Vec<u8>, _>>()?
         } else if master_key.len() == 32 {

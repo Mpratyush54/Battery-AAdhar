@@ -1,6 +1,6 @@
 use chrono::Utc;
 use sqlx::{Pool, Postgres, Row};
-use tracing::{info, error, instrument};
+use tracing::{error, info, instrument};
 use uuid::Uuid;
 
 use crate::errors::{BpaError, BpaResult};
@@ -95,13 +95,13 @@ impl RegistrationService {
         let battery_query = "INSERT INTO batteries (bpan, manufacturer_id, production_year, battery_category, compliance_class, static_hash, carbon_hash, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)";
         sqlx::query(battery_query)
             .bind(&bpan)
-            .bind(&request.manufacturer_id)
+            .bind(request.manufacturer_id)
             .bind(request.production_year as i32)
             .bind(&request.battery_category)
             .bind(&request.compliance_class)
             .bind(&static_hash)
             .bind(&carbon_hash)
-            .bind(&now)
+            .bind(now)
             .execute(&mut *tx)
             .await
             .map_err(|e| {
@@ -113,14 +113,14 @@ impl RegistrationService {
         let id_uuid = Uuid::new_v4();
         let identifiers_query = "INSERT INTO battery_identifiers (id, bpan, cipher_algorithm, cipher_version, encrypted_serial_number, encrypted_batch_number, encrypted_factory_code, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)";
         let _query = sqlx::query(identifiers_query)
-            .bind(&id_uuid)
+            .bind(id_uuid)
             .bind(&bpan)
             .bind("AES-256-GCM")
             .bind(1i32)
             .bind(&encrypted_serial)
             .bind(&encrypted_batch)
             .bind(&encrypted_factory)
-            .bind(&now)
+            .bind(now)
             .execute(&mut *tx)
             .await
             .map_err(|e| {
@@ -132,7 +132,7 @@ impl RegistrationService {
         let desc_uuid = Uuid::new_v4();
         let descriptor_query = "INSERT INTO battery_descriptor (id, bpan, chemistry_type, nominal_voltage, rated_capacity_kwh, energy_density, weight_kg, form_factor, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)";
         sqlx::query(descriptor_query)
-            .bind(&desc_uuid)
+            .bind(desc_uuid)
             .bind(&bpan)
             .bind(&request.chemistry_type)
             .bind(request.nominal_voltage)
@@ -140,7 +140,7 @@ impl RegistrationService {
             .bind(request.energy_density)
             .bind(request.weight_kg)
             .bind(&request.form_factor)
-            .bind(&now)
+            .bind(now)
             .execute(&mut *tx)
             .await
             .map_err(|e| {
@@ -152,13 +152,13 @@ impl RegistrationService {
         let health_uuid = Uuid::new_v4();
         let health_query = "INSERT INTO battery_health (id, bpan, state_of_health, total_cycles, degradation_class, end_of_life, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7)";
         sqlx::query(health_query)
-            .bind(&health_uuid)
+            .bind(health_uuid)
             .bind(&bpan)
-            .bind(100.0_f64)  // New battery starts at 100% SoH
-            .bind(0i32)       // Zero cycles
-            .bind("A")        // Best degradation class
-            .bind(false)      // Not end of life
-            .bind(&now)
+            .bind(100.0_f64) // New battery starts at 100% SoH
+            .bind(0i32) // Zero cycles
+            .bind("A") // Best degradation class
+            .bind(false) // Not end of life
+            .bind(now)
             .execute(&mut *tx)
             .await
             .map_err(|e| {
@@ -170,13 +170,13 @@ impl RegistrationService {
         let reg_uuid = Uuid::new_v4();
         let reg_query = "INSERT INTO battery_registration_log (id, bpan, manufacturer_id, registration_status, submitted_at, approved_at, approved_by) VALUES ($1, $2, $3, $4, $5, $6, $7)";
         sqlx::query(reg_query)
-            .bind(&reg_uuid)
+            .bind(reg_uuid)
             .bind(&bpan)
-            .bind(&request.manufacturer_id)
+            .bind(request.manufacturer_id)
             .bind("PENDING")
-            .bind(&now)
-            .bind(&now)  // Will be updated on approval
-            .bind(&actor_id)
+            .bind(now)
+            .bind(now) // Will be updated on approval
+            .bind(actor_id)
             .execute(&mut *tx)
             .await
             .map_err(|e| {
@@ -196,13 +196,13 @@ impl RegistrationService {
         );
         let audit_query = "INSERT INTO audit_logs (id, actor_id, action, resource, previous_hash, entry_hash, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)";
         sqlx::query(audit_query)
-            .bind(&audit_uuid)
-            .bind(&actor_id)
+            .bind(audit_uuid)
+            .bind(actor_id)
             .bind("REGISTER_BATTERY")
             .bind(&bpan)
-            .bind(&HashChainService::genesis_hash())
+            .bind(HashChainService::genesis_hash())
             .bind(&entry_hash)
-            .bind(&now)
+            .bind(now)
             .execute(&mut *tx)
             .await
             .map_err(|e| {
@@ -223,11 +223,14 @@ impl RegistrationService {
         })
     }
 
-    pub async fn get_battery(&self, bpan: &str) -> std::result::Result<Option<BatteryData>, sqlx::Error> {
+    pub async fn get_battery(
+        &self,
+        bpan: &str,
+    ) -> std::result::Result<Option<BatteryData>, sqlx::Error> {
         let record = sqlx::query(
             r#"
             SELECT chemistry_type FROM battery_descriptor WHERE bpan = $1
-            "#
+            "#,
         )
         .bind(bpan)
         .fetch_optional(&self.pool)
@@ -252,9 +255,9 @@ impl RegistrationService {
         let update_query = "UPDATE battery_registration_log SET registration_status = $1, approved_at = $2, approved_by = $3 WHERE id = $4 AND registration_status = 'PENDING'";
         let result = sqlx::query(update_query)
             .bind("APPROVED")
-            .bind(&now)
-            .bind(&approver_id)
-            .bind(&registration_id)
+            .bind(now)
+            .bind(approver_id)
+            .bind(registration_id)
             .execute(&mut *tx)
             .await?;
 
@@ -276,19 +279,22 @@ impl RegistrationService {
             &ts_str,
         );
         sqlx::query("INSERT INTO audit_logs (id, actor_id, action, resource, previous_hash, entry_hash, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)")
-            .bind(&audit_uuid)
-            .bind(&approver_id)
+            .bind(audit_uuid)
+            .bind(approver_id)
             .bind("APPROVE_REGISTRATION")
-            .bind(&registration_id.to_string())
-            .bind(&HashChainService::genesis_hash())
+            .bind(registration_id.to_string())
+            .bind(HashChainService::genesis_hash())
             .bind(&entry_hash)
-            .bind(&now)
+            .bind(now)
             .execute(&mut *tx)
             .await?;
 
         tx.commit().await?;
 
-        info!("Registration {} approved by {}", registration_id, approver_id);
+        info!(
+            "Registration {} approved by {}",
+            registration_id, approver_id
+        );
         Ok(())
     }
 
@@ -304,9 +310,9 @@ impl RegistrationService {
         let update_query = "UPDATE battery_registration_log SET registration_status = $1, approved_at = $2, approved_by = $3 WHERE id = $4 AND registration_status = 'PENDING'";
         let result = sqlx::query(update_query)
             .bind("REJECTED")
-            .bind(&now)
-            .bind(&rejector_id)
-            .bind(&registration_id)
+            .bind(now)
+            .bind(rejector_id)
+            .bind(registration_id)
             .execute(&self.pool)
             .await?;
 
@@ -317,7 +323,10 @@ impl RegistrationService {
             )));
         }
 
-        info!("Registration {} rejected by {}", registration_id, rejector_id);
+        info!(
+            "Registration {} rejected by {}",
+            registration_id, rejector_id
+        );
         Ok(())
     }
 
@@ -358,20 +367,20 @@ impl RegistrationService {
 #[derive(Debug, Clone)]
 pub struct BatteryRegistrationRequest {
     pub manufacturer_id: Uuid,
-    pub manufacturer_code: String,   // 3-char regulator-assigned code
-    pub chemistry_type: String,      // LFP, NMC, NCA, etc.
-    pub battery_category: String,    // EV-L, EV-M, EV-N, Industrial, ESS
-    pub compliance_class: String,    // AIS-156, etc.
+    pub manufacturer_code: String, // 3-char regulator-assigned code
+    pub chemistry_type: String,    // LFP, NMC, NCA, etc.
+    pub battery_category: String,  // EV-L, EV-M, EV-N, Industrial, ESS
+    pub compliance_class: String,  // AIS-156, etc.
     pub nominal_voltage: f64,
     pub rated_capacity_kwh: f64,
     pub energy_density: f64,
     pub weight_kg: f64,
     pub form_factor: String,
-    pub serial_number: String,       // 8+ char alphanumeric
+    pub serial_number: String, // 8+ char alphanumeric
     pub batch_number: String,
     pub factory_code: String,
     pub production_year: u16,
-    pub sequence_number: String,     // 2-char sequence
+    pub sequence_number: String, // 2-char sequence
 }
 
 /// Response payload after successful registration.

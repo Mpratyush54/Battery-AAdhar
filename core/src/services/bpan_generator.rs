@@ -74,7 +74,7 @@ impl BpanGenerator {
         Self::validate_serial_number(serial_number)?;
 
         // Validate production year
-        if production_year < 2020 || production_year > 2099 {
+        if !(2020..=2099).contains(&production_year) {
             return Err(BpaError::BpanFormat(
                 "Production year must be between 2020 and 2099".into(),
             ));

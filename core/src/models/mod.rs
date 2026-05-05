@@ -24,3 +24,10 @@ pub struct BatteryDescriptor {
 pub struct Stakeholder {
     pub id: String,
 }
+
+pub mod carbon;
+pub use carbon::{
+    CarbonComparison, CarbonFootprint, CarbonFootprintPublic, CarbonFootprintRequest,
+};
+pub mod health;
+pub use health::{HealthAggregate, HealthHistory, HealthRecord, HealthStatus, HealthUpdateRequest};

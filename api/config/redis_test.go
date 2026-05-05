@@ -14,7 +14,7 @@ func TestRedisConnectionAndPing(t *testing.T) {
 		Addr: "localhost:6379",
 		DB:   0,
 	})
-    defer client.Close()
+	defer client.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	defer cancel()

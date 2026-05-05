@@ -97,7 +97,7 @@ var (
 	// Capacity lookup (simplified from Annexure IV)
 	// Maps single character to kWh value
 	CapacityMap = map[string]float32{
-		"A": 30,   // AA in Annexure IV = 1 → mapped here as convenience
+		"A": 30, // AA in Annexure IV = 1 → mapped here as convenience
 		"B": 50,
 		"C": 75,
 		"D": 100,
@@ -108,7 +108,7 @@ var (
 
 	// Voltage lookup (simplified)
 	VoltageMap = map[string]float32{
-		"F": 307,   // Example from spec pilot
+		"F": 307, // Example from spec pilot
 		"K": 400,
 		"L": 450,
 		// ... more as needed
@@ -117,18 +117,18 @@ var (
 
 // DecodedBPANDetails returns human-readable details of a decoded BPAN.
 type DecodedBPANDetails struct {
-	CountryName          string
-	ManufacturerCode     string
-	CapacityKwh          float32
-	ChemistryType        string
-	NominalVoltageV      float32
-	CellOrigin           string
-	ExtinguisherClass    string
-	ManufacturingYear    int
-	ManufacturingMonth   string
-	ManufacturingDay     int
-	FactoryNumber        int
-	SequentialNumber     string
+	CountryName        string
+	ManufacturerCode   string
+	CapacityKwh        float32
+	ChemistryType      string
+	NominalVoltageV    float32
+	CellOrigin         string
+	ExtinguisherClass  string
+	ManufacturingYear  int
+	ManufacturingMonth string
+	ManufacturingDay   int
+	FactoryNumber      int
+	SequentialNumber   string
 }
 
 // Decode a BPAN and return human-readable fields.

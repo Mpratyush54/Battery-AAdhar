@@ -47,8 +47,8 @@ func CreatePayload(bpanStr string) (*QRPayload, error) {
 		ManufacturingMonth: details.ManufacturingMonth,
 		ManufacturingDay:   details.ManufacturingDay,
 		// These fields would come from the database (DB lookup on Day 7)
-		RecyclePercentage:     0,  // TODO: fetch from battery_material_composition
-		CarbonFootprintKgCO2e: 0,  // TODO: fetch from carbon_footprint
+		RecyclePercentage:     0, // TODO: fetch from battery_material_composition
+		CarbonFootprintKgCO2e: 0, // TODO: fetch from carbon_footprint
 	}, nil
 }
 

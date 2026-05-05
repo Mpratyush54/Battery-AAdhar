@@ -4,11 +4,11 @@
 //! the attacker must recompute the entire hash chain, which becomes
 //! computationally infeasible after a few entries.
 
-use sqlx::PgPool;
-use sha2::{Sha256, Digest};
-use uuid::Uuid;
-use chrono::Utc;
 use super::battery_repo::RepositoryError;
+use chrono::Utc;
+use sha2::{Digest, Sha256};
+use sqlx::PgPool;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct AuditLogEntry {
@@ -18,8 +18,8 @@ pub struct AuditLogEntry {
     pub resource: String,
     pub resource_id: String,
     pub details: Option<String>,
-    pub entry_hash: String,        // SHA256 of (action + resource + entry_hash_prev)
-    pub entry_hash_prev: String,   // Hash of previous entry (chain link)
+    pub entry_hash: String, // SHA256 of (action + resource + entry_hash_prev)
+    pub entry_hash_prev: String, // Hash of previous entry (chain link)
     pub created_at: chrono::DateTime<Utc>,
 }
 
@@ -43,11 +43,7 @@ impl AuditRepositoryImpl {
     }
 
     /// Compute hash for a new audit entry (includes previous hash for chain)
-    fn compute_entry_hash(
-        action: &str,
-        resource: &str,
-        prev_hash: &str,
-    ) -> String {
+    fn compute_entry_hash(action: &str, resource: &str, prev_hash: &str) -> String {
         let mut hasher = Sha256::new();
         hasher.update(action.as_bytes());
         hasher.update(resource.as_bytes());
@@ -121,7 +117,11 @@ impl AuditRepositoryImpl {
     }
 
     /// Retrieve audit trail for a resource with hash-chain verification
-    pub async fn get_audit_trail(&self, resource_id: &str, limit: i32) -> Result<Vec<AuditLogEntry>, RepositoryError> {
+    pub async fn get_audit_trail(
+        &self,
+        resource_id: &str,
+        limit: i32,
+    ) -> Result<Vec<AuditLogEntry>, RepositoryError> {
         let entries = sqlx::query_as::<_, AuditLogEntry>(
             r#"
             SELECT id, actor_id, action, resource, resource_id, details, entry_hash, entry_hash_prev, created_at
@@ -137,12 +137,13 @@ impl AuditRepositoryImpl {
         // Verify hash chain integrity
         let mut prev_hash = "0".to_string(); // Genesis
         for entry in &entries {
-            let computed_hash = Self::compute_entry_hash(&entry.action, &entry.resource, &prev_hash);
+            let computed_hash =
+                Self::compute_entry_hash(&entry.action, &entry.resource, &prev_hash);
             if computed_hash != entry.entry_hash {
-                return Err(RepositoryError::ValidationError(
-                    format!("hash chain broken at entry {}: expected {}, got {}", 
-                        entry.id, computed_hash, entry.entry_hash),
-                ));
+                return Err(RepositoryError::ValidationError(format!(
+                    "hash chain broken at entry {}: expected {}, got {}",
+                    entry.id, computed_hash, entry.entry_hash
+                )));
             }
             prev_hash = entry.entry_hash.clone();
         }
@@ -190,7 +191,10 @@ impl AuditRepositoryImpl {
     }
 
     /// Get all violations for a battery
-    pub async fn get_violations(&self, bpan: &str) -> Result<Vec<ComplianceViolation>, RepositoryError> {
+    pub async fn get_violations(
+        &self,
+        bpan: &str,
+    ) -> Result<Vec<ComplianceViolation>, RepositoryError> {
         let violations = sqlx::query_as::<_, ComplianceViolation>(
             "SELECT id, bpan, violation_type, severity, details, detected_at FROM compliance_violations WHERE bpan = $1 ORDER BY detected_at DESC",
         )
@@ -211,8 +215,10 @@ mod tests {
     fn test_hash_chain_integrity() {
         // Simulate hash chain: 3 entries
         let entry1_hash = AuditRepositoryImpl::compute_entry_hash("create", "battery", "0");
-        let entry2_hash = AuditRepositoryImpl::compute_entry_hash("update", "battery", &entry1_hash);
-        let entry3_hash = AuditRepositoryImpl::compute_entry_hash("verify", "battery", &entry2_hash);
+        let entry2_hash =
+            AuditRepositoryImpl::compute_entry_hash("update", "battery", &entry1_hash);
+        let entry3_hash =
+            AuditRepositoryImpl::compute_entry_hash("verify", "battery", &entry2_hash);
 
         // All hashes should be different
         assert_ne!(entry1_hash, entry2_hash);
@@ -228,17 +234,21 @@ mod tests {
     fn test_tamper_detection() {
         // If entry 2's action is tampered to "delete" instead of "update"
         let entry1_hash = AuditRepositoryImpl::compute_entry_hash("create", "battery", "0");
-        let entry2_hash_original = AuditRepositoryImpl::compute_entry_hash("update", "battery", &entry1_hash);
-        let entry2_hash_tampered = AuditRepositoryImpl::compute_entry_hash("delete", "battery", &entry1_hash);
+        let entry2_hash_original =
+            AuditRepositoryImpl::compute_entry_hash("update", "battery", &entry1_hash);
+        let entry2_hash_tampered =
+            AuditRepositoryImpl::compute_entry_hash("delete", "battery", &entry1_hash);
 
         // Tampered hash differs from original
         assert_ne!(entry2_hash_original, entry2_hash_tampered);
 
         // And the next entry's hash will break the chain
-        let entry3_hash = AuditRepositoryImpl::compute_entry_hash("verify", "battery", &entry2_hash_original);
+        let entry3_hash =
+            AuditRepositoryImpl::compute_entry_hash("verify", "battery", &entry2_hash_original);
 
         // If we try to recompute entry3's hash with the tampered entry2, it fails
-        let entry3_hash_broken = AuditRepositoryImpl::compute_entry_hash("verify", "battery", &entry2_hash_tampered);
+        let entry3_hash_broken =
+            AuditRepositoryImpl::compute_entry_hash("verify", "battery", &entry2_hash_tampered);
         assert_ne!(entry3_hash, entry3_hash_broken);
     }
 }

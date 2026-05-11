@@ -9,7 +9,6 @@ package commonv1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	_ "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -227,7 +226,7 @@ var File_proto_common_proto protoreflect.FileDescriptor
 
 const file_proto_common_proto_rawDesc = "" +
 	"\n" +
-	"\x12proto/common.proto\x12\rbpa.common.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x1c\n" +
+	"\x12proto/common.proto\x12\rbpa.common.v1\"\x1c\n" +
 	"\x04Bpan\x12\x14\n" +
 	"\x05value\x18\x01 \x01(\tR\x05value\"I\n" +
 	"\vPageRequest\x12\x1b\n" +

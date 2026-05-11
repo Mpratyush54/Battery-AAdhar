@@ -7,7 +7,6 @@
 package batteryv1
 
 import (
-	_ "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/common/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -26,25 +25,25 @@ const (
 type BatteryCategory int32
 
 const (
-	BatteryCategory_BATTERY_CATEGORY_UNSPECIFIED BatteryCategory = 0
-	BatteryCategory_EV_L_CATEGORY                BatteryCategory = 1
-	BatteryCategory_EV_M_N_CATEGORY              BatteryCategory = 2
-	BatteryCategory_INDUSTRIAL_ABOVE_2KWH        BatteryCategory = 3
+	BatteryCategory_BATTERY_CATEGORY_UNSPECIFIED           BatteryCategory = 0
+	BatteryCategory_BATTERY_CATEGORY_EV_L                  BatteryCategory = 1
+	BatteryCategory_BATTERY_CATEGORY_EV_M_N                BatteryCategory = 2
+	BatteryCategory_BATTERY_CATEGORY_INDUSTRIAL_ABOVE_2KWH BatteryCategory = 3
 )
 
 // Enum value maps for BatteryCategory.
 var (
 	BatteryCategory_name = map[int32]string{
 		0: "BATTERY_CATEGORY_UNSPECIFIED",
-		1: "EV_L_CATEGORY",
-		2: "EV_M_N_CATEGORY",
-		3: "INDUSTRIAL_ABOVE_2KWH",
+		1: "BATTERY_CATEGORY_EV_L",
+		2: "BATTERY_CATEGORY_EV_M_N",
+		3: "BATTERY_CATEGORY_INDUSTRIAL_ABOVE_2KWH",
 	}
 	BatteryCategory_value = map[string]int32{
-		"BATTERY_CATEGORY_UNSPECIFIED": 0,
-		"EV_L_CATEGORY":                1,
-		"EV_M_N_CATEGORY":              2,
-		"INDUSTRIAL_ABOVE_2KWH":        3,
+		"BATTERY_CATEGORY_UNSPECIFIED":           0,
+		"BATTERY_CATEGORY_EV_L":                  1,
+		"BATTERY_CATEGORY_EV_M_N":                2,
+		"BATTERY_CATEGORY_INDUSTRIAL_ABOVE_2KWH": 3,
 	}
 )
 
@@ -79,27 +78,27 @@ type BatteryStatus int32
 
 const (
 	BatteryStatus_BATTERY_STATUS_UNSPECIFIED BatteryStatus = 0
-	BatteryStatus_OPERATIONAL                BatteryStatus = 1 // SoH > 80%
-	BatteryStatus_SECOND_LIFE                BatteryStatus = 2 // 60–80%
-	BatteryStatus_END_OF_LIFE                BatteryStatus = 3 // < 60%
-	BatteryStatus_WASTE                      BatteryStatus = 4
+	BatteryStatus_BATTERY_STATUS_OPERATIONAL BatteryStatus = 1 // SoH > 80%
+	BatteryStatus_BATTERY_STATUS_SECOND_LIFE BatteryStatus = 2 // 60–80%
+	BatteryStatus_BATTERY_STATUS_END_OF_LIFE BatteryStatus = 3 // < 60%
+	BatteryStatus_BATTERY_STATUS_WASTE       BatteryStatus = 4
 )
 
 // Enum value maps for BatteryStatus.
 var (
 	BatteryStatus_name = map[int32]string{
 		0: "BATTERY_STATUS_UNSPECIFIED",
-		1: "OPERATIONAL",
-		2: "SECOND_LIFE",
-		3: "END_OF_LIFE",
-		4: "WASTE",
+		1: "BATTERY_STATUS_OPERATIONAL",
+		2: "BATTERY_STATUS_SECOND_LIFE",
+		3: "BATTERY_STATUS_END_OF_LIFE",
+		4: "BATTERY_STATUS_WASTE",
 	}
 	BatteryStatus_value = map[string]int32{
 		"BATTERY_STATUS_UNSPECIFIED": 0,
-		"OPERATIONAL":                1,
-		"SECOND_LIFE":                2,
-		"END_OF_LIFE":                3,
-		"WASTE":                      4,
+		"BATTERY_STATUS_OPERATIONAL": 1,
+		"BATTERY_STATUS_SECOND_LIFE": 2,
+		"BATTERY_STATUS_END_OF_LIFE": 3,
+		"BATTERY_STATUS_WASTE":       4,
 	}
 )
 
@@ -399,17 +398,172 @@ func (x *BatteryDynamicData) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+type CarbonFootprint struct {
+	state                        protoimpl.MessageState `protogen:"open.v1"`
+	RawMaterialEmissionsKgCo2E   float64                `protobuf:"fixed64,1,opt,name=raw_material_emissions_kg_co2e,json=rawMaterialEmissionsKgCo2e,proto3" json:"raw_material_emissions_kg_co2e,omitempty"`
+	ManufacturingEmissionsKgCo2E float64                `protobuf:"fixed64,2,opt,name=manufacturing_emissions_kg_co2e,json=manufacturingEmissionsKgCo2e,proto3" json:"manufacturing_emissions_kg_co2e,omitempty"`
+	TransportEmissionsKgCo2E     float64                `protobuf:"fixed64,3,opt,name=transport_emissions_kg_co2e,json=transportEmissionsKgCo2e,proto3" json:"transport_emissions_kg_co2e,omitempty"`
+	UsageEmissionsKgCo2E         float64                `protobuf:"fixed64,4,opt,name=usage_emissions_kg_co2e,json=usageEmissionsKgCo2e,proto3" json:"usage_emissions_kg_co2e,omitempty"`
+	RecyclingEmissionsKgCo2E     float64                `protobuf:"fixed64,5,opt,name=recycling_emissions_kg_co2e,json=recyclingEmissionsKgCo2e,proto3" json:"recycling_emissions_kg_co2e,omitempty"`
+	TotalEmissionsKgCo2E         float64                `protobuf:"fixed64,6,opt,name=total_emissions_kg_co2e,json=totalEmissionsKgCo2e,proto3" json:"total_emissions_kg_co2e,omitempty"`
+	Verified                     bool                   `protobuf:"varint,7,opt,name=verified,proto3" json:"verified,omitempty"`
+	unknownFields                protoimpl.UnknownFields
+	sizeCache                    protoimpl.SizeCache
+}
+
+func (x *CarbonFootprint) Reset() {
+	*x = CarbonFootprint{}
+	mi := &file_proto_battery_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CarbonFootprint) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CarbonFootprint) ProtoMessage() {}
+
+func (x *CarbonFootprint) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_battery_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CarbonFootprint.ProtoReflect.Descriptor instead.
+func (*CarbonFootprint) Descriptor() ([]byte, []int) {
+	return file_proto_battery_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *CarbonFootprint) GetRawMaterialEmissionsKgCo2E() float64 {
+	if x != nil {
+		return x.RawMaterialEmissionsKgCo2E
+	}
+	return 0
+}
+
+func (x *CarbonFootprint) GetManufacturingEmissionsKgCo2E() float64 {
+	if x != nil {
+		return x.ManufacturingEmissionsKgCo2E
+	}
+	return 0
+}
+
+func (x *CarbonFootprint) GetTransportEmissionsKgCo2E() float64 {
+	if x != nil {
+		return x.TransportEmissionsKgCo2E
+	}
+	return 0
+}
+
+func (x *CarbonFootprint) GetUsageEmissionsKgCo2E() float64 {
+	if x != nil {
+		return x.UsageEmissionsKgCo2E
+	}
+	return 0
+}
+
+func (x *CarbonFootprint) GetRecyclingEmissionsKgCo2E() float64 {
+	if x != nil {
+		return x.RecyclingEmissionsKgCo2E
+	}
+	return 0
+}
+
+func (x *CarbonFootprint) GetTotalEmissionsKgCo2E() float64 {
+	if x != nil {
+		return x.TotalEmissionsKgCo2E
+	}
+	return 0
+}
+
+func (x *CarbonFootprint) GetVerified() bool {
+	if x != nil {
+		return x.Verified
+	}
+	return false
+}
+
+type HealthRecord struct {
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	StateOfHealthPercent float64                `protobuf:"fixed64,1,opt,name=state_of_health_percent,json=stateOfHealthPercent,proto3" json:"state_of_health_percent,omitempty"`
+	CycleCount           int32                  `protobuf:"varint,2,opt,name=cycle_count,json=cycleCount,proto3" json:"cycle_count,omitempty"`
+	DegradationClass     string                 `protobuf:"bytes,3,opt,name=degradation_class,json=degradationClass,proto3" json:"degradation_class,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *HealthRecord) Reset() {
+	*x = HealthRecord{}
+	mi := &file_proto_battery_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HealthRecord) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HealthRecord) ProtoMessage() {}
+
+func (x *HealthRecord) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_battery_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HealthRecord.ProtoReflect.Descriptor instead.
+func (*HealthRecord) Descriptor() ([]byte, []int) {
+	return file_proto_battery_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *HealthRecord) GetStateOfHealthPercent() float64 {
+	if x != nil {
+		return x.StateOfHealthPercent
+	}
+	return 0
+}
+
+func (x *HealthRecord) GetCycleCount() int32 {
+	if x != nil {
+		return x.CycleCount
+	}
+	return 0
+}
+
+func (x *HealthRecord) GetDegradationClass() string {
+	if x != nil {
+		return x.DegradationClass
+	}
+	return ""
+}
+
 type RegisterBatteryRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	ManufacturerId string                 `protobuf:"bytes,1,opt,name=manufacturer_id,json=manufacturerId,proto3" json:"manufacturer_id,omitempty"`
 	StaticData     *BatteryStaticData     `protobuf:"bytes,2,opt,name=static_data,json=staticData,proto3" json:"static_data,omitempty"`
+	Material       *MaterialComposition   `protobuf:"bytes,3,opt,name=material,proto3" json:"material,omitempty"`
+	Carbon         *CarbonFootprint       `protobuf:"bytes,4,opt,name=carbon,proto3" json:"carbon,omitempty"`
+	InitialHealth  *HealthRecord          `protobuf:"bytes,5,opt,name=initial_health,json=initialHealth,proto3" json:"initial_health,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
 
 func (x *RegisterBatteryRequest) Reset() {
 	*x = RegisterBatteryRequest{}
-	mi := &file_proto_battery_proto_msgTypes[2]
+	mi := &file_proto_battery_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -421,7 +575,7 @@ func (x *RegisterBatteryRequest) String() string {
 func (*RegisterBatteryRequest) ProtoMessage() {}
 
 func (x *RegisterBatteryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_battery_proto_msgTypes[2]
+	mi := &file_proto_battery_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -434,7 +588,7 @@ func (x *RegisterBatteryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegisterBatteryRequest.ProtoReflect.Descriptor instead.
 func (*RegisterBatteryRequest) Descriptor() ([]byte, []int) {
-	return file_proto_battery_proto_rawDescGZIP(), []int{2}
+	return file_proto_battery_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *RegisterBatteryRequest) GetManufacturerId() string {
@@ -451,6 +605,27 @@ func (x *RegisterBatteryRequest) GetStaticData() *BatteryStaticData {
 	return nil
 }
 
+func (x *RegisterBatteryRequest) GetMaterial() *MaterialComposition {
+	if x != nil {
+		return x.Material
+	}
+	return nil
+}
+
+func (x *RegisterBatteryRequest) GetCarbon() *CarbonFootprint {
+	if x != nil {
+		return x.Carbon
+	}
+	return nil
+}
+
+func (x *RegisterBatteryRequest) GetInitialHealth() *HealthRecord {
+	if x != nil {
+		return x.InitialHealth
+	}
+	return nil
+}
+
 type RegisterBatteryResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Bpan          string                 `protobuf:"bytes,1,opt,name=bpan,proto3" json:"bpan,omitempty"`                              // generated 21-char BPAN
@@ -462,7 +637,7 @@ type RegisterBatteryResponse struct {
 
 func (x *RegisterBatteryResponse) Reset() {
 	*x = RegisterBatteryResponse{}
-	mi := &file_proto_battery_proto_msgTypes[3]
+	mi := &file_proto_battery_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -474,7 +649,7 @@ func (x *RegisterBatteryResponse) String() string {
 func (*RegisterBatteryResponse) ProtoMessage() {}
 
 func (x *RegisterBatteryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_battery_proto_msgTypes[3]
+	mi := &file_proto_battery_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -487,7 +662,7 @@ func (x *RegisterBatteryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegisterBatteryResponse.ProtoReflect.Descriptor instead.
 func (*RegisterBatteryResponse) Descriptor() ([]byte, []int) {
-	return file_proto_battery_proto_rawDescGZIP(), []int{3}
+	return file_proto_battery_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *RegisterBatteryResponse) GetBpan() string {
@@ -520,7 +695,7 @@ type GetBatteryRequest struct {
 
 func (x *GetBatteryRequest) Reset() {
 	*x = GetBatteryRequest{}
-	mi := &file_proto_battery_proto_msgTypes[4]
+	mi := &file_proto_battery_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -532,7 +707,7 @@ func (x *GetBatteryRequest) String() string {
 func (*GetBatteryRequest) ProtoMessage() {}
 
 func (x *GetBatteryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_battery_proto_msgTypes[4]
+	mi := &file_proto_battery_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -545,7 +720,7 @@ func (x *GetBatteryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBatteryRequest.ProtoReflect.Descriptor instead.
 func (*GetBatteryRequest) Descriptor() ([]byte, []int) {
-	return file_proto_battery_proto_rawDescGZIP(), []int{4}
+	return file_proto_battery_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetBatteryRequest) GetBpan() string {
@@ -565,7 +740,7 @@ type GetBatteryResponse struct {
 
 func (x *GetBatteryResponse) Reset() {
 	*x = GetBatteryResponse{}
-	mi := &file_proto_battery_proto_msgTypes[5]
+	mi := &file_proto_battery_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -577,7 +752,7 @@ func (x *GetBatteryResponse) String() string {
 func (*GetBatteryResponse) ProtoMessage() {}
 
 func (x *GetBatteryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_battery_proto_msgTypes[5]
+	mi := &file_proto_battery_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -590,7 +765,7 @@ func (x *GetBatteryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBatteryResponse.ProtoReflect.Descriptor instead.
 func (*GetBatteryResponse) Descriptor() ([]byte, []int) {
-	return file_proto_battery_proto_rawDescGZIP(), []int{5}
+	return file_proto_battery_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetBatteryResponse) GetBpan() string {
@@ -620,7 +795,7 @@ type UpdateBatteryStatusRequest struct {
 
 func (x *UpdateBatteryStatusRequest) Reset() {
 	*x = UpdateBatteryStatusRequest{}
-	mi := &file_proto_battery_proto_msgTypes[6]
+	mi := &file_proto_battery_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -632,7 +807,7 @@ func (x *UpdateBatteryStatusRequest) String() string {
 func (*UpdateBatteryStatusRequest) ProtoMessage() {}
 
 func (x *UpdateBatteryStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_battery_proto_msgTypes[6]
+	mi := &file_proto_battery_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -645,7 +820,7 @@ func (x *UpdateBatteryStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateBatteryStatusRequest.ProtoReflect.Descriptor instead.
 func (*UpdateBatteryStatusRequest) Descriptor() ([]byte, []int) {
-	return file_proto_battery_proto_rawDescGZIP(), []int{6}
+	return file_proto_battery_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *UpdateBatteryStatusRequest) GetBpan() string {
@@ -693,7 +868,7 @@ type UpdateBatteryStatusResponse struct {
 
 func (x *UpdateBatteryStatusResponse) Reset() {
 	*x = UpdateBatteryStatusResponse{}
-	mi := &file_proto_battery_proto_msgTypes[7]
+	mi := &file_proto_battery_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -705,7 +880,7 @@ func (x *UpdateBatteryStatusResponse) String() string {
 func (*UpdateBatteryStatusResponse) ProtoMessage() {}
 
 func (x *UpdateBatteryStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_battery_proto_msgTypes[7]
+	mi := &file_proto_battery_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -718,7 +893,7 @@ func (x *UpdateBatteryStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateBatteryStatusResponse.ProtoReflect.Descriptor instead.
 func (*UpdateBatteryStatusResponse) Descriptor() ([]byte, []int) {
-	return file_proto_battery_proto_rawDescGZIP(), []int{7}
+	return file_proto_battery_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *UpdateBatteryStatusResponse) GetSuccess() bool {
@@ -735,11 +910,385 @@ func (x *UpdateBatteryStatusResponse) GetNewStatus() string {
 	return ""
 }
 
+type MaterialComposition struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Bpan  string                 `protobuf:"bytes,1,opt,name=bpan,proto3" json:"bpan,omitempty"`
+	// Public fields (visible to all roles)
+	CathodeMaterial      string  `protobuf:"bytes,2,opt,name=cathode_material,json=cathodeMaterial,proto3" json:"cathode_material,omitempty"`                  // e.g. "NMC811"
+	AnodeMaterial        string  `protobuf:"bytes,3,opt,name=anode_material,json=anodeMaterial,proto3" json:"anode_material,omitempty"`                        // e.g. "Graphite"
+	ElectrolyteType      string  `protobuf:"bytes,4,opt,name=electrolyte_type,json=electrolyteType,proto3" json:"electrolyte_type,omitempty"`                  // e.g. "LiPF6"
+	SeparatorMaterial    string  `protobuf:"bytes,5,opt,name=separator_material,json=separatorMaterial,proto3" json:"separator_material,omitempty"`            // e.g. "PE/PP"
+	RecyclablePercentage float64 `protobuf:"fixed64,6,opt,name=recyclable_percentage,json=recyclablePercentage,proto3" json:"recyclable_percentage,omitempty"` // 0.0–100.0
+	// Private fields (encrypted at rest, role-gated)
+	LithiumContentG     float64 `protobuf:"fixed64,7,opt,name=lithium_content_g,json=lithiumContentG,proto3" json:"lithium_content_g,omitempty"`
+	CobaltContentG      float64 `protobuf:"fixed64,8,opt,name=cobalt_content_g,json=cobaltContentG,proto3" json:"cobalt_content_g,omitempty"`
+	NickelContentG      float64 `protobuf:"fixed64,9,opt,name=nickel_content_g,json=nickelContentG,proto3" json:"nickel_content_g,omitempty"`
+	ManganeseContentG   float64 `protobuf:"fixed64,10,opt,name=manganese_content_g,json=manganeseContentG,proto3" json:"manganese_content_g,omitempty"`
+	LeadContentG        float64 `protobuf:"fixed64,11,opt,name=lead_content_g,json=leadContentG,proto3" json:"lead_content_g,omitempty"`
+	CadmiumContentG     float64 `protobuf:"fixed64,12,opt,name=cadmium_content_g,json=cadmiumContentG,proto3" json:"cadmium_content_g,omitempty"`
+	HazardousSubstances string  `protobuf:"bytes,13,opt,name=hazardous_substances,json=hazardousSubstances,proto3" json:"hazardous_substances,omitempty"` // CSV list
+	SupplyChainSource   string  `protobuf:"bytes,14,opt,name=supply_chain_source,json=supplyChainSource,proto3" json:"supply_chain_source,omitempty"`     // origin traceability
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *MaterialComposition) Reset() {
+	*x = MaterialComposition{}
+	mi := &file_proto_battery_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MaterialComposition) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MaterialComposition) ProtoMessage() {}
+
+func (x *MaterialComposition) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_battery_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MaterialComposition.ProtoReflect.Descriptor instead.
+func (*MaterialComposition) Descriptor() ([]byte, []int) {
+	return file_proto_battery_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *MaterialComposition) GetBpan() string {
+	if x != nil {
+		return x.Bpan
+	}
+	return ""
+}
+
+func (x *MaterialComposition) GetCathodeMaterial() string {
+	if x != nil {
+		return x.CathodeMaterial
+	}
+	return ""
+}
+
+func (x *MaterialComposition) GetAnodeMaterial() string {
+	if x != nil {
+		return x.AnodeMaterial
+	}
+	return ""
+}
+
+func (x *MaterialComposition) GetElectrolyteType() string {
+	if x != nil {
+		return x.ElectrolyteType
+	}
+	return ""
+}
+
+func (x *MaterialComposition) GetSeparatorMaterial() string {
+	if x != nil {
+		return x.SeparatorMaterial
+	}
+	return ""
+}
+
+func (x *MaterialComposition) GetRecyclablePercentage() float64 {
+	if x != nil {
+		return x.RecyclablePercentage
+	}
+	return 0
+}
+
+func (x *MaterialComposition) GetLithiumContentG() float64 {
+	if x != nil {
+		return x.LithiumContentG
+	}
+	return 0
+}
+
+func (x *MaterialComposition) GetCobaltContentG() float64 {
+	if x != nil {
+		return x.CobaltContentG
+	}
+	return 0
+}
+
+func (x *MaterialComposition) GetNickelContentG() float64 {
+	if x != nil {
+		return x.NickelContentG
+	}
+	return 0
+}
+
+func (x *MaterialComposition) GetManganeseContentG() float64 {
+	if x != nil {
+		return x.ManganeseContentG
+	}
+	return 0
+}
+
+func (x *MaterialComposition) GetLeadContentG() float64 {
+	if x != nil {
+		return x.LeadContentG
+	}
+	return 0
+}
+
+func (x *MaterialComposition) GetCadmiumContentG() float64 {
+	if x != nil {
+		return x.CadmiumContentG
+	}
+	return 0
+}
+
+func (x *MaterialComposition) GetHazardousSubstances() string {
+	if x != nil {
+		return x.HazardousSubstances
+	}
+	return ""
+}
+
+func (x *MaterialComposition) GetSupplyChainSource() string {
+	if x != nil {
+		return x.SupplyChainSource
+	}
+	return ""
+}
+
+type SubmitMaterialCompositionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Bpan          string                 `protobuf:"bytes,1,opt,name=bpan,proto3" json:"bpan,omitempty"`
+	SubmitterId   string                 `protobuf:"bytes,2,opt,name=submitter_id,json=submitterId,proto3" json:"submitter_id,omitempty"`
+	Composition   *MaterialComposition   `protobuf:"bytes,3,opt,name=composition,proto3" json:"composition,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubmitMaterialCompositionRequest) Reset() {
+	*x = SubmitMaterialCompositionRequest{}
+	mi := &file_proto_battery_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubmitMaterialCompositionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubmitMaterialCompositionRequest) ProtoMessage() {}
+
+func (x *SubmitMaterialCompositionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_battery_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubmitMaterialCompositionRequest.ProtoReflect.Descriptor instead.
+func (*SubmitMaterialCompositionRequest) Descriptor() ([]byte, []int) {
+	return file_proto_battery_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *SubmitMaterialCompositionRequest) GetBpan() string {
+	if x != nil {
+		return x.Bpan
+	}
+	return ""
+}
+
+func (x *SubmitMaterialCompositionRequest) GetSubmitterId() string {
+	if x != nil {
+		return x.SubmitterId
+	}
+	return ""
+}
+
+func (x *SubmitMaterialCompositionRequest) GetComposition() *MaterialComposition {
+	if x != nil {
+		return x.Composition
+	}
+	return nil
+}
+
+type SubmitMaterialCompositionResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	DataHash      string                 `protobuf:"bytes,2,opt,name=data_hash,json=dataHash,proto3" json:"data_hash,omitempty"`    // SHA-256 of the stored record
+	EventHash     string                 `protobuf:"bytes,3,opt,name=event_hash,json=eventHash,proto3" json:"event_hash,omitempty"` // hash-chain entry for audit
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubmitMaterialCompositionResponse) Reset() {
+	*x = SubmitMaterialCompositionResponse{}
+	mi := &file_proto_battery_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubmitMaterialCompositionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubmitMaterialCompositionResponse) ProtoMessage() {}
+
+func (x *SubmitMaterialCompositionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_battery_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubmitMaterialCompositionResponse.ProtoReflect.Descriptor instead.
+func (*SubmitMaterialCompositionResponse) Descriptor() ([]byte, []int) {
+	return file_proto_battery_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *SubmitMaterialCompositionResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *SubmitMaterialCompositionResponse) GetDataHash() string {
+	if x != nil {
+		return x.DataHash
+	}
+	return ""
+}
+
+func (x *SubmitMaterialCompositionResponse) GetEventHash() string {
+	if x != nil {
+		return x.EventHash
+	}
+	return ""
+}
+
+type GetMaterialCompositionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Bpan          string                 `protobuf:"bytes,1,opt,name=bpan,proto3" json:"bpan,omitempty"`
+	RequesterRole string                 `protobuf:"bytes,2,opt,name=requester_role,json=requesterRole,proto3" json:"requester_role,omitempty"` // determines which fields are returned
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetMaterialCompositionRequest) Reset() {
+	*x = GetMaterialCompositionRequest{}
+	mi := &file_proto_battery_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetMaterialCompositionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetMaterialCompositionRequest) ProtoMessage() {}
+
+func (x *GetMaterialCompositionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_battery_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetMaterialCompositionRequest.ProtoReflect.Descriptor instead.
+func (*GetMaterialCompositionRequest) Descriptor() ([]byte, []int) {
+	return file_proto_battery_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *GetMaterialCompositionRequest) GetBpan() string {
+	if x != nil {
+		return x.Bpan
+	}
+	return ""
+}
+
+func (x *GetMaterialCompositionRequest) GetRequesterRole() string {
+	if x != nil {
+		return x.RequesterRole
+	}
+	return ""
+}
+
+type GetMaterialCompositionResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Composition   *MaterialComposition   `protobuf:"bytes,1,opt,name=composition,proto3" json:"composition,omitempty"`
+	Partial       bool                   `protobuf:"varint,2,opt,name=partial,proto3" json:"partial,omitempty"` // true if private fields were redacted
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetMaterialCompositionResponse) Reset() {
+	*x = GetMaterialCompositionResponse{}
+	mi := &file_proto_battery_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetMaterialCompositionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetMaterialCompositionResponse) ProtoMessage() {}
+
+func (x *GetMaterialCompositionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_battery_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetMaterialCompositionResponse.ProtoReflect.Descriptor instead.
+func (*GetMaterialCompositionResponse) Descriptor() ([]byte, []int) {
+	return file_proto_battery_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *GetMaterialCompositionResponse) GetComposition() *MaterialComposition {
+	if x != nil {
+		return x.Composition
+	}
+	return nil
+}
+
+func (x *GetMaterialCompositionResponse) GetPartial() bool {
+	if x != nil {
+		return x.Partial
+	}
+	return false
+}
+
 var File_proto_battery_proto protoreflect.FileDescriptor
 
 const file_proto_battery_proto_rawDesc = "" +
 	"\n" +
-	"\x13proto/battery.proto\x12\x0ebpa.battery.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x12proto/common.proto\"\xe0\x05\n" +
+	"\x13proto/battery.proto\x12\x0ebpa.battery.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xe0\x05\n" +
 	"\x11BatteryStaticData\x12!\n" +
 	"\fcountry_code\x18\x01 \x01(\tR\vcountryCode\x12+\n" +
 	"\x11manufacturer_code\x18\x02 \x01(\tR\x10manufacturerCode\x120\n" +
@@ -769,11 +1318,27 @@ const file_proto_battery_proto_rawDesc = "" +
 	"\x12disassembly_method\x18\x05 \x01(\tR\x11disassemblyMethod\x12-\n" +
 	"\x12circularity_method\x18\x06 \x01(\tR\x11circularityMethod\x129\n" +
 	"\n" +
-	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x85\x01\n" +
+	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xa4\x03\n" +
+	"\x0fCarbonFootprint\x12B\n" +
+	"\x1eraw_material_emissions_kg_co2e\x18\x01 \x01(\x01R\x1arawMaterialEmissionsKgCo2e\x12E\n" +
+	"\x1fmanufacturing_emissions_kg_co2e\x18\x02 \x01(\x01R\x1cmanufacturingEmissionsKgCo2e\x12=\n" +
+	"\x1btransport_emissions_kg_co2e\x18\x03 \x01(\x01R\x18transportEmissionsKgCo2e\x125\n" +
+	"\x17usage_emissions_kg_co2e\x18\x04 \x01(\x01R\x14usageEmissionsKgCo2e\x12=\n" +
+	"\x1brecycling_emissions_kg_co2e\x18\x05 \x01(\x01R\x18recyclingEmissionsKgCo2e\x125\n" +
+	"\x17total_emissions_kg_co2e\x18\x06 \x01(\x01R\x14totalEmissionsKgCo2e\x12\x1a\n" +
+	"\bverified\x18\a \x01(\bR\bverified\"\x93\x01\n" +
+	"\fHealthRecord\x125\n" +
+	"\x17state_of_health_percent\x18\x01 \x01(\x01R\x14stateOfHealthPercent\x12\x1f\n" +
+	"\vcycle_count\x18\x02 \x01(\x05R\n" +
+	"cycleCount\x12+\n" +
+	"\x11degradation_class\x18\x03 \x01(\tR\x10degradationClass\"\xc4\x02\n" +
 	"\x16RegisterBatteryRequest\x12'\n" +
 	"\x0fmanufacturer_id\x18\x01 \x01(\tR\x0emanufacturerId\x12B\n" +
 	"\vstatic_data\x18\x02 \x01(\v2!.bpa.battery.v1.BatteryStaticDataR\n" +
-	"staticData\"l\n" +
+	"staticData\x12?\n" +
+	"\bmaterial\x18\x03 \x01(\v2#.bpa.battery.v1.MaterialCompositionR\bmaterial\x127\n" +
+	"\x06carbon\x18\x04 \x01(\v2\x1f.bpa.battery.v1.CarbonFootprintR\x06carbon\x12C\n" +
+	"\x0einitial_health\x18\x05 \x01(\v2\x1c.bpa.battery.v1.HealthRecordR\rinitialHealth\"l\n" +
 	"\x17RegisterBatteryResponse\x12\x12\n" +
 	"\x04bpan\x18\x01 \x01(\tR\x04bpan\x12\x1e\n" +
 	"\vqr_code_png\x18\x02 \x01(\fR\tqrCodePng\x12\x1d\n" +
@@ -795,23 +1360,56 @@ const file_proto_battery_proto_rawDesc = "" +
 	"\x1bUpdateBatteryStatusResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x1d\n" +
 	"\n" +
-	"new_status\x18\x02 \x01(\tR\tnewStatus*v\n" +
+	"new_status\x18\x02 \x01(\tR\tnewStatus\"\xef\x04\n" +
+	"\x13MaterialComposition\x12\x12\n" +
+	"\x04bpan\x18\x01 \x01(\tR\x04bpan\x12)\n" +
+	"\x10cathode_material\x18\x02 \x01(\tR\x0fcathodeMaterial\x12%\n" +
+	"\x0eanode_material\x18\x03 \x01(\tR\ranodeMaterial\x12)\n" +
+	"\x10electrolyte_type\x18\x04 \x01(\tR\x0felectrolyteType\x12-\n" +
+	"\x12separator_material\x18\x05 \x01(\tR\x11separatorMaterial\x123\n" +
+	"\x15recyclable_percentage\x18\x06 \x01(\x01R\x14recyclablePercentage\x12*\n" +
+	"\x11lithium_content_g\x18\a \x01(\x01R\x0flithiumContentG\x12(\n" +
+	"\x10cobalt_content_g\x18\b \x01(\x01R\x0ecobaltContentG\x12(\n" +
+	"\x10nickel_content_g\x18\t \x01(\x01R\x0enickelContentG\x12.\n" +
+	"\x13manganese_content_g\x18\n" +
+	" \x01(\x01R\x11manganeseContentG\x12$\n" +
+	"\x0elead_content_g\x18\v \x01(\x01R\fleadContentG\x12*\n" +
+	"\x11cadmium_content_g\x18\f \x01(\x01R\x0fcadmiumContentG\x121\n" +
+	"\x14hazardous_substances\x18\r \x01(\tR\x13hazardousSubstances\x12.\n" +
+	"\x13supply_chain_source\x18\x0e \x01(\tR\x11supplyChainSource\"\xa0\x01\n" +
+	" SubmitMaterialCompositionRequest\x12\x12\n" +
+	"\x04bpan\x18\x01 \x01(\tR\x04bpan\x12!\n" +
+	"\fsubmitter_id\x18\x02 \x01(\tR\vsubmitterId\x12E\n" +
+	"\vcomposition\x18\x03 \x01(\v2#.bpa.battery.v1.MaterialCompositionR\vcomposition\"y\n" +
+	"!SubmitMaterialCompositionResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x1b\n" +
+	"\tdata_hash\x18\x02 \x01(\tR\bdataHash\x12\x1d\n" +
+	"\n" +
+	"event_hash\x18\x03 \x01(\tR\teventHash\"Z\n" +
+	"\x1dGetMaterialCompositionRequest\x12\x12\n" +
+	"\x04bpan\x18\x01 \x01(\tR\x04bpan\x12%\n" +
+	"\x0erequester_role\x18\x02 \x01(\tR\rrequesterRole\"\x81\x01\n" +
+	"\x1eGetMaterialCompositionResponse\x12E\n" +
+	"\vcomposition\x18\x01 \x01(\v2#.bpa.battery.v1.MaterialCompositionR\vcomposition\x12\x18\n" +
+	"\apartial\x18\x02 \x01(\bR\apartial*\x97\x01\n" +
 	"\x0fBatteryCategory\x12 \n" +
-	"\x1cBATTERY_CATEGORY_UNSPECIFIED\x10\x00\x12\x11\n" +
-	"\rEV_L_CATEGORY\x10\x01\x12\x13\n" +
-	"\x0fEV_M_N_CATEGORY\x10\x02\x12\x19\n" +
-	"\x15INDUSTRIAL_ABOVE_2KWH\x10\x03*m\n" +
+	"\x1cBATTERY_CATEGORY_UNSPECIFIED\x10\x00\x12\x19\n" +
+	"\x15BATTERY_CATEGORY_EV_L\x10\x01\x12\x1b\n" +
+	"\x17BATTERY_CATEGORY_EV_M_N\x10\x02\x12*\n" +
+	"&BATTERY_CATEGORY_INDUSTRIAL_ABOVE_2KWH\x10\x03*\xa9\x01\n" +
 	"\rBatteryStatus\x12\x1e\n" +
-	"\x1aBATTERY_STATUS_UNSPECIFIED\x10\x00\x12\x0f\n" +
-	"\vOPERATIONAL\x10\x01\x12\x0f\n" +
-	"\vSECOND_LIFE\x10\x02\x12\x0f\n" +
-	"\vEND_OF_LIFE\x10\x03\x12\t\n" +
-	"\x05WASTE\x10\x042\xb9\x02\n" +
+	"\x1aBATTERY_STATUS_UNSPECIFIED\x10\x00\x12\x1e\n" +
+	"\x1aBATTERY_STATUS_OPERATIONAL\x10\x01\x12\x1e\n" +
+	"\x1aBATTERY_STATUS_SECOND_LIFE\x10\x02\x12\x1e\n" +
+	"\x1aBATTERY_STATUS_END_OF_LIFE\x10\x03\x12\x18\n" +
+	"\x14BATTERY_STATUS_WASTE\x10\x042\xb5\x04\n" +
 	"\x0eBatteryService\x12b\n" +
 	"\x0fRegisterBattery\x12&.bpa.battery.v1.RegisterBatteryRequest\x1a'.bpa.battery.v1.RegisterBatteryResponse\x12S\n" +
 	"\n" +
 	"GetBattery\x12!.bpa.battery.v1.GetBatteryRequest\x1a\".bpa.battery.v1.GetBatteryResponse\x12n\n" +
-	"\x13UpdateBatteryStatus\x12*.bpa.battery.v1.UpdateBatteryStatusRequest\x1a+.bpa.battery.v1.UpdateBatteryStatusResponseBJZHgithub.com/Mpratyush54/Battery-AAdhar/api/gen/proto/battery/v1;batteryv1b\x06proto3"
+	"\x13UpdateBatteryStatus\x12*.bpa.battery.v1.UpdateBatteryStatusRequest\x1a+.bpa.battery.v1.UpdateBatteryStatusResponse\x12\x80\x01\n" +
+	"\x19SubmitMaterialComposition\x120.bpa.battery.v1.SubmitMaterialCompositionRequest\x1a1.bpa.battery.v1.SubmitMaterialCompositionResponse\x12w\n" +
+	"\x16GetMaterialComposition\x12-.bpa.battery.v1.GetMaterialCompositionRequest\x1a..bpa.battery.v1.GetMaterialCompositionResponseBJZHgithub.com/Mpratyush54/Battery-AAdhar/api/gen/proto/battery/v1;batteryv1b\x06proto3"
 
 var (
 	file_proto_battery_proto_rawDescOnce sync.Once
@@ -826,38 +1424,54 @@ func file_proto_battery_proto_rawDescGZIP() []byte {
 }
 
 var file_proto_battery_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_proto_battery_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_proto_battery_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_proto_battery_proto_goTypes = []any{
-	(BatteryCategory)(0),                // 0: bpa.battery.v1.BatteryCategory
-	(BatteryStatus)(0),                  // 1: bpa.battery.v1.BatteryStatus
-	(*BatteryStaticData)(nil),           // 2: bpa.battery.v1.BatteryStaticData
-	(*BatteryDynamicData)(nil),          // 3: bpa.battery.v1.BatteryDynamicData
-	(*RegisterBatteryRequest)(nil),      // 4: bpa.battery.v1.RegisterBatteryRequest
-	(*RegisterBatteryResponse)(nil),     // 5: bpa.battery.v1.RegisterBatteryResponse
-	(*GetBatteryRequest)(nil),           // 6: bpa.battery.v1.GetBatteryRequest
-	(*GetBatteryResponse)(nil),          // 7: bpa.battery.v1.GetBatteryResponse
-	(*UpdateBatteryStatusRequest)(nil),  // 8: bpa.battery.v1.UpdateBatteryStatusRequest
-	(*UpdateBatteryStatusResponse)(nil), // 9: bpa.battery.v1.UpdateBatteryStatusResponse
-	(*timestamppb.Timestamp)(nil),       // 10: google.protobuf.Timestamp
+	(BatteryCategory)(0),                      // 0: bpa.battery.v1.BatteryCategory
+	(BatteryStatus)(0),                        // 1: bpa.battery.v1.BatteryStatus
+	(*BatteryStaticData)(nil),                 // 2: bpa.battery.v1.BatteryStaticData
+	(*BatteryDynamicData)(nil),                // 3: bpa.battery.v1.BatteryDynamicData
+	(*CarbonFootprint)(nil),                   // 4: bpa.battery.v1.CarbonFootprint
+	(*HealthRecord)(nil),                      // 5: bpa.battery.v1.HealthRecord
+	(*RegisterBatteryRequest)(nil),            // 6: bpa.battery.v1.RegisterBatteryRequest
+	(*RegisterBatteryResponse)(nil),           // 7: bpa.battery.v1.RegisterBatteryResponse
+	(*GetBatteryRequest)(nil),                 // 8: bpa.battery.v1.GetBatteryRequest
+	(*GetBatteryResponse)(nil),                // 9: bpa.battery.v1.GetBatteryResponse
+	(*UpdateBatteryStatusRequest)(nil),        // 10: bpa.battery.v1.UpdateBatteryStatusRequest
+	(*UpdateBatteryStatusResponse)(nil),       // 11: bpa.battery.v1.UpdateBatteryStatusResponse
+	(*MaterialComposition)(nil),               // 12: bpa.battery.v1.MaterialComposition
+	(*SubmitMaterialCompositionRequest)(nil),  // 13: bpa.battery.v1.SubmitMaterialCompositionRequest
+	(*SubmitMaterialCompositionResponse)(nil), // 14: bpa.battery.v1.SubmitMaterialCompositionResponse
+	(*GetMaterialCompositionRequest)(nil),     // 15: bpa.battery.v1.GetMaterialCompositionRequest
+	(*GetMaterialCompositionResponse)(nil),    // 16: bpa.battery.v1.GetMaterialCompositionResponse
+	(*timestamppb.Timestamp)(nil),             // 17: google.protobuf.Timestamp
 }
 var file_proto_battery_proto_depIdxs = []int32{
 	0,  // 0: bpa.battery.v1.BatteryDynamicData.category:type_name -> bpa.battery.v1.BatteryCategory
 	1,  // 1: bpa.battery.v1.BatteryDynamicData.status:type_name -> bpa.battery.v1.BatteryStatus
-	10, // 2: bpa.battery.v1.BatteryDynamicData.updated_at:type_name -> google.protobuf.Timestamp
+	17, // 2: bpa.battery.v1.BatteryDynamicData.updated_at:type_name -> google.protobuf.Timestamp
 	2,  // 3: bpa.battery.v1.RegisterBatteryRequest.static_data:type_name -> bpa.battery.v1.BatteryStaticData
-	2,  // 4: bpa.battery.v1.GetBatteryResponse.static_data:type_name -> bpa.battery.v1.BatteryStaticData
-	1,  // 5: bpa.battery.v1.UpdateBatteryStatusRequest.new_status:type_name -> bpa.battery.v1.BatteryStatus
-	4,  // 6: bpa.battery.v1.BatteryService.RegisterBattery:input_type -> bpa.battery.v1.RegisterBatteryRequest
-	6,  // 7: bpa.battery.v1.BatteryService.GetBattery:input_type -> bpa.battery.v1.GetBatteryRequest
-	8,  // 8: bpa.battery.v1.BatteryService.UpdateBatteryStatus:input_type -> bpa.battery.v1.UpdateBatteryStatusRequest
-	5,  // 9: bpa.battery.v1.BatteryService.RegisterBattery:output_type -> bpa.battery.v1.RegisterBatteryResponse
-	7,  // 10: bpa.battery.v1.BatteryService.GetBattery:output_type -> bpa.battery.v1.GetBatteryResponse
-	9,  // 11: bpa.battery.v1.BatteryService.UpdateBatteryStatus:output_type -> bpa.battery.v1.UpdateBatteryStatusResponse
-	9,  // [9:12] is the sub-list for method output_type
-	6,  // [6:9] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	12, // 4: bpa.battery.v1.RegisterBatteryRequest.material:type_name -> bpa.battery.v1.MaterialComposition
+	4,  // 5: bpa.battery.v1.RegisterBatteryRequest.carbon:type_name -> bpa.battery.v1.CarbonFootprint
+	5,  // 6: bpa.battery.v1.RegisterBatteryRequest.initial_health:type_name -> bpa.battery.v1.HealthRecord
+	2,  // 7: bpa.battery.v1.GetBatteryResponse.static_data:type_name -> bpa.battery.v1.BatteryStaticData
+	1,  // 8: bpa.battery.v1.UpdateBatteryStatusRequest.new_status:type_name -> bpa.battery.v1.BatteryStatus
+	12, // 9: bpa.battery.v1.SubmitMaterialCompositionRequest.composition:type_name -> bpa.battery.v1.MaterialComposition
+	12, // 10: bpa.battery.v1.GetMaterialCompositionResponse.composition:type_name -> bpa.battery.v1.MaterialComposition
+	6,  // 11: bpa.battery.v1.BatteryService.RegisterBattery:input_type -> bpa.battery.v1.RegisterBatteryRequest
+	8,  // 12: bpa.battery.v1.BatteryService.GetBattery:input_type -> bpa.battery.v1.GetBatteryRequest
+	10, // 13: bpa.battery.v1.BatteryService.UpdateBatteryStatus:input_type -> bpa.battery.v1.UpdateBatteryStatusRequest
+	13, // 14: bpa.battery.v1.BatteryService.SubmitMaterialComposition:input_type -> bpa.battery.v1.SubmitMaterialCompositionRequest
+	15, // 15: bpa.battery.v1.BatteryService.GetMaterialComposition:input_type -> bpa.battery.v1.GetMaterialCompositionRequest
+	7,  // 16: bpa.battery.v1.BatteryService.RegisterBattery:output_type -> bpa.battery.v1.RegisterBatteryResponse
+	9,  // 17: bpa.battery.v1.BatteryService.GetBattery:output_type -> bpa.battery.v1.GetBatteryResponse
+	11, // 18: bpa.battery.v1.BatteryService.UpdateBatteryStatus:output_type -> bpa.battery.v1.UpdateBatteryStatusResponse
+	14, // 19: bpa.battery.v1.BatteryService.SubmitMaterialComposition:output_type -> bpa.battery.v1.SubmitMaterialCompositionResponse
+	16, // 20: bpa.battery.v1.BatteryService.GetMaterialComposition:output_type -> bpa.battery.v1.GetMaterialCompositionResponse
+	16, // [16:21] is the sub-list for method output_type
+	11, // [11:16] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_proto_battery_proto_init() }
@@ -871,7 +1485,7 @@ func file_proto_battery_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_battery_proto_rawDesc), len(file_proto_battery_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   8,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

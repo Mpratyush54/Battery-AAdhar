@@ -366,6 +366,470 @@ func (x *VerifySignatureResponse) GetSignedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+type TransitionStateRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Bpan          string                 `protobuf:"bytes,1,opt,name=bpan,proto3" json:"bpan,omitempty"`
+	NewState      string                 `protobuf:"bytes,2,opt,name=new_state,json=newState,proto3" json:"new_state,omitempty"` // REGISTERED, OPERATIONAL, etc.
+	ActorId       string                 `protobuf:"bytes,3,opt,name=actor_id,json=actorId,proto3" json:"actor_id,omitempty"`
+	ActorRole     string                 `protobuf:"bytes,4,opt,name=actor_role,json=actorRole,proto3" json:"actor_role,omitempty"`
+	Details       string                 `protobuf:"bytes,5,opt,name=details,proto3" json:"details,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TransitionStateRequest) Reset() {
+	*x = TransitionStateRequest{}
+	mi := &file_proto_lifecycle_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TransitionStateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TransitionStateRequest) ProtoMessage() {}
+
+func (x *TransitionStateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TransitionStateRequest.ProtoReflect.Descriptor instead.
+func (*TransitionStateRequest) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *TransitionStateRequest) GetBpan() string {
+	if x != nil {
+		return x.Bpan
+	}
+	return ""
+}
+
+func (x *TransitionStateRequest) GetNewState() string {
+	if x != nil {
+		return x.NewState
+	}
+	return ""
+}
+
+func (x *TransitionStateRequest) GetActorId() string {
+	if x != nil {
+		return x.ActorId
+	}
+	return ""
+}
+
+func (x *TransitionStateRequest) GetActorRole() string {
+	if x != nil {
+		return x.ActorRole
+	}
+	return ""
+}
+
+func (x *TransitionStateRequest) GetDetails() string {
+	if x != nil {
+		return x.Details
+	}
+	return ""
+}
+
+type TransitionStateResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	EventId       string                 `protobuf:"bytes,2,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
+	EntryHash     string                 `protobuf:"bytes,3,opt,name=entry_hash,json=entryHash,proto3" json:"entry_hash,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TransitionStateResponse) Reset() {
+	*x = TransitionStateResponse{}
+	mi := &file_proto_lifecycle_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TransitionStateResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TransitionStateResponse) ProtoMessage() {}
+
+func (x *TransitionStateResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TransitionStateResponse.ProtoReflect.Descriptor instead.
+func (*TransitionStateResponse) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *TransitionStateResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *TransitionStateResponse) GetEventId() string {
+	if x != nil {
+		return x.EventId
+	}
+	return ""
+}
+
+func (x *TransitionStateResponse) GetEntryHash() string {
+	if x != nil {
+		return x.EntryHash
+	}
+	return ""
+}
+
+type InitiateTransferRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Bpan          string                 `protobuf:"bytes,1,opt,name=bpan,proto3" json:"bpan,omitempty"`
+	FromOwnerId   string                 `protobuf:"bytes,2,opt,name=from_owner_id,json=fromOwnerId,proto3" json:"from_owner_id,omitempty"`
+	ToOwnerId     string                 `protobuf:"bytes,3,opt,name=to_owner_id,json=toOwnerId,proto3" json:"to_owner_id,omitempty"`
+	FromOwnerRole string                 `protobuf:"bytes,4,opt,name=from_owner_role,json=fromOwnerRole,proto3" json:"from_owner_role,omitempty"`
+	ToOwnerRole   string                 `protobuf:"bytes,5,opt,name=to_owner_role,json=toOwnerRole,proto3" json:"to_owner_role,omitempty"`
+	Reason        string                 `protobuf:"bytes,6,opt,name=reason,proto3" json:"reason,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InitiateTransferRequest) Reset() {
+	*x = InitiateTransferRequest{}
+	mi := &file_proto_lifecycle_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InitiateTransferRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InitiateTransferRequest) ProtoMessage() {}
+
+func (x *InitiateTransferRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InitiateTransferRequest.ProtoReflect.Descriptor instead.
+func (*InitiateTransferRequest) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *InitiateTransferRequest) GetBpan() string {
+	if x != nil {
+		return x.Bpan
+	}
+	return ""
+}
+
+func (x *InitiateTransferRequest) GetFromOwnerId() string {
+	if x != nil {
+		return x.FromOwnerId
+	}
+	return ""
+}
+
+func (x *InitiateTransferRequest) GetToOwnerId() string {
+	if x != nil {
+		return x.ToOwnerId
+	}
+	return ""
+}
+
+func (x *InitiateTransferRequest) GetFromOwnerRole() string {
+	if x != nil {
+		return x.FromOwnerRole
+	}
+	return ""
+}
+
+func (x *InitiateTransferRequest) GetToOwnerRole() string {
+	if x != nil {
+		return x.ToOwnerRole
+	}
+	return ""
+}
+
+func (x *InitiateTransferRequest) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+type InitiateTransferResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TransferId    string                 `protobuf:"bytes,1,opt,name=transfer_id,json=transferId,proto3" json:"transfer_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InitiateTransferResponse) Reset() {
+	*x = InitiateTransferResponse{}
+	mi := &file_proto_lifecycle_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InitiateTransferResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InitiateTransferResponse) ProtoMessage() {}
+
+func (x *InitiateTransferResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InitiateTransferResponse.ProtoReflect.Descriptor instead.
+func (*InitiateTransferResponse) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *InitiateTransferResponse) GetTransferId() string {
+	if x != nil {
+		return x.TransferId
+	}
+	return ""
+}
+
+type ConfirmTransferRequest struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	TransferId        string                 `protobuf:"bytes,1,opt,name=transfer_id,json=transferId,proto3" json:"transfer_id,omitempty"`
+	ConfirmingOwnerId string                 `protobuf:"bytes,2,opt,name=confirming_owner_id,json=confirmingOwnerId,proto3" json:"confirming_owner_id,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *ConfirmTransferRequest) Reset() {
+	*x = ConfirmTransferRequest{}
+	mi := &file_proto_lifecycle_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConfirmTransferRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConfirmTransferRequest) ProtoMessage() {}
+
+func (x *ConfirmTransferRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConfirmTransferRequest.ProtoReflect.Descriptor instead.
+func (*ConfirmTransferRequest) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ConfirmTransferRequest) GetTransferId() string {
+	if x != nil {
+		return x.TransferId
+	}
+	return ""
+}
+
+func (x *ConfirmTransferRequest) GetConfirmingOwnerId() string {
+	if x != nil {
+		return x.ConfirmingOwnerId
+	}
+	return ""
+}
+
+type ConfirmTransferResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	IsComplete    bool                   `protobuf:"varint,1,opt,name=is_complete,json=isComplete,proto3" json:"is_complete,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConfirmTransferResponse) Reset() {
+	*x = ConfirmTransferResponse{}
+	mi := &file_proto_lifecycle_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConfirmTransferResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConfirmTransferResponse) ProtoMessage() {}
+
+func (x *ConfirmTransferResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConfirmTransferResponse.ProtoReflect.Descriptor instead.
+func (*ConfirmTransferResponse) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *ConfirmTransferResponse) GetIsComplete() bool {
+	if x != nil {
+		return x.IsComplete
+	}
+	return false
+}
+
+type RejectTransferRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	TransferId       string                 `protobuf:"bytes,1,opt,name=transfer_id,json=transferId,proto3" json:"transfer_id,omitempty"`
+	RejectingOwnerId string                 `protobuf:"bytes,2,opt,name=rejecting_owner_id,json=rejectingOwnerId,proto3" json:"rejecting_owner_id,omitempty"`
+	Reason           string                 `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *RejectTransferRequest) Reset() {
+	*x = RejectTransferRequest{}
+	mi := &file_proto_lifecycle_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RejectTransferRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RejectTransferRequest) ProtoMessage() {}
+
+func (x *RejectTransferRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RejectTransferRequest.ProtoReflect.Descriptor instead.
+func (*RejectTransferRequest) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *RejectTransferRequest) GetTransferId() string {
+	if x != nil {
+		return x.TransferId
+	}
+	return ""
+}
+
+func (x *RejectTransferRequest) GetRejectingOwnerId() string {
+	if x != nil {
+		return x.RejectingOwnerId
+	}
+	return ""
+}
+
+func (x *RejectTransferRequest) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+type RejectTransferResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RejectTransferResponse) Reset() {
+	*x = RejectTransferResponse{}
+	mi := &file_proto_lifecycle_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RejectTransferResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RejectTransferResponse) ProtoMessage() {}
+
+func (x *RejectTransferResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RejectTransferResponse.ProtoReflect.Descriptor instead.
+func (*RejectTransferResponse) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *RejectTransferResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
 var File_proto_lifecycle_proto protoreflect.FileDescriptor
 
 const file_proto_lifecycle_proto_rawDesc = "" +
@@ -392,11 +856,51 @@ const file_proto_lifecycle_proto_rawDesc = "" +
 	"\x17VerifySignatureResponse\x12%\n" +
 	"\x0etamper_evident\x18\x01 \x01(\bR\rtamperEvident\x12\"\n" +
 	"\rsigner_key_id\x18\x02 \x01(\tR\vsignerKeyId\x127\n" +
-	"\tsigned_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\bsignedAt2\xd3\x02\n" +
+	"\tsigned_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\bsignedAt\"\x9d\x01\n" +
+	"\x16TransitionStateRequest\x12\x12\n" +
+	"\x04bpan\x18\x01 \x01(\tR\x04bpan\x12\x1b\n" +
+	"\tnew_state\x18\x02 \x01(\tR\bnewState\x12\x19\n" +
+	"\bactor_id\x18\x03 \x01(\tR\aactorId\x12\x1d\n" +
+	"\n" +
+	"actor_role\x18\x04 \x01(\tR\tactorRole\x12\x18\n" +
+	"\adetails\x18\x05 \x01(\tR\adetails\"m\n" +
+	"\x17TransitionStateResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x19\n" +
+	"\bevent_id\x18\x02 \x01(\tR\aeventId\x12\x1d\n" +
+	"\n" +
+	"entry_hash\x18\x03 \x01(\tR\tentryHash\"\xd5\x01\n" +
+	"\x17InitiateTransferRequest\x12\x12\n" +
+	"\x04bpan\x18\x01 \x01(\tR\x04bpan\x12\"\n" +
+	"\rfrom_owner_id\x18\x02 \x01(\tR\vfromOwnerId\x12\x1e\n" +
+	"\vto_owner_id\x18\x03 \x01(\tR\ttoOwnerId\x12&\n" +
+	"\x0ffrom_owner_role\x18\x04 \x01(\tR\rfromOwnerRole\x12\"\n" +
+	"\rto_owner_role\x18\x05 \x01(\tR\vtoOwnerRole\x12\x16\n" +
+	"\x06reason\x18\x06 \x01(\tR\x06reason\";\n" +
+	"\x18InitiateTransferResponse\x12\x1f\n" +
+	"\vtransfer_id\x18\x01 \x01(\tR\n" +
+	"transferId\"i\n" +
+	"\x16ConfirmTransferRequest\x12\x1f\n" +
+	"\vtransfer_id\x18\x01 \x01(\tR\n" +
+	"transferId\x12.\n" +
+	"\x13confirming_owner_id\x18\x02 \x01(\tR\x11confirmingOwnerId\":\n" +
+	"\x17ConfirmTransferResponse\x12\x1f\n" +
+	"\vis_complete\x18\x01 \x01(\bR\n" +
+	"isComplete\"~\n" +
+	"\x15RejectTransferRequest\x12\x1f\n" +
+	"\vtransfer_id\x18\x01 \x01(\tR\n" +
+	"transferId\x12,\n" +
+	"\x12rejecting_owner_id\x18\x02 \x01(\tR\x10rejectingOwnerId\x12\x16\n" +
+	"\x06reason\x18\x03 \x01(\tR\x06reason\"2\n" +
+	"\x16RejectTransferResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xf3\x05\n" +
 	"\x10LifecycleService\x12l\n" +
 	"\x11VerifyOperational\x12*.bpa.lifecycle.v1.VerifyOperationalRequest\x1a+.bpa.lifecycle.v1.VerifyOperationalResponse\x12i\n" +
 	"\x10VerifyRecyclable\x12).bpa.lifecycle.v1.VerifyRecyclableRequest\x1a*.bpa.lifecycle.v1.VerifyRecyclableResponse\x12f\n" +
-	"\x0fVerifySignature\x12(.bpa.lifecycle.v1.VerifySignatureRequest\x1a).bpa.lifecycle.v1.VerifySignatureResponseBNZLgithub.com/Mpratyush54/Battery-AAdhar/api/gen/proto/lifecycle/v1;lifecyclev1b\x06proto3"
+	"\x0fVerifySignature\x12(.bpa.lifecycle.v1.VerifySignatureRequest\x1a).bpa.lifecycle.v1.VerifySignatureResponse\x12f\n" +
+	"\x0fTransitionState\x12(.bpa.lifecycle.v1.TransitionStateRequest\x1a).bpa.lifecycle.v1.TransitionStateResponse\x12i\n" +
+	"\x10InitiateTransfer\x12).bpa.lifecycle.v1.InitiateTransferRequest\x1a*.bpa.lifecycle.v1.InitiateTransferResponse\x12f\n" +
+	"\x0fConfirmTransfer\x12(.bpa.lifecycle.v1.ConfirmTransferRequest\x1a).bpa.lifecycle.v1.ConfirmTransferResponse\x12c\n" +
+	"\x0eRejectTransfer\x12'.bpa.lifecycle.v1.RejectTransferRequest\x1a(.bpa.lifecycle.v1.RejectTransferResponseBNZLgithub.com/Mpratyush54/Battery-AAdhar/api/gen/proto/lifecycle/v1;lifecyclev1b\x06proto3"
 
 var (
 	file_proto_lifecycle_proto_rawDescOnce sync.Once
@@ -410,7 +914,7 @@ func file_proto_lifecycle_proto_rawDescGZIP() []byte {
 	return file_proto_lifecycle_proto_rawDescData
 }
 
-var file_proto_lifecycle_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_proto_lifecycle_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_proto_lifecycle_proto_goTypes = []any{
 	(*VerifyOperationalRequest)(nil),  // 0: bpa.lifecycle.v1.VerifyOperationalRequest
 	(*VerifyOperationalResponse)(nil), // 1: bpa.lifecycle.v1.VerifyOperationalResponse
@@ -418,22 +922,38 @@ var file_proto_lifecycle_proto_goTypes = []any{
 	(*VerifyRecyclableResponse)(nil),  // 3: bpa.lifecycle.v1.VerifyRecyclableResponse
 	(*VerifySignatureRequest)(nil),    // 4: bpa.lifecycle.v1.VerifySignatureRequest
 	(*VerifySignatureResponse)(nil),   // 5: bpa.lifecycle.v1.VerifySignatureResponse
-	(*timestamppb.Timestamp)(nil),     // 6: google.protobuf.Timestamp
+	(*TransitionStateRequest)(nil),    // 6: bpa.lifecycle.v1.TransitionStateRequest
+	(*TransitionStateResponse)(nil),   // 7: bpa.lifecycle.v1.TransitionStateResponse
+	(*InitiateTransferRequest)(nil),   // 8: bpa.lifecycle.v1.InitiateTransferRequest
+	(*InitiateTransferResponse)(nil),  // 9: bpa.lifecycle.v1.InitiateTransferResponse
+	(*ConfirmTransferRequest)(nil),    // 10: bpa.lifecycle.v1.ConfirmTransferRequest
+	(*ConfirmTransferResponse)(nil),   // 11: bpa.lifecycle.v1.ConfirmTransferResponse
+	(*RejectTransferRequest)(nil),     // 12: bpa.lifecycle.v1.RejectTransferRequest
+	(*RejectTransferResponse)(nil),    // 13: bpa.lifecycle.v1.RejectTransferResponse
+	(*timestamppb.Timestamp)(nil),     // 14: google.protobuf.Timestamp
 }
 var file_proto_lifecycle_proto_depIdxs = []int32{
-	6, // 0: bpa.lifecycle.v1.VerifyOperationalResponse.proof_issued_at:type_name -> google.protobuf.Timestamp
-	6, // 1: bpa.lifecycle.v1.VerifySignatureResponse.signed_at:type_name -> google.protobuf.Timestamp
-	0, // 2: bpa.lifecycle.v1.LifecycleService.VerifyOperational:input_type -> bpa.lifecycle.v1.VerifyOperationalRequest
-	2, // 3: bpa.lifecycle.v1.LifecycleService.VerifyRecyclable:input_type -> bpa.lifecycle.v1.VerifyRecyclableRequest
-	4, // 4: bpa.lifecycle.v1.LifecycleService.VerifySignature:input_type -> bpa.lifecycle.v1.VerifySignatureRequest
-	1, // 5: bpa.lifecycle.v1.LifecycleService.VerifyOperational:output_type -> bpa.lifecycle.v1.VerifyOperationalResponse
-	3, // 6: bpa.lifecycle.v1.LifecycleService.VerifyRecyclable:output_type -> bpa.lifecycle.v1.VerifyRecyclableResponse
-	5, // 7: bpa.lifecycle.v1.LifecycleService.VerifySignature:output_type -> bpa.lifecycle.v1.VerifySignatureResponse
-	5, // [5:8] is the sub-list for method output_type
-	2, // [2:5] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	14, // 0: bpa.lifecycle.v1.VerifyOperationalResponse.proof_issued_at:type_name -> google.protobuf.Timestamp
+	14, // 1: bpa.lifecycle.v1.VerifySignatureResponse.signed_at:type_name -> google.protobuf.Timestamp
+	0,  // 2: bpa.lifecycle.v1.LifecycleService.VerifyOperational:input_type -> bpa.lifecycle.v1.VerifyOperationalRequest
+	2,  // 3: bpa.lifecycle.v1.LifecycleService.VerifyRecyclable:input_type -> bpa.lifecycle.v1.VerifyRecyclableRequest
+	4,  // 4: bpa.lifecycle.v1.LifecycleService.VerifySignature:input_type -> bpa.lifecycle.v1.VerifySignatureRequest
+	6,  // 5: bpa.lifecycle.v1.LifecycleService.TransitionState:input_type -> bpa.lifecycle.v1.TransitionStateRequest
+	8,  // 6: bpa.lifecycle.v1.LifecycleService.InitiateTransfer:input_type -> bpa.lifecycle.v1.InitiateTransferRequest
+	10, // 7: bpa.lifecycle.v1.LifecycleService.ConfirmTransfer:input_type -> bpa.lifecycle.v1.ConfirmTransferRequest
+	12, // 8: bpa.lifecycle.v1.LifecycleService.RejectTransfer:input_type -> bpa.lifecycle.v1.RejectTransferRequest
+	1,  // 9: bpa.lifecycle.v1.LifecycleService.VerifyOperational:output_type -> bpa.lifecycle.v1.VerifyOperationalResponse
+	3,  // 10: bpa.lifecycle.v1.LifecycleService.VerifyRecyclable:output_type -> bpa.lifecycle.v1.VerifyRecyclableResponse
+	5,  // 11: bpa.lifecycle.v1.LifecycleService.VerifySignature:output_type -> bpa.lifecycle.v1.VerifySignatureResponse
+	7,  // 12: bpa.lifecycle.v1.LifecycleService.TransitionState:output_type -> bpa.lifecycle.v1.TransitionStateResponse
+	9,  // 13: bpa.lifecycle.v1.LifecycleService.InitiateTransfer:output_type -> bpa.lifecycle.v1.InitiateTransferResponse
+	11, // 14: bpa.lifecycle.v1.LifecycleService.ConfirmTransfer:output_type -> bpa.lifecycle.v1.ConfirmTransferResponse
+	13, // 15: bpa.lifecycle.v1.LifecycleService.RejectTransfer:output_type -> bpa.lifecycle.v1.RejectTransferResponse
+	9,  // [9:16] is the sub-list for method output_type
+	2,  // [2:9] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_proto_lifecycle_proto_init() }
@@ -447,7 +967,7 @@ func file_proto_lifecycle_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_lifecycle_proto_rawDesc), len(file_proto_lifecycle_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

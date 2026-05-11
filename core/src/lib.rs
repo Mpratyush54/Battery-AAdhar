@@ -20,6 +20,9 @@ pub mod auth_v1 {
 pub mod lifecycle_v1 {
     tonic::include_proto!("bpa.lifecycle.v1");
 }
+pub mod circular_economy_v1 {
+    tonic::include_proto!("bpa.circular_economy.v1");
+}
 
 use services::encryption::EncryptionService;
 use services::key_manager::KeyManagerImpl;
@@ -40,6 +43,10 @@ pub struct BpaEngine {
     pub zk_prover: Arc<ZkProverImpl>,
     pub material_service: MaterialService,
     pub lifecycle_service: Arc<crate::services::battery_lifecycle::BatteryLifecycleService>,
+    pub reuse_service: Arc<dyn crate::services::reuse::ReuseService>,
+    pub recycling_service: Arc<dyn crate::services::recycling::RecyclingService>,
+    pub reuse_repo: Arc<dyn crate::repositories::reuse_repo::ReuseRepository>,
+    pub recycling_repo: Arc<dyn crate::repositories::recycling_repo::RecyclingRepository>,
 }
 
 impl BpaEngine {
@@ -61,6 +68,20 @@ impl BpaEngine {
             crate::services::battery_lifecycle::BatteryLifecycleService::new(ownership_repo),
         );
 
+        let reuse_repo = Arc::new(
+            crate::repositories::reuse_repo::ReuseRepositoryImpl::new(db_pool.clone()),
+        );
+        let recycling_repo = Arc::new(
+            crate::repositories::recycling_repo::RecyclingRepositoryImpl::new(db_pool.clone()),
+        );
+
+        let reuse_service: Arc<dyn crate::services::reuse::ReuseService> = Arc::new(
+            crate::services::reuse::ReuseServiceImpl::new(reuse_repo.clone()),
+        );
+        let recycling_service: Arc<dyn crate::services::recycling::RecyclingService> = Arc::new(
+            crate::services::recycling::RecyclingServiceImpl::new(recycling_repo.clone()),
+        );
+
         Ok(Self {
             registration: RegistrationService::new(db_pool.clone(), encryption.clone()),
             encryption,
@@ -70,6 +91,10 @@ impl BpaEngine {
             zk_prover,
             material_service,
             lifecycle_service,
+            reuse_service,
+            recycling_service,
+            reuse_repo,
+            recycling_repo,
         })
     }
 

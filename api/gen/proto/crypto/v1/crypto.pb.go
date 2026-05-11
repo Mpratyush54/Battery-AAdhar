@@ -9,7 +9,6 @@ package cryptov1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	_ "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -982,7 +981,7 @@ var File_proto_crypto_proto protoreflect.FileDescriptor
 
 const file_proto_crypto_proto_rawDesc = "" +
 	"\n" +
-	"\x12proto/crypto.proto\x12\rbpa.crypto.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x82\x01\n" +
+	"\x12proto/crypto.proto\x12\rbpa.crypto.v1\"\x82\x01\n" +
 	"\x0eEncryptRequest\x12\x12\n" +
 	"\x04bpan\x18\x01 \x01(\tR\x04bpan\x12\x1d\n" +
 	"\n" +

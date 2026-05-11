@@ -19,9 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	BatteryService_RegisterBattery_FullMethodName     = "/bpa.battery.v1.BatteryService/RegisterBattery"
-	BatteryService_GetBattery_FullMethodName          = "/bpa.battery.v1.BatteryService/GetBattery"
-	BatteryService_UpdateBatteryStatus_FullMethodName = "/bpa.battery.v1.BatteryService/UpdateBatteryStatus"
+	BatteryService_RegisterBattery_FullMethodName           = "/bpa.battery.v1.BatteryService/RegisterBattery"
+	BatteryService_GetBattery_FullMethodName                = "/bpa.battery.v1.BatteryService/GetBattery"
+	BatteryService_UpdateBatteryStatus_FullMethodName       = "/bpa.battery.v1.BatteryService/UpdateBatteryStatus"
+	BatteryService_SubmitMaterialComposition_FullMethodName = "/bpa.battery.v1.BatteryService/SubmitMaterialComposition"
+	BatteryService_GetMaterialComposition_FullMethodName    = "/bpa.battery.v1.BatteryService/GetMaterialComposition"
 )
 
 // BatteryServiceClient is the client API for BatteryService service.
@@ -31,6 +33,8 @@ type BatteryServiceClient interface {
 	RegisterBattery(ctx context.Context, in *RegisterBatteryRequest, opts ...grpc.CallOption) (*RegisterBatteryResponse, error)
 	GetBattery(ctx context.Context, in *GetBatteryRequest, opts ...grpc.CallOption) (*GetBatteryResponse, error)
 	UpdateBatteryStatus(ctx context.Context, in *UpdateBatteryStatusRequest, opts ...grpc.CallOption) (*UpdateBatteryStatusResponse, error)
+	SubmitMaterialComposition(ctx context.Context, in *SubmitMaterialCompositionRequest, opts ...grpc.CallOption) (*SubmitMaterialCompositionResponse, error)
+	GetMaterialComposition(ctx context.Context, in *GetMaterialCompositionRequest, opts ...grpc.CallOption) (*GetMaterialCompositionResponse, error)
 }
 
 type batteryServiceClient struct {
@@ -71,6 +75,26 @@ func (c *batteryServiceClient) UpdateBatteryStatus(ctx context.Context, in *Upda
 	return out, nil
 }
 
+func (c *batteryServiceClient) SubmitMaterialComposition(ctx context.Context, in *SubmitMaterialCompositionRequest, opts ...grpc.CallOption) (*SubmitMaterialCompositionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SubmitMaterialCompositionResponse)
+	err := c.cc.Invoke(ctx, BatteryService_SubmitMaterialComposition_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *batteryServiceClient) GetMaterialComposition(ctx context.Context, in *GetMaterialCompositionRequest, opts ...grpc.CallOption) (*GetMaterialCompositionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMaterialCompositionResponse)
+	err := c.cc.Invoke(ctx, BatteryService_GetMaterialComposition_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BatteryServiceServer is the server API for BatteryService service.
 // All implementations must embed UnimplementedBatteryServiceServer
 // for forward compatibility.
@@ -78,6 +102,8 @@ type BatteryServiceServer interface {
 	RegisterBattery(context.Context, *RegisterBatteryRequest) (*RegisterBatteryResponse, error)
 	GetBattery(context.Context, *GetBatteryRequest) (*GetBatteryResponse, error)
 	UpdateBatteryStatus(context.Context, *UpdateBatteryStatusRequest) (*UpdateBatteryStatusResponse, error)
+	SubmitMaterialComposition(context.Context, *SubmitMaterialCompositionRequest) (*SubmitMaterialCompositionResponse, error)
+	GetMaterialComposition(context.Context, *GetMaterialCompositionRequest) (*GetMaterialCompositionResponse, error)
 	mustEmbedUnimplementedBatteryServiceServer()
 }
 
@@ -96,6 +122,12 @@ func (UnimplementedBatteryServiceServer) GetBattery(context.Context, *GetBattery
 }
 func (UnimplementedBatteryServiceServer) UpdateBatteryStatus(context.Context, *UpdateBatteryStatusRequest) (*UpdateBatteryStatusResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateBatteryStatus not implemented")
+}
+func (UnimplementedBatteryServiceServer) SubmitMaterialComposition(context.Context, *SubmitMaterialCompositionRequest) (*SubmitMaterialCompositionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SubmitMaterialComposition not implemented")
+}
+func (UnimplementedBatteryServiceServer) GetMaterialComposition(context.Context, *GetMaterialCompositionRequest) (*GetMaterialCompositionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetMaterialComposition not implemented")
 }
 func (UnimplementedBatteryServiceServer) mustEmbedUnimplementedBatteryServiceServer() {}
 func (UnimplementedBatteryServiceServer) testEmbeddedByValue()                        {}
@@ -172,6 +204,42 @@ func _BatteryService_UpdateBatteryStatus_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BatteryService_SubmitMaterialComposition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SubmitMaterialCompositionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BatteryServiceServer).SubmitMaterialComposition(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BatteryService_SubmitMaterialComposition_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BatteryServiceServer).SubmitMaterialComposition(ctx, req.(*SubmitMaterialCompositionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BatteryService_GetMaterialComposition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMaterialCompositionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BatteryServiceServer).GetMaterialComposition(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BatteryService_GetMaterialComposition_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BatteryServiceServer).GetMaterialComposition(ctx, req.(*GetMaterialCompositionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BatteryService_ServiceDesc is the grpc.ServiceDesc for BatteryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -190,6 +258,14 @@ var BatteryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateBatteryStatus",
 			Handler:    _BatteryService_UpdateBatteryStatus_Handler,
+		},
+		{
+			MethodName: "SubmitMaterialComposition",
+			Handler:    _BatteryService_SubmitMaterialComposition_Handler,
+		},
+		{
+			MethodName: "GetMaterialComposition",
+			Handler:    _BatteryService_GetMaterialComposition_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -1,6 +1,6 @@
 //! main.rs — Battery Pack Aadhaar gRPC server
 //!
-//! Boots all 4 services (Crypto, Battery, Auth, Lifecycle) on 0.0.0.0:50051.
+//! Boots all 5 services (Crypto, Battery, Auth, Lifecycle, CircularEconomy) on 0.0.0.0:50051.
 //! Secrets priority:
 //!   1. Environment variables (already injected, e.g. via `infisical run --`)
 //!   2. Infisical SDK (fetched at startup using INFISICAL_CLIENT_ID/SECRET from .env)
@@ -12,6 +12,7 @@ use tracing::{info, warn};
 
 use bpa_engine::api::{
     AuthServiceImpl, AuthServiceServer, BatteryServiceImpl, BatteryServiceServer,
+    CircularEconomyServiceImpl, CircularEconomyServiceServer,
     CryptoServiceImpl, CryptoServiceServer, LifecycleServiceImpl, LifecycleServiceServer,
 };
 
@@ -155,12 +156,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let battery_svc = BatteryServiceImpl::new(engine.clone());
     let auth_svc = AuthServiceImpl::new(engine.clone());
     let lifecycle_svc = LifecycleServiceImpl::new(engine.clone());
+    let ce_svc = CircularEconomyServiceImpl::new(engine.clone());
 
     Server::builder()
         .add_service(CryptoServiceServer::new(crypto_svc))
         .add_service(BatteryServiceServer::new(battery_svc))
         .add_service(AuthServiceServer::new(auth_svc))
         .add_service(LifecycleServiceServer::new(lifecycle_svc))
+        .add_service(CircularEconomyServiceServer::new(ce_svc))
         .serve(addr)
         .await?;
 

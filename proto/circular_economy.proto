@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package bpa.circular_economy.v1;
+
+option go_package = "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/circular_economy/v1;circular_economyv1";
+
+message CertifyReuseRequest {
+  string bpan = 1;
+  float soh_percent = 2;
+  string certified_by = 3;
+  string application = 4;
+  uint32 expected_years = 5;
+}
+
+message CertifyReuseResponse {
+  string certification_id = 1;
+  string certification_hash = 2;
+}
+
+message RecordRecyclingRequest {
+  string bpan = 1;
+  string recycled_by = 2;
+  string method = 3;
+  float weight_kg = 4;
+  string standard = 5;
+  RecoveryRates recovery_rates = 6;
+}
+
+message RecoveryRates {
+  float lithium_percent = 1;
+  float cobalt_percent = 2;
+  float nickel_percent = 3;
+  float other_percent = 4;
+}
+
+message RecordRecyclingResponse {
+  string certification_id = 1;
+  string certification_hash = 2;
+}
+
+message GetMetricsRequest {
+  string manufacturer_id = 1;
+  string chemistry_type = 2;
+}
+
+message CircularEconomyMetrics {
+  uint32 battery_count = 1;
+  float avg_li_recovery = 2;
+  float avg_co_recovery = 3;
+  float avg_ni_recovery = 4;
+  float total_weight_processed_kg = 5;
+}
+
+message GetMetricsResponse {
+  CircularEconomyMetrics metrics = 1;
+}
+
+service CircularEconomyService {
+  rpc CertifyReuse (CertifyReuseRequest) returns (CertifyReuseResponse);
+  rpc RecordRecycling (RecordRecyclingRequest) returns (RecordRecyclingResponse);
+  rpc GetMetrics (GetMetricsRequest) returns (GetMetricsResponse);
+}

@@ -35,6 +35,7 @@ type LifecycleServiceClient interface {
 	VerifyOperational(ctx context.Context, in *VerifyOperationalRequest, opts ...grpc.CallOption) (*VerifyOperationalResponse, error)
 	VerifyRecyclable(ctx context.Context, in *VerifyRecyclableRequest, opts ...grpc.CallOption) (*VerifyRecyclableResponse, error)
 	VerifySignature(ctx context.Context, in *VerifySignatureRequest, opts ...grpc.CallOption) (*VerifySignatureResponse, error)
+	// New methods for Day 12
 	TransitionState(ctx context.Context, in *TransitionStateRequest, opts ...grpc.CallOption) (*TransitionStateResponse, error)
 	InitiateTransfer(ctx context.Context, in *InitiateTransferRequest, opts ...grpc.CallOption) (*InitiateTransferResponse, error)
 	ConfirmTransfer(ctx context.Context, in *ConfirmTransferRequest, opts ...grpc.CallOption) (*ConfirmTransferResponse, error)
@@ -126,6 +127,7 @@ type LifecycleServiceServer interface {
 	VerifyOperational(context.Context, *VerifyOperationalRequest) (*VerifyOperationalResponse, error)
 	VerifyRecyclable(context.Context, *VerifyRecyclableRequest) (*VerifyRecyclableResponse, error)
 	VerifySignature(context.Context, *VerifySignatureRequest) (*VerifySignatureResponse, error)
+	// New methods for Day 12
 	TransitionState(context.Context, *TransitionStateRequest) (*TransitionStateResponse, error)
 	InitiateTransfer(context.Context, *InitiateTransferRequest) (*InitiateTransferResponse, error)
 	ConfirmTransfer(context.Context, *ConfirmTransferRequest) (*ConfirmTransferResponse, error)
@@ -236,48 +238,6 @@ func _LifecycleService_VerifySignature_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
-// LifecycleService_ServiceDesc is the grpc.ServiceDesc for LifecycleService service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
-var LifecycleService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "bpa.lifecycle.v1.LifecycleService",
-	HandlerType: (*LifecycleServiceServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "VerifyOperational",
-			Handler:    _LifecycleService_VerifyOperational_Handler,
-		},
-		{
-			MethodName: "VerifyRecyclable",
-			Handler:    _LifecycleService_VerifyRecyclable_Handler,
-		},
-		{
-			MethodName: "VerifySignature",
-			Handler:    _LifecycleService_VerifySignature_Handler,
-		},
-		{
-			MethodName: "TransitionState",
-			Handler:    _LifecycleService_TransitionState_Handler,
-		},
-		{
-			MethodName: "InitiateTransfer",
-			Handler:    _LifecycleService_InitiateTransfer_Handler,
-		},
-		{
-			MethodName: "ConfirmTransfer",
-			Handler:    _LifecycleService_ConfirmTransfer_Handler,
-		},
-		{
-			MethodName: "RejectTransfer",
-			Handler:    _LifecycleService_RejectTransfer_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/lifecycle.proto",
-}
-
-// ── Day 12 server handlers ────────────────────────────────────────────────────
-
 func _LifecycleService_TransitionState_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(TransitionStateRequest)
 	if err := dec(in); err != nil {
@@ -348,4 +308,44 @@ func _LifecycleService_RejectTransfer_Handler(srv interface{}, ctx context.Conte
 		return srv.(LifecycleServiceServer).RejectTransfer(ctx, req.(*RejectTransferRequest))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+// LifecycleService_ServiceDesc is the grpc.ServiceDesc for LifecycleService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var LifecycleService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "bpa.lifecycle.v1.LifecycleService",
+	HandlerType: (*LifecycleServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "VerifyOperational",
+			Handler:    _LifecycleService_VerifyOperational_Handler,
+		},
+		{
+			MethodName: "VerifyRecyclable",
+			Handler:    _LifecycleService_VerifyRecyclable_Handler,
+		},
+		{
+			MethodName: "VerifySignature",
+			Handler:    _LifecycleService_VerifySignature_Handler,
+		},
+		{
+			MethodName: "TransitionState",
+			Handler:    _LifecycleService_TransitionState_Handler,
+		},
+		{
+			MethodName: "InitiateTransfer",
+			Handler:    _LifecycleService_InitiateTransfer_Handler,
+		},
+		{
+			MethodName: "ConfirmTransfer",
+			Handler:    _LifecycleService_ConfirmTransfer_Handler,
+		},
+		{
+			MethodName: "RejectTransfer",
+			Handler:    _LifecycleService_RejectTransfer_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "proto/lifecycle.proto",
 }

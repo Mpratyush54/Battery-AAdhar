@@ -121,22 +121,30 @@ pub async fn sync_database_schema(pool: &Pool<Postgres>) -> Result<(), sqlx::Err
     "#).execute(pool).await?;
 
     sqlx::query(r#"
-        CREATE TABLE IF NOT EXISTS reuse_history (
+        CREATE TABLE IF NOT EXISTS reuse_certifications (
             id UUID PRIMARY KEY,
             bpan VARCHAR(21) NOT NULL REFERENCES batteries(bpan),
-            reuse_application VARCHAR(255) NOT NULL,
+            soh_at_certification DOUBLE PRECISION NOT NULL,
             certified_by VARCHAR(255) NOT NULL,
+            intended_application VARCHAR(255) NOT NULL,
+            expected_second_life_years INT NOT NULL,
+            certification_hash VARCHAR(64) NOT NULL,
             certified_at TIMESTAMP NOT NULL DEFAULT NOW()
         );
     "#).execute(pool).await?;
 
     sqlx::query(r#"
-        CREATE TABLE IF NOT EXISTS recycling_records (
+        CREATE TABLE IF NOT EXISTS recycling_certifications (
             id UUID PRIMARY KEY,
             bpan VARCHAR(21) NOT NULL REFERENCES batteries(bpan),
-            recycler_name VARCHAR(255) NOT NULL,
-            recovered_material_percentage DOUBLE PRECISION NOT NULL,
-            certificate_hash VARCHAR(64) NOT NULL,
+            recycled_by VARCHAR(255) NOT NULL,
+            recycling_method VARCHAR(255) NOT NULL,
+            weight_processed_kg DOUBLE PRECISION NOT NULL,
+            li_recovery_percent DOUBLE PRECISION NOT NULL,
+            co_recovery_percent DOUBLE PRECISION NOT NULL,
+            ni_recovery_percent DOUBLE PRECISION NOT NULL,
+            certifying_standard VARCHAR(255) NOT NULL,
+            certification_hash VARCHAR(64) NOT NULL,
             recycled_at TIMESTAMP NOT NULL DEFAULT NOW()
         );
     "#).execute(pool).await?;
@@ -651,8 +659,8 @@ pub async fn sync_database_schema(pool: &Pool<Postgres>) -> Result<(), sqlx::Err
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_dynamic_data_log_bpan ON dynamic_data_log(bpan)").execute(pool).await?;
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_carbon_footprint_bpan ON carbon_footprint(bpan)").execute(pool).await?;
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_compliance_violations_bpan ON compliance_violation_log(bpan)").execute(pool).await?;
-    sqlx::query("CREATE INDEX IF NOT EXISTS idx_recycling_records_bpan ON recycling_records(bpan)").execute(pool).await?;
-    sqlx::query("CREATE INDEX IF NOT EXISTS idx_reuse_history_bpan ON reuse_history(bpan)").execute(pool).await?;
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_recycling_certifications_bpan ON recycling_certifications(bpan)").execute(pool).await?;
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_reuse_certifications_bpan ON reuse_certifications(bpan)").execute(pool).await?;
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_qr_records_bpan ON qr_records(bpan)").execute(pool).await?;
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_battery_registration_bpan ON battery_registration_log(bpan)").execute(pool).await?;
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_ownership_transfers_bpan ON ownership_transfers(bpan)").execute(pool).await?;

@@ -101,6 +101,16 @@ func NewRouter(microservices *config.MicroserviceClients) http.Handler {
 		controllers.RegisterComplianceRoutes(r)
 		controllers.RegisterTelemetryRoutes(r)
 		controllers.RegisterQRRoutes(r)
+		// Circular Economy (Reuse/Recycling)
+		if microservices != nil {
+			controllers.RegisterReuseRecyclingRoutes(r, 
+				services.NewReuseService(microservices.GrpcConn), 
+				services.NewRecyclingService(microservices.GrpcConn), 
+				services.NewDashboardService(microservices.GrpcConn),
+			)
+		} else {
+			controllers.RegisterReuseRecyclingRoutes(r, nil, nil, nil)
+		}
 	})
 
 	return r

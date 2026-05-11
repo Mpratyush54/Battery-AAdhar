@@ -14,13 +14,6 @@ pub struct BatteryIdentifier {
 }
 
 #[derive(sqlx::FromRow, Debug)]
-pub struct BatteryDescriptor {
-    pub id: uuid::Uuid,
-    pub bpan: String,
-    // Add more fields if needed, or leave stub
-}
-
-#[derive(sqlx::FromRow, Debug)]
 pub struct Stakeholder {
     pub id: String,
 }
@@ -35,3 +28,7 @@ pub use carbon::{
 };
 pub mod health;
 pub use health::{HealthAggregate, HealthHistory, HealthRecord, HealthStatus, HealthUpdateRequest};
+pub mod battery_descriptor;
+pub use battery_descriptor::{BatteryDescriptor, BatteryDescriptorRequest};
+pub mod battery_material_composition;
+pub use battery_material_composition::{MaterialComposition, MaterialCompositionRequest};

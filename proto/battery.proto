@@ -68,9 +68,28 @@ message BatteryDynamicData {
 
 // ─── Requests / Responses ──────────────────────────────────────────────────
 
+message CarbonFootprint {
+  double raw_material_emissions_kg_co2e = 1;
+  double manufacturing_emissions_kg_co2e = 2;
+  double transport_emissions_kg_co2e = 3;
+  double usage_emissions_kg_co2e = 4;
+  double recycling_emissions_kg_co2e = 5;
+  double total_emissions_kg_co2e = 6;
+  bool   verified = 7;
+}
+
+message HealthRecord {
+  double state_of_health_percent = 1;
+  int32  cycle_count = 2;
+  string degradation_class = 3;
+}
+
 message RegisterBatteryRequest {
   string            manufacturer_id = 1;
   BatteryStaticData static_data     = 2;
+  MaterialComposition material      = 3;
+  CarbonFootprint   carbon          = 4;
+  HealthRecord      initial_health  = 5;
 }
 
 message RegisterBatteryResponse {

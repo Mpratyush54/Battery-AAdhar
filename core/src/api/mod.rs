@@ -7,6 +7,7 @@ pub mod auth;
 pub mod battery;
 pub mod crypto;
 pub mod lifecycle;
+pub mod circular_economy;
 
 // Re-export for convenient access in main.rs
 pub use auth::AuthServiceImpl;
@@ -17,3 +18,5 @@ pub use crypto::CryptoServiceImpl;
 pub use crypto::CryptoServiceServer;
 pub use lifecycle::LifecycleServiceImpl;
 pub use lifecycle::LifecycleServiceServer;
+pub use circular_economy::CircularEconomyServiceImpl;
+pub use circular_economy::CircularEconomyServiceServer;

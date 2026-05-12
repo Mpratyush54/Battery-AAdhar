@@ -72,7 +72,7 @@ impl BatteryRegistrationServiceImpl {
 
         let mut bpan = String::from("MY"); // India prefix
 
-        for (i, c) in hash.chars().enumerate().take(19) {
+        for (_i, c) in hash.chars().enumerate().take(19) {
             let digit = u8::from_str_radix(&c.to_string(), 16).unwrap_or(0);
             bpan.push(chars[digit as usize % charset.len()]);
         }

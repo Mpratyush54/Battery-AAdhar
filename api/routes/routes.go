@@ -98,7 +98,7 @@ func NewRouter(microservices *config.MicroserviceClients) http.Handler {
 			controllers.RegisterLifecycleRoutes(r, nil) // Will return 503 for gRPC-dependent routes
 		}
 
-		controllers.RegisterComplianceRoutes(r)
+		controllers.RegisterComplianceRoutes(r, services.NewComplianceService())
 		controllers.RegisterTelemetryRoutes(r)
 		controllers.RegisterQRRoutes(r)
 		// Circular Economy (Reuse/Recycling)

@@ -32,3 +32,5 @@ pub mod battery_descriptor;
 pub use battery_descriptor::{BatteryDescriptor, BatteryDescriptorRequest};
 pub mod battery_material_composition;
 pub use battery_material_composition::{MaterialComposition, MaterialCompositionRequest};
+pub mod compliance;
+pub use compliance::{ComplianceViolation, ComplianceSeverity, ComplianceStatus};

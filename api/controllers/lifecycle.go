@@ -32,8 +32,8 @@ func RegisterLifecycleRoutes(r chi.Router, s *services.LifecycleService) {
 		// Verification (verifier role only)
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.IsRole("verifier"))
-			r.Post("/batteries/{bpan}/verify/operational", VerifyOperational(s))
-			r.Post("/batteries/{bpan}/verify/signature", VerifySignature(s))
+			r.Post("/batteries/{bpan}/verify/operational", VerifyLifecycleOperational(s))
+			r.Post("/batteries/{bpan}/verify/signature", VerifyLifecycleSignature(s))
 		})
 	})
 }
@@ -278,7 +278,7 @@ func RecordRecycling(s *services.LifecycleService) http.HandlerFunc {
 
 // ── VerifyOperational ─────────────────────────────────────────────────────────
 
-// VerifyOperational godoc
+// VerifyLifecycleOperational godoc
 // @Summary      Verify battery is operational (ZK proof)
 // @Description  Generates a zero-knowledge proof that battery SoH meets threshold
 // @Tags         lifecycle
@@ -288,7 +288,7 @@ func RecordRecycling(s *services.LifecycleService) http.HandlerFunc {
 // @Failure      500  {object}  map[string]string
 // @Router       /batteries/{bpan}/verify/operational [post]
 // @Security     BearerAuth
-func VerifyOperational(s *services.LifecycleService) http.HandlerFunc {
+func VerifyLifecycleOperational(s *services.LifecycleService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if s == nil {
@@ -311,7 +311,7 @@ func VerifyOperational(s *services.LifecycleService) http.HandlerFunc {
 
 // ── VerifySignature ───────────────────────────────────────────────────────────
 
-// VerifySignature godoc
+// VerifyLifecycleSignature godoc
 // @Summary      Verify battery data signature
 // @Description  Checks cryptographic integrity of all battery data
 // @Tags         lifecycle
@@ -321,7 +321,7 @@ func VerifyOperational(s *services.LifecycleService) http.HandlerFunc {
 // @Failure      500  {object}  map[string]string
 // @Router       /batteries/{bpan}/verify/signature [post]
 // @Security     BearerAuth
-func VerifySignature(s *services.LifecycleService) http.HandlerFunc {
+func VerifyLifecycleSignature(s *services.LifecycleService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if s == nil {

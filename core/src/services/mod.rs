@@ -32,3 +32,5 @@ pub mod reuse;
 pub use reuse::{ReuseCertification, ReuseError, ReuseService, ReuseServiceImpl};
 pub mod recycling;
 pub use recycling::{RecyclingCertification, RecyclingError, RecyclingService, RecyclingServiceImpl, RecoveryRates};
+pub mod compliance;
+pub use compliance::{ComplianceService, ComplianceServiceImpl, ComplianceError};

@@ -34,3 +34,7 @@ pub mod recycling;
 pub use recycling::{RecyclingCertification, RecyclingError, RecyclingService, RecyclingServiceImpl, RecoveryRates};
 pub mod compliance;
 pub use compliance::{ComplianceService, ComplianceServiceImpl, ComplianceError};
+pub mod telemetry;
+pub use telemetry::{TelemetryError, TelemetryRecord, TelemetryService, TelemetryServiceImpl};
+pub mod notification;
+pub use notification::{Notification, NotificationError as NotificationSvcError, NotificationService, NotificationServiceImpl};

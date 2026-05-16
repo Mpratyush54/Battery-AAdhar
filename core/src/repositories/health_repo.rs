@@ -119,11 +119,65 @@ impl HealthRepositoryImpl {
 
     pub async fn get_health_history(
         &self,
-        _bpan: &str,
-        _limit: i32,
+        bpan: &str,
+        limit: i32,
     ) -> Result<Vec<HealthRecord>, RepositoryError> {
-        // TODO: Fetch ordered by reported_at DESC
-        Ok(vec![])
+        let rows = sqlx::query(
+            r#"
+            SELECT * FROM battery_health 
+            WHERE bpan = $1 
+            ORDER BY reported_at DESC LIMIT $2
+            "#,
+        )
+        .bind(bpan)
+        .bind(limit)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
+
+        let records: Vec<HealthRecord> = rows
+            .into_iter()
+            .filter_map(|r| {
+                let status_str: String = r.try_get("health_status").ok()?;
+                let health_status = match status_str.as_str() {
+                    "OPERATIONAL" => crate::models::HealthStatus::Operational,
+                    "SECOND_LIFE" => crate::models::HealthStatus::SecondLife,
+                    "EOL_PROCESS" => crate::models::HealthStatus::EolProcess,
+                    "WASTE" => crate::models::HealthStatus::Waste,
+                    _ => crate::models::HealthStatus::Unknown,
+                };
+
+                let id_str: String = r.try_get("id").ok()?;
+                let id = Uuid::parse_str(&id_str).unwrap_or_else(|_| Uuid::new_v4());
+
+                Some(HealthRecord {
+                    id,
+                    bpan: r.try_get("bpan").unwrap_or_default(),
+                    state_of_health_percent: r.try_get("state_of_health_percent").unwrap_or(0.0),
+                    health_status,
+                    cycle_count: r.try_get::<i32, _>("cycle_count").unwrap_or(0) as u32,
+                    degradation_rate_percent_per_cycle: 0.1,
+                    degradation_class: "normal".to_string(),
+                    min_temperature_celsius: r.try_get("min_temperature_celsius").unwrap_or(0.0),
+                    max_temperature_celsius: r.try_get("max_temperature_celsius").unwrap_or(0.0),
+                    average_temperature_celsius: 0.0,
+                    cell_voltage_min_mv: 0.0,
+                    cell_voltage_max_mv: 0.0,
+                    internal_resistance_mohm: r.try_get("internal_resistance_mohm").unwrap_or(0.0),
+                    error_flags: r.try_get("error_flags").unwrap_or_default(),
+                    is_healthy: r.try_get("is_healthy").unwrap_or(true),
+                    reported_by: r.try_get("reported_by").unwrap_or_default(),
+                    reported_at: r.try_get("reported_at").unwrap_or_else(|_| Utc::now()),
+                    record_number: r.try_get::<i32, _>("record_number").unwrap_or(1) as u32,
+                    zk_proof_soh_gt_80: r.try_get("zk_proof_operational").unwrap_or_default(),
+                    zk_proof_soh_gte_60: r.try_get("zk_proof_second_life").unwrap_or_default(),
+                    zk_proof_soh_gte_30: r.try_get("zk_proof_recyclable").unwrap_or_default(),
+                    proofs_generated_at: r.try_get("proofs_generated_at").unwrap_or_default(),
+                })
+            })
+            .collect();
+
+        Ok(records)
     }
 
     pub async fn get_avg_soh_by_manufacturer(

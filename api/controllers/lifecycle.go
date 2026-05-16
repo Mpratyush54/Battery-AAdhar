@@ -312,7 +312,7 @@ func VerifyLifecycleOperational(s *services.LifecycleService) http.HandlerFunc {
 
 // VerifyOperational — POST /api/v1/batteries/{bpan}/verify/operational
 // Direct gRPC-backed handler for routes.go wiring (bypasses LifecycleService).
-func VerifyOperational(cc *grpc.ClientConn) http.HandlerFunc {
+func VerifyOperationalHandler(cc *grpc.ClientConn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if cc == nil {

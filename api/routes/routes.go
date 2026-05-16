@@ -63,7 +63,7 @@ func NewRouter(microservices *config.MicroserviceClients) http.Handler {
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.RequireResource(models.ResourceBattery, models.ActionCreate))
 			if microservices != nil {
-				regSvc := services.NewRegistrationService(microservices.GrpcConn.Conn)
+				regSvc := services.NewRegistrationService(microservices.GrpcConn.RawConn())
 				r.Post("/battery/register", controllers.RegisterBattery(regSvc))
 			} else {
 				r.Post("/battery/register", handleRegistrationUnavailable)
@@ -80,8 +80,8 @@ func NewRouter(microservices *config.MicroserviceClients) http.Handler {
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.IsRole("verifier"))
 			if microservices != nil {
-				r.Post("/batteries/{bpan}/verify/operational", controllers.VerifyOperational(microservices.GrpcConn))
-				r.Post("/batteries/{bpan}/verify/signature", controllers.VerifySignature(microservices.GrpcConn))
+			r.Post("/batteries/{bpan}/verify/operational", controllers.VerifyOperationalHandler(microservices.GrpcConn))
+			r.Post("/batteries/{bpan}/verify/signature", controllers.VerifySignature(microservices.GrpcConn))
 			} else {
 				r.Post("/batteries/{bpan}/verify/operational", handleServiceUnavailable)
 				r.Post("/batteries/{bpan}/verify/signature", handleServiceUnavailable)

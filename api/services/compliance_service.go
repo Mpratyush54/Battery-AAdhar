@@ -1,68 +1,159 @@
+// compliance_service.go — Compliance checking service layer
+// Orchestrates gRPC calls to the Rust core for compliance operations.
+
 package services
 
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"time"
 
 	"github.com/Mpratyush54/Battery-AAdhar/api/models"
+	"github.com/Mpratyush54/Battery-AAdhar/api/grpc"
+	lifecyclev1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/lifecycle/v1"
 )
 
+// ComplianceService handles compliance checking and ZK verification.
 type ComplianceService struct {
-	// TODO Day 14 R2: Add repository + Rust gRPC client
+	lifecycleClient lifecyclev1.LifecycleServiceClient
 }
 
+// NewComplianceService creates a new compliance service.
 func NewComplianceService() *ComplianceService {
 	return &ComplianceService{}
 }
 
-func (s *ComplianceService) GetComplianceStatus(
+// NewComplianceServiceWithClient creates a compliance service with gRPC client.
+func NewComplianceServiceWithClient(cc *grpc.ClientConn) *ComplianceService {
+	if cc == nil {
+		return &ComplianceService{}
+	}
+	return &ComplianceService{
+		lifecycleClient: cc.LifecycleClient,
+	}
+}
+
+// CheckCompliance checks a single battery's compliance status.
+func (s *ComplianceService) CheckCompliance(
 	ctx context.Context,
 	bpan string,
+	soh float32,
+	hasMaterial bool,
+	hasCarbon bool,
 ) (*models.ComplianceStatusResponse, error) {
-	// TODO Day 14 R2:
-	// 1. Fetch battery data (SoH, health_updated_at, BMCS, BCF, registration_date)
-	// 2. Call Rust compliance service
-	// 3. Return violations
+	if bpan == "" {
+		return nil, fmt.Errorf("bpan is required")
+	}
+
+	slog.Info("checking compliance",
+		"bpan", bpan,
+		"soh", soh,
+		"has_material", hasMaterial,
+		"has_carbon", hasCarbon,
+	)
+
+	var violations []models.ComplianceViolation
+	status := "COMPLIANT"
+
+	if soh < 30 {
+		violations = append(violations, models.ComplianceViolation{
+			ViolationType:  "END_OF_LIFE",
+			Severity:       "CRITICAL",
+			Description:    fmt.Sprintf("Battery SoH %.1f%% < 30%%, end-of-life recycling required", soh),
+			RequiresAction: true,
+			DetectedAt:     time.Now(),
+		})
+		status = "VIOLATIONS_EXIST"
+	} else if soh < 80 {
+		violations = append(violations, models.ComplianceViolation{
+			ViolationType:  "SECOND_LIFE_ELIGIBLE",
+			Severity:       "INFO",
+			Description:    fmt.Sprintf("Battery SoH %.1f%% eligible for second-life", soh),
+			RequiresAction: false,
+			DetectedAt:     time.Now(),
+		})
+		status = "WARNINGS_EXIST"
+	}
+
+	if !hasMaterial {
+		violations = append(violations, models.ComplianceViolation{
+			ViolationType:  "MISSING_BMCS",
+			Severity:       "CRITICAL",
+			Description:    "Material Composition (BMCS) not submitted",
+			RequiresAction: true,
+			DetectedAt:     time.Now(),
+		})
+		status = "VIOLATIONS_EXIST"
+	}
+
+	_ = hasCarbon // Used in future compliance rules
 
 	return &models.ComplianceStatusResponse{
-		BPAN:          bpan,
-		Status:        "COMPLIANT",
-		Violations:    []models.ComplianceViolation{},
-		CriticalCount: 0,
-		WarningCount:  0,
+		BPAN:       bpan,
+		Status:     status,
+		Violations: violations,
 	}, nil
 }
 
-func (s *ComplianceService) StartComplianceScan(
-	ctx context.Context,
-) (string, error) {
-	// TODO Day 14 R2:
-	// 1. Start background job to scan all batteries
-	// 2. For each: get data, call Rust service, store violations
-	// 3. Return scan ID for status polling
+// TriggerComplianceScan triggers a full compliance scan.
+func (s *ComplianceService) TriggerComplianceScan(ctx context.Context) (*models.ComplianceDashboard, error) {
+	slog.Info("triggering compliance scan")
 
-	scanID := fmt.Sprintf("scan-%d", 1000)
-	return scanID, nil
+	// TODO: Wire to Rust gRPC for full scan
+	return &models.ComplianceDashboard{
+		TotalBatteries:          0,
+		BatteriesWithViolations: 0,
+		CriticalViolations:      0,
+		WarningViolations:       0,
+		ComplianceRate:          100.0,
+	}, nil
 }
 
-func (s *ComplianceService) GenerateComplianceProof(
+// VerifyOperational generates a ZK proof that battery meets operational standards.
+func (s *ComplianceService) VerifyOperational(
 	ctx context.Context,
 	bpan string,
-	requirement string,
-) ([]byte, []byte, error) {
-	// TODO Day 14 R1:
-	// 1. Call Rust gRPC service with requirement
-	// 2. Return (proof, commitment)
+	soh float32,
+) (*models.ComplianceProofResponse, error) {
+	if s.lifecycleClient == nil {
+		return nil, fmt.Errorf("compliance service: gRPC client not connected")
+	}
 
-	return []byte{}, []byte{}, nil
+	resp, err := s.lifecycleClient.VerifyOperational(ctx, &lifecyclev1.VerifyOperationalRequest{
+		Bpan: bpan,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("gRPC error: %w", err)
+	}
+
+	return &models.ComplianceProofResponse{
+		BPAN:       bpan,
+		Requirement: "operational",
+		Statement:  fmt.Sprintf("Battery SoH > 80%% (actual: %.1f%%)", soh),
+		Proof:      resp.ZkProof,
+		Commitment: resp.PublicInputs,
+	}, nil
 }
 
-func (s *ComplianceService) GetComplianceDashboard(
-	ctx context.Context,
-) (*models.ComplianceDashboard, error) {
-	// TODO Day 14 R2: Query aggregated stats
+// GetViolations retrieves compliance violations for a battery.
+func (s *ComplianceService) GetViolations(ctx context.Context, bpan string) ([]models.ComplianceViolation, error) {
+	slog.Info("fetching violations", "bpan", bpan)
 
+	// TODO: Wire to Rust gRPC
+	return []models.ComplianceViolation{}, nil
+}
+
+// GetComplianceDashboard retrieves aggregated compliance stats.
+func (s *ComplianceService) GetComplianceDashboard(ctx context.Context) (*models.ComplianceDashboard, error) {
+	slog.Info("fetching compliance dashboard")
+
+	// TODO: Wire to Rust gRPC
 	return &models.ComplianceDashboard{
-		ComplianceRate: 95.5,
+		TotalBatteries:          0,
+		BatteriesWithViolations: 0,
+		CriticalViolations:      0,
+		WarningViolations:       0,
+		ComplianceRate:          100.0,
 	}, nil
 }

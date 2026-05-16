@@ -8,19 +8,23 @@ import (
 	"fmt"
 	"log/slog"
 
+	batteryv1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/battery/v1"
+	"github.com/Mpratyush54/Battery-AAdhar/api/grpc"
 	"github.com/Mpratyush54/Battery-AAdhar/api/models"
 )
 
 // MaterialService handles BMCS operations via gRPC to Rust core.
 type MaterialService struct {
-	encryptionService *EncryptionService
-	// TODO: Add gRPC client once proto is regenerated
+	batteryClient batteryv1.BatteryServiceClient
 }
 
 // NewMaterialService creates a new material service.
-func NewMaterialService(encSvc *EncryptionService) *MaterialService {
+func NewMaterialService(cc *grpc.ClientConn) *MaterialService {
+	if cc == nil {
+		return &MaterialService{}
+	}
 	return &MaterialService{
-		encryptionService: encSvc,
+		batteryClient: cc.BatteryClient,
 	}
 }
 
@@ -37,10 +41,12 @@ func (s *MaterialService) SubmitMaterialComposition(
 	if submitterID == "" {
 		return nil, fmt.Errorf("submitter_id is required")
 	}
-
-	// Validate required fields
 	if req.CathodeMaterial == "" || req.AnodeMaterial == "" {
 		return nil, fmt.Errorf("cathode_material and anode_material are required")
+	}
+
+	if s.batteryClient == nil {
+		return nil, fmt.Errorf("material service: gRPC client not connected")
 	}
 
 	slog.Info("submitting BMCS",
@@ -49,12 +55,34 @@ func (s *MaterialService) SubmitMaterialComposition(
 		"cathode", req.CathodeMaterial,
 	)
 
-	// TODO Day 8b: Call Rust gRPC SubmitMaterialComposition
-	// For now, return a success stub with a hash placeholder
+	resp, err := s.batteryClient.SubmitMaterialComposition(ctx, &batteryv1.SubmitMaterialCompositionRequest{
+		Bpan:       bpan,
+		SubmitterId: submitterID,
+		Composition: &batteryv1.MaterialComposition{
+			Bpan:                bpan,
+			CathodeMaterial:     req.CathodeMaterial,
+			AnodeMaterial:       req.AnodeMaterial,
+			ElectrolyteType:     req.ElectrolyteType,
+			SeparatorMaterial:   req.SeparatorMaterial,
+			RecyclablePercentage: req.RecyclablePercent,
+			LithiumContentG:     req.LithiumContentG,
+			CobaltContentG:      req.CobaltContentG,
+			NickelContentG:      req.NickelContentG,
+			ManganeseContentG:   req.ManganeseContentG,
+			LeadContentG:        req.LeadContentG,
+			CadmiumContentG:     req.CadmiumContentG,
+			HazardousSubstances: req.HazardousSubstances,
+			SupplyChainSource:   req.SupplyChainSource,
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("gRPC error: %w", err)
+	}
+
 	return &models.SubmitMaterialResponse{
-		Success:   true,
-		DataHash:  fmt.Sprintf("sha256:bmcs:%s:pending", bpan),
-		EventHash: fmt.Sprintf("sha256:event:%s:pending", bpan),
+		Success:   resp.Success,
+		DataHash:  resp.DataHash,
+		EventHash: resp.EventHash,
 	}, nil
 }
 
@@ -68,20 +96,35 @@ func (s *MaterialService) GetMaterialComposition(
 		return nil, fmt.Errorf("bpan is required")
 	}
 
+	if s.batteryClient == nil {
+		return nil, fmt.Errorf("material service: gRPC client not connected")
+	}
+
 	slog.Info("fetching BMCS",
 		"bpan", bpan,
 		"requester_role", requesterRole,
 	)
 
-	// TODO Day 8b: Call Rust gRPC GetMaterialComposition
-	// For now, return a stub with public fields only
+	resp, err := s.batteryClient.GetMaterialComposition(ctx, &batteryv1.GetMaterialCompositionRequest{
+		Bpan:          bpan,
+		RequesterRole: requesterRole,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("gRPC error: %w", err)
+	}
+
+	if resp.Composition == nil {
+		return nil, fmt.Errorf("no BMCS data found for BPAN %s", bpan)
+	}
+
+	comp := resp.Composition
 	return &models.MaterialCompositionResponse{
-		BPAN:              bpan,
-		CathodeMaterial:   "NMC811",
-		AnodeMaterial:     "Graphite",
-		ElectrolyteType:   "LiPF6",
-		SeparatorMaterial: "PE/PP",
-		RecyclablePercent: 92.5,
-		Partial:           true,
+		BPAN:              comp.Bpan,
+		CathodeMaterial:   comp.CathodeMaterial,
+		AnodeMaterial:     comp.AnodeMaterial,
+		ElectrolyteType:   comp.ElectrolyteType,
+		SeparatorMaterial: comp.SeparatorMaterial,
+		RecyclablePercent: comp.RecyclablePercentage,
+		Partial:           resp.Partial,
 	}, nil
 }

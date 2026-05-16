@@ -5,20 +5,19 @@ import (
 	"net/http"
 
 	"github.com/Mpratyush54/Battery-AAdhar/api/bpan"
-	"github.com/Mpratyush54/Battery-AAdhar/api/config"
 	"github.com/go-chi/chi/v5"
 )
 
 // RegisterBatteryController handles POST /api/v1/battery/register.
-// It delegates to the atomic registration service which calls the Rust gRPC engine.
+// This is a placeholder — the real registration is handled by the
+// registration controller which calls the Rust gRPC engine.
 func RegisterBatteryController(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		http.Error(res, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Delegate to the registration controller which handles the full atomic flow
-	RegisterBatteryAtomicController(res, req)
+	http.Error(res, `{"error":"use POST /api/v1/batteries/register for atomic registration"}`, http.StatusNotImplemented)
 }
 
 // GetBatteryController handles GET /api/v1/battery?bpan=...
@@ -123,6 +122,3 @@ func handleRegisterManufacturer(w http.ResponseWriter, _ *http.Request) {
 func handleListManufacturers(w http.ResponseWriter, _ *http.Request) {
 	http.Error(w, "not implemented", http.StatusNotImplemented)
 }
-
-// Ensure config package is referenced (used by RegisterBatteryAtomicController)
-var _ = config.MicroserviceClients{}

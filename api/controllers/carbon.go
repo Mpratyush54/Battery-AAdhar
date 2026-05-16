@@ -52,11 +52,11 @@ func SubmitCarbonFootprint(carbonService *services.CarbonService) http.HandlerFu
 		}
 
 		// Call carbon service
-		submissionID, err := carbonService.SubmitCarbonFootprint(r.Context(), bpan, &req, claims.Role)
+		submissionID, err := carbonService.SubmitCarbonFootprint(r.Context(), bpan, claims.Subject, &req)
 		if err != nil {
 			slog.Error("submit carbon failed", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{"error": "submission failed"})
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 			return
 		}
 
@@ -138,7 +138,7 @@ func VerifyCarbonFootprint(carbonService *services.CarbonService) http.HandlerFu
 		}
 
 		// Verify
-		err := carbonService.VerifyCarbonFootprint(r.Context(), bpan, claims.Subject, req.Standard, claims.Role)
+		err := carbonService.VerifyCarbonFootprint(r.Context(), bpan, claims.Subject, req.Standard)
 		if err != nil {
 			slog.Error("carbon verification failed", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -194,7 +194,7 @@ func CompareCarbonFootprints(carbonService *services.CarbonService) http.Handler
 var carbonService *services.CarbonService
 
 func init() {
-	carbonService = services.NewCarbonService(nil)
+	carbonService = services.NewCarbonService()
 }
 
 // RegisterCarbonRoutes registers all carbon-related routes

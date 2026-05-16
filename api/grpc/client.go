@@ -134,3 +134,8 @@ func (c *ClientConn) healthCheck(ctx context.Context) error {
 func (c *ClientConn) Close() error {
 	return c.conn.Close()
 }
+
+// RawConn returns the underlying *grpc.ClientConn for services that need it.
+func (c *ClientConn) RawConn() *grpc.ClientConn {
+	return c.conn
+}

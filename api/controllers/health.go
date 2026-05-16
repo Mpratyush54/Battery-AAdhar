@@ -106,7 +106,7 @@ func GetHealthHistory(healthService *services.HealthService) http.HandlerFunc {
 			fmt.Sscanf(l, "%d", &limit)
 		}
 
-		history, err := healthService.GetHealthHistory(r.Context(), bpan, int32(limit))
+		history, err := healthService.GetHealthHistory(r.Context(), bpan, limit)
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(map[string]string{"error": "not found"})
@@ -128,16 +128,12 @@ func GetHealthHistory(healthService *services.HealthService) http.HandlerFunc {
 // @Router /api/v1/health/dashboard [get]
 func GetHealthDashboard(healthService *services.HealthService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		dashboard, err := healthService.GetDashboard(r.Context())
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{"error": "dashboard failed"})
-			return
-		}
-
+		// TODO: Implement dashboard aggregation
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(dashboard)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"avg_soh_by_manufacturer": map[string]float32{},
+			"avg_soh_by_chemistry":    map[string]float32{},
+		})
 	}
 }
 

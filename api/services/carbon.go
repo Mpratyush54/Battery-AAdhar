@@ -1,4 +1,5 @@
-// carbon.go — Carbon footprint service orchestration
+// carbon.go — Carbon footprint service layer
+// Orchestrates gRPC calls to the Rust core for BCF operations.
 
 package services
 
@@ -10,93 +11,91 @@ import (
 	"github.com/Mpratyush54/Battery-AAdhar/api/models"
 )
 
-type CarbonService struct {
-	encryptionService *EncryptionService
-	// TODO Day 7: add repository
+// CarbonService handles BCF operations.
+// Currently local-only — Rust gRPC for carbon will be added when proto expands.
+type CarbonService struct{}
+
+// NewCarbonService creates a new carbon service.
+func NewCarbonService() *CarbonService {
+	return &CarbonService{}
 }
 
-func NewCarbonService(encSvc *EncryptionService) *CarbonService {
-	return &CarbonService{
-		encryptionService: encSvc,
-	}
-}
-
+// SubmitCarbonFootprint validates and stores carbon footprint data.
 func (s *CarbonService) SubmitCarbonFootprint(
 	ctx context.Context,
 	bpan string,
+	submitterID string,
 	req *models.CarbonFootprintRequest,
-	requesterRole string,
 ) (string, error) {
-	if requesterRole != "manufacturer" && requesterRole != "importer" && requesterRole != "admin" {
-		return "", fmt.Errorf("only manufacturer can submit carbon data")
+	if bpan == "" || submitterID == "" {
+		return "", fmt.Errorf("bpan and submitter_id are required")
+	}
+	if req.RawMaterialEmissionsKgCo2e < 0 || req.ManufacturingEmissionsKgCo2e < 0 {
+		return "", fmt.Errorf("emissions must be non-negative")
 	}
 
-	// TODO Day 7: Call Rust service to encrypt + store
-	// For now, return submission ID
-	submissionID := fmt.Sprintf("sub-%s-bcf", bpan)
-
-	slog.Info("carbon footprint submitted",
+	slog.Info("submitting BCF",
 		"bpan", bpan,
-		"submission_id", submissionID,
-		"total_emissions", req.RawMaterialEmissionsKgCo2e+req.ManufacturingEmissionsKgCo2e+req.TransportEmissionsKgCo2e+req.UsageEmissionsKgCo2e+req.RecyclingEmissionsKgCo2e,
+		"submitter_id", submitterID,
+		"total", req.RawMaterialEmissionsKgCo2e+req.ManufacturingEmissionsKgCo2e+req.TransportEmissionsKgCo2e+req.UsageEmissionsKgCo2e+req.RecyclingEmissionsKgCo2e,
 	)
 
-	return submissionID, nil
+	// TODO: Wire to Rust gRPC when carbon proto is added
+	return fmt.Sprintf("bcf:%s:%s", bpan, submitterID), nil
 }
 
+// VerifyCarbonFootprint marks a carbon footprint as verified.
 func (s *CarbonService) VerifyCarbonFootprint(
 	ctx context.Context,
 	bpan string,
 	verifiedBy string,
 	standard string,
-	requesterRole string,
 ) error {
-	if requesterRole != "verifier" && requesterRole != "regulator" && requesterRole != "admin" {
-		return fmt.Errorf("only verifier can verify")
+	if bpan == "" || verifiedBy == "" {
+		return fmt.Errorf("bpan and verified_by are required")
 	}
 
-	// TODO Day 7: Check hash integrity, mark verified in DB
-
-	slog.Info("carbon verified",
+	slog.Info("verifying BCF",
 		"bpan", bpan,
 		"verified_by", verifiedBy,
 		"standard", standard,
 	)
 
+	// TODO: Wire to Rust gRPC
 	return nil
 }
 
+// GetCarbonFootprint retrieves carbon footprint data.
 func (s *CarbonService) GetCarbonFootprint(
 	ctx context.Context,
 	bpan string,
 	requesterRole string,
 ) (*models.CarbonFootprintResponse, error) {
-	// TODO Day 7: Fetch from DB based on role
+	if bpan == "" {
+		return nil, fmt.Errorf("bpan is required")
+	}
 
+	slog.Info("fetching BCF", "bpan", bpan, "role", requesterRole)
+
+	// TODO: Wire to Rust gRPC
 	return &models.CarbonFootprintResponse{
-		BPAN:                 bpan,
-		TotalEmissionsKgCo2e: 157.0,
-		EmissionsPerKwh:      5.23,
-		Verified:             true,
-		VerifiedBy:           stringPtr("TUV-INDIA"),
+		BPAN:              bpan,
+		TotalEmissionsKgCo2e: 0,
+		Verified:          false,
 	}, nil
 }
 
+// CompareCarbonFootprints compares two batteries' carbon footprints.
 func (s *CarbonService) CompareCarbonFootprints(
 	ctx context.Context,
-	bpanA string,
-	bpanB string,
+	bpanA, bpanB string,
 ) (*models.CarbonComparison, error) {
-	// TODO Day 7: Fetch both from DB, compute deltas
+	slog.Info("comparing carbon footprints", "bpan_a", bpanA, "bpan_b", bpanB)
 
+	// TODO: Wire to Rust gRPC
 	return &models.CarbonComparison{
-		BpanA:      bpanA,
-		BpanB:      bpanB,
-		TotalDelta: 10.0,
-		BpanALower: true,
+		BpanA:     bpanA,
+		BpanB:     bpanB,
+		TotalDelta: 0,
 	}, nil
-}
-
-func stringPtr(s string) *string {
-	return &s
 }

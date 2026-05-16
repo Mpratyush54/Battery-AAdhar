@@ -1,6 +1,6 @@
 // auth.go — JWT validation middleware
-// Extracts and validates RS256 tokens from Authorization header.
-// On Day 3: validation stub. On Day 15: full RS256 + expiry check.
+// Extracts and validates HS256 tokens from Authorization header.
+// On Day 3: expiry check added. On Day 22: migrate to RS256 + signature verification.
 
 package middleware
 
@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -29,44 +30,59 @@ type contextKey string
 
 const claimsContextKey contextKey = "jwt_claims"
 
-// Authenticate parses JWT from Authorization header and attaches Claims to context.
+// Authenticate parses JWT from Authorization header, validates expiry,
+// and attaches Claims to context. Rejects expired or malformed tokens.
 //
-// Stub for Day 3: parses header but does NOT verify RS256 signature.
-// On Day 15: full signature verification via public key.
+// Day 3: HS256 with expiry check.
+// Day 22: migrate to RS256 signature verification.
 func Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Default: unauthenticated guest
-		claims := &Claims{
-			Role: "public",
-		}
-
 		authHeader := r.Header.Get("Authorization")
-		if strings.HasPrefix(authHeader, "Bearer ") {
-			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-			if tokenString != "" {
-				// TODO Day 15: Verify RS256 signature using public key from JWK endpoint
-				// For now, just parse claims without verification
-				parsedClaims, err := parseJWTClaims(tokenString)
-				if err != nil {
-					slog.Warn("invalid JWT", "error", err)
-					// Fall through to guest claims
-				} else {
-					claims = parsedClaims
-				}
-			}
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			// No token — attach guest claims and continue
+			ctx := context.WithValue(r.Context(), claimsContextKey, &Claims{Role: "public"})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
 		}
 
-		// Attach claims to request context
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		if tokenString == "" {
+			ctx := context.WithValue(r.Context(), claimsContextKey, &Claims{Role: "public"})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+
+		claims, err := parseAndValidateJWT(tokenString)
+		if err != nil {
+			slog.Warn("invalid JWT", "error", err)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			jsonError(w, "invalid or expired token")
+			return
+		}
+
+		// Attach validated claims to request context
 		ctx := context.WithValue(r.Context(), claimsContextKey, claims)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-// parseJWTClaims parses JWT without signature verification (Day 3 stub).
-func parseJWTClaims(tokenString string) (*Claims, error) {
-	// This is a stub implementation that does NOT verify the signature.
-	// It only parses the payload.
-	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
+// parseAndValidateJWT parses and validates an HS256 JWT.
+// Checks: signature (HS256), expiry, and required claims.
+func parseAndValidateJWT(tokenString string) (*Claims, error) {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		secret = "fallback_secret_key" // Dev only — must be overridden in production
+	}
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Validate signing method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(secret), nil
+	}, jwt.WithValidMethods([]string{"HS256"}))
+
 	if err != nil {
 		return nil, fmt.Errorf("parse JWT: %w", err)
 	}
@@ -78,7 +94,7 @@ func parseJWTClaims(tokenString string) (*Claims, error) {
 
 	// Extract fields
 	claims := &Claims{
-		Role: "authenticated", // default for any valid token
+		Role: "authenticated",
 	}
 
 	if sub, ok := mapClaims["sub"].(string); ok {
@@ -93,9 +109,14 @@ func parseJWTClaims(tokenString string) (*Claims, error) {
 		claims.ManufacturerID = mfrID
 	}
 
-	// Parse expiry (exp is a NumericDate: seconds since Unix epoch)
+	// Parse expiry
 	if exp, ok := mapClaims["exp"].(float64); ok {
 		claims.ExpiresAt = time.Unix(int64(exp), 0)
+		if time.Now().After(claims.ExpiresAt) {
+			return nil, fmt.Errorf("token expired at %v", claims.ExpiresAt)
+		}
+	} else {
+		return nil, fmt.Errorf("token missing expiry claim")
 	}
 
 	return claims, nil
@@ -105,7 +126,6 @@ func parseJWTClaims(tokenString string) (*Claims, error) {
 func ClaimsFromContext(ctx context.Context) *Claims {
 	v, _ := ctx.Value(claimsContextKey).(*Claims)
 	if v == nil {
-		// Return default guest claims if not found
 		return &Claims{Role: "public"}
 	}
 	return v
@@ -124,4 +144,8 @@ func GetUserRole(r *http.Request) string {
 // IsExpired checks if the JWT has expired.
 func (c *Claims) IsExpired() bool {
 	return time.Now().After(c.ExpiresAt)
+}
+
+func jsonError(w http.ResponseWriter, msg string) {
+	w.Write([]byte(`{"error":"` + msg + `"}`))
 }

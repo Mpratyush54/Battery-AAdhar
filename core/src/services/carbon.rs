@@ -1,10 +1,13 @@
-//! carbon.rs — Carbon footprint service with verification
+//! carbon.rs — Carbon footprint service with verification and DB persistence
 //!
-//! Handles submission, verification, and integrity checks.
+//! Handles submission, verification, and integrity checks for BCF data.
+//! All operations are backed by PostgreSQL with hash-chain audit trails.
 
 use crate::models::{CarbonFootprint, CarbonFootprintPublic, CarbonFootprintRequest};
-
+use crate::repositories::carbon_repo::CarbonRepository;
 use async_trait::async_trait;
+use sqlx::PgPool;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub enum CarbonError {
@@ -13,6 +16,7 @@ pub enum CarbonError {
     VerificationFailed(String),
     TamperDetected(String),
     ValidationError(String),
+    DatabaseError(String),
 }
 
 impl std::fmt::Display for CarbonError {
@@ -23,6 +27,7 @@ impl std::fmt::Display for CarbonError {
             CarbonError::VerificationFailed(msg) => write!(f, "verification failed: {}", msg),
             CarbonError::TamperDetected(msg) => write!(f, "tamper detected: {}", msg),
             CarbonError::ValidationError(msg) => write!(f, "validation error: {}", msg),
+            CarbonError::DatabaseError(msg) => write!(f, "database error: {}", msg),
         }
     }
 }
@@ -36,6 +41,7 @@ pub trait CarbonService: Send + Sync {
         bpan: &str,
         data: &CarbonFootprintRequest,
         requester_role: &str,
+        submitter_id: &str,
     ) -> Result<String, CarbonError>;
 
     async fn verify_carbon_footprint(
@@ -53,6 +59,12 @@ pub trait CarbonService: Send + Sync {
     ) -> Result<CarbonFootprintOrPublic, CarbonError>;
 
     async fn check_tamper(&self, bpan: &str) -> Result<bool, CarbonError>;
+
+    async fn compare_carbon_footprints(
+        &self,
+        bpan_a: &str,
+        bpan_b: &str,
+    ) -> Result<CarbonComparison, CarbonError>;
 }
 
 #[derive(Debug)]
@@ -61,31 +73,63 @@ pub enum CarbonFootprintOrPublic {
     Public(CarbonFootprintPublic),
 }
 
-pub struct CarbonServiceImpl;
+#[derive(Debug)]
+pub struct CarbonComparison {
+    pub bpan_a: String,
+    pub bpan_b: String,
+    pub total_a: f32,
+    pub total_b: f32,
+    pub delta: f32,
+    pub stage_deltas: CarbonStageDeltas,
+}
 
-impl Default for CarbonServiceImpl {
-    fn default() -> Self {
-        Self::new()
-    }
+#[derive(Debug)]
+pub struct CarbonStageDeltas {
+    pub raw_material: f32,
+    pub manufacturing: f32,
+    pub transport: f32,
+    pub usage: f32,
+    pub recycling: f32,
+}
+
+pub struct CarbonServiceImpl {
+    repo: Arc<dyn CarbonRepository>,
 }
 
 impl CarbonServiceImpl {
-    pub fn new() -> Self {
-        CarbonServiceImpl
+    pub fn new(pool: PgPool) -> Self {
+        CarbonServiceImpl {
+            repo: Arc::new(crate::repositories::carbon_repo::CarbonRepositoryImpl::new(pool)),
+        }
     }
 
     fn can_submit(&self, role: &str) -> bool {
-        matches!(role, "manufacturer" | "importer" | "admin")
+        matches!(
+            role,
+            "MANUFACTURER" | "IMPORTER" | "ADMIN" | "manufacturer" | "importer" | "admin"
+        )
     }
 
     fn can_verify(&self, role: &str) -> bool {
-        matches!(role, "verifier" | "regulator" | "admin")
+        matches!(
+            role,
+            "VERIFIER" | "REGULATOR" | "ADMIN" | "verifier" | "regulator" | "admin"
+        )
     }
 
     fn can_see_full(&self, role: &str) -> bool {
         matches!(
             role,
-            "manufacturer" | "importer" | "verifier" | "regulator" | "admin"
+            "MANUFACTURER"
+                | "IMPORTER"
+                | "VERIFIER"
+                | "REGULATOR"
+                | "ADMIN"
+                | "manufacturer"
+                | "importer"
+                | "verifier"
+                | "regulator"
+                | "admin"
         )
     }
 }
@@ -97,10 +141,11 @@ impl CarbonService for CarbonServiceImpl {
         bpan: &str,
         data: &CarbonFootprintRequest,
         requester_role: &str,
+        submitter_id: &str,
     ) -> Result<String, CarbonError> {
         if !self.can_submit(requester_role) {
             return Err(CarbonError::Unauthorized(
-                "only manufacturer can submit carbon data".to_string(),
+                "only manufacturer/importer can submit carbon data".to_string(),
             ));
         }
 
@@ -108,7 +153,6 @@ impl CarbonService for CarbonServiceImpl {
             return Err(CarbonError::ValidationError("invalid BPAN".to_string()));
         }
 
-        // Validate emissions are non-negative (except recycling avoided mining)
         if data.raw_material_emissions_kg_co2e < 0.0
             || data.manufacturing_emissions_kg_co2e < 0.0
             || data.transport_emissions_kg_co2e < 0.0
@@ -119,9 +163,59 @@ impl CarbonService for CarbonServiceImpl {
             ));
         }
 
-        // TODO Day 7: Store in DB, encrypt sensitive fields
-        let submission_id = uuid::Uuid::new_v4().to_string();
-        tracing::info!("carbon footprint submitted: {}", submission_id);
+        // Compute total emissions
+        let total = data.raw_material_emissions_kg_co2e
+            + data.manufacturing_emissions_kg_co2e
+            + data.transport_emissions_kg_co2e
+            + data.usage_emissions_kg_co2e
+            + data.recycling_emissions_kg_co2e;
+
+        // Build carbon footprint record
+        let cf = CarbonFootprint {
+            bpan: bpan.to_string(),
+            raw_material_emissions_kg_co2e: data.raw_material_emissions_kg_co2e,
+            raw_material_source_country: data.raw_material_source_country.clone(),
+            mining_method: data.mining_method.clone(),
+            manufacturing_emissions_kg_co2e: data.manufacturing_emissions_kg_co2e,
+            manufacturing_location: data.manufacturing_location.clone(),
+            factory_energy_source: data.factory_energy_source.clone(),
+            cell_production_method: data.cell_production_method.clone(),
+            transport_emissions_kg_co2e: data.transport_emissions_kg_co2e,
+            transport_distance_km: data.transport_distance_km,
+            transport_mode: data.transport_mode.clone(),
+            transport_packaging: data.transport_packaging.clone(),
+            usage_emissions_kg_co2e: data.usage_emissions_kg_co2e,
+            usage_years: data.usage_years,
+            usage_grid_emissions_factor: data.usage_grid_emissions_factor,
+            usage_annual_km: data.usage_annual_km,
+            recycling_emissions_kg_co2e: data.recycling_emissions_kg_co2e,
+            recycling_recovery_rate: data.recycling_recovery_rate,
+            recycling_avoided_mining: data.recycling_avoided_mining,
+            recycling_method: data.recycling_method.clone(),
+            total_emissions_kg_co2e: total,
+            emissions_per_kwh: 0.0, // Computed later when capacity is known
+            carbon_hash: String::new(),               // Computed by repo
+            submitted_by: submitter_id.to_string(),
+            submitted_at: chrono::Utc::now(),
+            submitted_version: 1,
+            verified: false,
+            verified_by: None,
+            verified_at: None,
+            verification_standard: None,
+        };
+
+        let submission_id = self
+            .repo
+            .insert_carbon_footprint(&cf)
+            .await
+            .map_err(|e| CarbonError::DatabaseError(e.to_string()))?;
+
+        tracing::info!(
+            bpan = %bpan,
+            submission_id = %submission_id,
+            total_emissions = total,
+            "carbon footprint submitted"
+        );
 
         Ok(submission_id)
     }
@@ -129,21 +223,35 @@ impl CarbonService for CarbonServiceImpl {
     async fn verify_carbon_footprint(
         &self,
         bpan: &str,
-        _verified_by: &str,
+        verified_by: &str,
         standard: &str,
         requester_role: &str,
     ) -> Result<(), CarbonError> {
         if !self.can_verify(requester_role) {
             return Err(CarbonError::Unauthorized(
-                "only verifier can verify carbon data".to_string(),
+                "only verifier/regulator can verify carbon data".to_string(),
             ));
         }
 
-        // TODO Day 7: Fetch from DB, check hash integrity
-        // If hash doesn't match, raise TamperDetected error
-        // Otherwise, mark verified=true, set verified_by and verified_at
+        // Check tamper before verifying
+        let tampered = self.check_tamper(bpan).await?;
+        if tampered {
+            return Err(CarbonError::TamperDetected(
+                "carbon data hash mismatch — possible tampering".to_string(),
+            ));
+        }
 
-        tracing::info!("carbon footprint verified for BPAN {}: {}", bpan, standard);
+        self.repo
+            .verify_carbon_footprint(bpan, verified_by, standard)
+            .await
+            .map_err(|e| CarbonError::DatabaseError(e.to_string()))?;
+
+        tracing::info!(
+            bpan = %bpan,
+            verified_by = %verified_by,
+            standard = %standard,
+            "carbon footprint verified"
+        );
 
         Ok(())
     }
@@ -157,41 +265,12 @@ impl CarbonService for CarbonServiceImpl {
             return Err(CarbonError::NotFound("invalid BPAN".to_string()));
         }
 
-        // TODO Day 7: Fetch from DB
-        // For now, return mock data
-
-        let cf = CarbonFootprint {
-            bpan: bpan.to_string(),
-            raw_material_emissions_kg_co2e: 45.0,
-            raw_material_source_country: "Indonesia".to_string(),
-            mining_method: "Brine Evaporation".to_string(),
-            manufacturing_emissions_kg_co2e: 35.0,
-            manufacturing_location: "China".to_string(),
-            factory_energy_source: "Renewable".to_string(),
-            cell_production_method: "Wet Coating".to_string(),
-            transport_emissions_kg_co2e: 12.0,
-            transport_distance_km: 15000.0,
-            transport_mode: "Sea".to_string(),
-            transport_packaging: "Recyclable".to_string(),
-            usage_emissions_kg_co2e: 80.0,
-            usage_years: 8,
-            usage_grid_emissions_factor: 500.0,
-            usage_annual_km: 15000,
-            recycling_emissions_kg_co2e: -15.0,
-            recycling_recovery_rate: 85.0,
-            recycling_avoided_mining: 30.0,
-            recycling_method: "Hydrometallurgical".to_string(),
-            total_emissions_kg_co2e: 157.0,
-            emissions_per_kwh: 5.23,
-            carbon_hash: "abc123def456".to_string(),
-            submitted_by: "mfr-001".to_string(),
-            submitted_at: chrono::Utc::now(),
-            submitted_version: 1,
-            verified: true,
-            verified_by: Some("TUV-INDIA".to_string()),
-            verified_at: Some(chrono::Utc::now()),
-            verification_standard: Some("ISO 14040".to_string()),
-        };
+        let cf = self
+            .repo
+            .get_by_bpan(bpan)
+            .await
+            .map_err(|e| CarbonError::DatabaseError(e.to_string()))?
+            .ok_or_else(|| CarbonError::NotFound(format!("no carbon data for BPAN {}", bpan)))?;
 
         if self.can_see_full(requester_role) {
             Ok(CarbonFootprintOrPublic::Full(Box::new(cf)))
@@ -200,13 +279,60 @@ impl CarbonService for CarbonServiceImpl {
         }
     }
 
-    async fn check_tamper(&self, _bpan: &str) -> Result<bool, CarbonError> {
-        // TODO Day 7: Fetch from DB, recompute hash
-        // If stored_hash != computed_hash, return true (tamper detected)
-        // Otherwise false
+    async fn check_tamper(&self, bpan: &str) -> Result<bool, CarbonError> {
+        let cf = self
+            .repo
+            .get_by_bpan(bpan)
+            .await
+            .map_err(|e| CarbonError::DatabaseError(e.to_string()))?;
 
-        // For now, return false (no tamper)
-        Ok(false)
+        let cf = match cf {
+            Some(c) => c,
+            None => return Ok(false), // No data = no tamper
+        };
+
+        // Recompute hash and compare with stored hash
+        let computed_hash = cf.recompute_hash();
+        Ok(cf.carbon_hash != computed_hash)
+    }
+
+    async fn compare_carbon_footprints(
+        &self,
+        bpan_a: &str,
+        bpan_b: &str,
+    ) -> Result<CarbonComparison, CarbonError> {
+        let cf_a = self
+            .repo
+            .get_by_bpan(bpan_a)
+            .await
+            .map_err(|e| CarbonError::DatabaseError(e.to_string()))?
+            .ok_or_else(|| CarbonError::NotFound(format!("no carbon data for BPAN {}", bpan_a)))?;
+
+        let cf_b = self
+            .repo
+            .get_by_bpan(bpan_b)
+            .await
+            .map_err(|e| CarbonError::DatabaseError(e.to_string()))?
+            .ok_or_else(|| CarbonError::NotFound(format!("no carbon data for BPAN {}", bpan_b)))?;
+
+        Ok(CarbonComparison {
+            bpan_a: bpan_a.to_string(),
+            bpan_b: bpan_b.to_string(),
+            total_a: cf_a.total_emissions_kg_co2e,
+            total_b: cf_b.total_emissions_kg_co2e,
+            delta: cf_a.total_emissions_kg_co2e - cf_b.total_emissions_kg_co2e,
+            stage_deltas: CarbonStageDeltas {
+                raw_material: cf_a.raw_material_emissions_kg_co2e
+                    - cf_b.raw_material_emissions_kg_co2e,
+                manufacturing: cf_a.manufacturing_emissions_kg_co2e
+                    - cf_b.manufacturing_emissions_kg_co2e,
+                transport: cf_a.transport_emissions_kg_co2e
+                    - cf_b.transport_emissions_kg_co2e,
+                usage: cf_a.usage_emissions_kg_co2e - cf_b.usage_emissions_kg_co2e,
+                recycling: cf_a.recycling_emissions_kg_co2e
+                    - cf_b.recycling_emissions_kg_co2e,
+            },
+        })
     }
 }
 
@@ -214,63 +340,18 @@ impl CarbonService for CarbonServiceImpl {
 mod tests {
     use super::*;
 
-    #[tokio::test]
-    async fn test_submit_unauthorized() {
-        let service = CarbonServiceImpl::new();
-        let req = CarbonFootprintRequest {
-            raw_material_emissions_kg_co2e: 45.0,
-            raw_material_source_country: "Indonesia".to_string(),
-            mining_method: "Brine".to_string(),
-            manufacturing_emissions_kg_co2e: 35.0,
-            manufacturing_location: "China".to_string(),
-            factory_energy_source: "Renewable".to_string(),
-            cell_production_method: "Wet".to_string(),
-            transport_emissions_kg_co2e: 12.0,
-            transport_distance_km: 15000.0,
-            transport_mode: "Sea".to_string(),
-            transport_packaging: "Cardboard".to_string(),
-            usage_emissions_kg_co2e: 80.0,
-            usage_years: 8,
-            usage_grid_emissions_factor: 500.0,
-            usage_annual_km: 15000,
-            recycling_emissions_kg_co2e: -15.0,
-            recycling_recovery_rate: 85.0,
-            recycling_avoided_mining: 30.0,
-            recycling_method: "Hydrometallurgical".to_string(),
-        };
+    #[test]
+    fn test_role_authorization() {
+        let pool = PgPool::connect_lazy("postgres://localhost/test").unwrap();
+        let service = CarbonServiceImpl::new(pool);
 
-        let result = service
-            .submit_carbon_footprint("MY008A6FKKKLC1DH80001", &req, "consumer")
-            .await;
+        assert!(service.can_submit("MANUFACTURER"));
+        assert!(service.can_submit("manufacturer"));
+        assert!(!service.can_submit("consumer"));
+        assert!(!service.can_submit("CONSUMER"));
 
-        assert!(result.is_err());
-        match result {
-            Err(CarbonError::Unauthorized(_)) => (),
-            _ => panic!("expected Unauthorized"),
-        }
-    }
-
-    #[tokio::test]
-    async fn test_verify_authorization() {
-        let service = CarbonServiceImpl::new();
-
-        // Consumer cannot verify
-        let result = service
-            .verify_carbon_footprint("MY008A6FKKKLC1DH80001", "consumer", "ISO 14040", "consumer")
-            .await;
-
-        assert!(result.is_err());
-
-        // Verifier can verify
-        let result = service
-            .verify_carbon_footprint(
-                "MY008A6FKKKLC1DH80001",
-                "TUV-INDIA",
-                "ISO 14040",
-                "verifier",
-            )
-            .await;
-
-        assert!(result.is_ok());
+        assert!(service.can_verify("VERIFIER"));
+        assert!(service.can_verify("regulator"));
+        assert!(!service.can_verify("consumer"));
     }
 }

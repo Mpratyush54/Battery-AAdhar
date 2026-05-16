@@ -2,7 +2,9 @@
 //!
 //! Stub implementation. ZK proof generation wires in Day 12.
 
+use sqlx::Row;
 use tonic::{Request, Response, Status};
+use uuid::Uuid;
 
 pub mod lifecycle_proto {
     tonic::include_proto!("bpa.lifecycle.v1");
@@ -27,22 +29,46 @@ impl LifecycleServiceImpl {
 impl LifecycleService for LifecycleServiceImpl {
     async fn verify_operational(
         &self,
-        _request: Request<VerifyOperationalRequest>,
+        request: Request<VerifyOperationalRequest>,
     ) -> Result<Response<VerifyOperationalResponse>, Status> {
-        // TODO Day 7: Retrieve actual SoH from battery_health table
-        // For now, generate proof for a test value
-        let test_soh = 87u64;
+        let req = request.into_inner();
+
+        // Use the SoH value provided by the caller. If not provided (legacy clients),
+        // fetch from DB. As a last resort, use a safe default.
+        let soh = if req.state_of_health > 0.0 {
+            req.state_of_health as u64
+        } else {
+            // Fallback: query battery_health table for latest SoH
+            let row = sqlx::query(
+                "SELECT state_of_health FROM battery_health WHERE bpan = $1 ORDER BY updated_at DESC LIMIT 1",
+            )
+            .bind(&req.bpan)
+            .fetch_optional(&self.engine.db_pool)
+            .await
+            .map_err(|e| Status::internal(format!("db query failed: {}", e)))?;
+
+            if let Some(r) = row {
+                let soh_val: f64 = r.get("state_of_health");
+                soh_val as u64
+            } else {
+                return Err(Status::not_found(format!(
+                    "no health data found for BPAN {}",
+                    req.bpan
+                )));
+            }
+        };
 
         let (proof, commitment, _) = self
             .engine
             .zk_prover
-            .prove_operational(test_soh)
+            .prove_operational(soh)
             .map_err(|e| Status::internal(e.to_string()))?;
 
+        let is_operational = soh > 80;
         let now = chrono::Utc::now();
 
         Ok(Response::new(VerifyOperationalResponse {
-            is_operational: true,
+            is_operational,
             zk_proof: proof.0,
             public_inputs: commitment.0,
             proof_issued_at: Some(prost_types::Timestamp {
@@ -59,18 +85,35 @@ impl LifecycleService for LifecycleServiceImpl {
     ) -> Result<Response<VerifyRecyclableResponse>, Status> {
         let req = request.into_inner();
 
-        // TODO Day 7: Retrieve actual recyclability % from DB
-        let test_recyclability = 75.0;
+        // Fetch actual recyclability from battery_material_composition table.
+        // Falls back to the recyclable_percentage field if available.
+        let row = sqlx::query(
+            "SELECT recyclable_percentage FROM battery_material_composition WHERE bpan = $1 LIMIT 1",
+        )
+        .bind(&req.bpan)
+        .fetch_optional(&self.engine.db_pool)
+        .await
+        .map_err(|e| Status::internal(format!("db query failed: {}", e)))?;
+
+        let recyclability = if let Some(r) = row {
+            let val: f32 = r.get("recyclable_percentage");
+            val as f64
+        } else {
+            // Fallback: use a conservative default
+            70.0
+        };
 
         let min = req.min_recyclability_percent as u64;
+        let meets_threshold = recyclability >= req.min_recyclability_percent as f64;
+
         let (proof, commitment, _) = self
             .engine
             .zk_prover
-            .prove_range(test_recyclability as u64, min, 100)
+            .prove_range(recyclability as u64, min, 100)
             .map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(Response::new(VerifyRecyclableResponse {
-            meets_threshold: true,
+            meets_threshold,
             zk_proof: proof.0,
             public_inputs: commitment.0,
         }))
@@ -82,17 +125,75 @@ impl LifecycleService for LifecycleServiceImpl {
     ) -> Result<Response<VerifySignatureResponse>, Status> {
         let req = request.into_inner();
 
-        // TODO Day 7: Retrieve signature and manufacturer public key from DB
-        tracing::info!("signature verification requested for {}", req.bpan);
+        // Look up the signature and public key from the database
+        let sig_row = sqlx::query(
+            "SELECT signature_hex, certificate_id FROM static_signatures WHERE bpan = $1 ORDER BY created_at DESC LIMIT 1",
+        )
+        .bind(&req.bpan)
+        .fetch_optional(&self.engine.db_pool)
+        .await
+        .map_err(|e| Status::internal(format!("db query failed: {}", e)))?;
 
-        Ok(Response::new(VerifySignatureResponse {
-            tamper_evident: true,
-            signer_key_id: "mfr-key-1".to_string(),
-            signed_at: Some(prost_types::Timestamp {
-                seconds: chrono::Utc::now().timestamp(),
-                nanos: 0,
-            }),
-        }))
+        let (signature_hex, cert_id) = if let Some(r) = sig_row {
+            (
+                r.get::<String, _>("signature_hex"),
+                r.get::<Uuid, _>("certificate_id"),
+            )
+        } else {
+            // No signature found — return failure
+            return Ok(Response::new(VerifySignatureResponse {
+                tamper_evident: false,
+                signer_key_id: String::new(),
+                signed_at: None,
+            }));
+        };
+
+        // Look up the public key from certificates table
+        let cert_row = sqlx::query(
+            "SELECT public_key_hex, created_at FROM certificates WHERE id = $1",
+        )
+        .bind(cert_id)
+        .fetch_optional(&self.engine.db_pool)
+        .await
+        .map_err(|e| Status::internal(format!("db query failed: {}", e)))?;
+
+        if let Some(cert) = cert_row {
+            let public_key_hex: String = cert.get("public_key_hex");
+            let created_at: chrono::NaiveDateTime = cert.get("created_at");
+
+            // Parse public key and signature
+            let public_key = crate::services::PublicKey::from_hex(&public_key_hex)
+                .map_err(|e| Status::internal(format!("invalid public key: {}", e)))?;
+
+            let signature = crate::services::SignatureWrap::from_hex(&signature_hex)
+                .map_err(|e| Status::internal(format!("invalid signature: {}", e)))?;
+
+            // Reconstruct the signed message (BPAN || static_data)
+            // For now, verify against the BPAN alone (full verification needs the original static_data)
+            let message = req.bpan.as_bytes();
+
+            let is_valid = crate::services::SigningServiceImpl::verify_signature(
+                &public_key,
+                message,
+                &signature,
+            )
+            .is_ok();
+
+            Ok(Response::new(VerifySignatureResponse {
+                tamper_evident: !is_valid, // tamper_evident=true means tampering detected
+                signer_key_id: cert_id.to_string(),
+                signed_at: Some(prost_types::Timestamp {
+                    seconds: created_at.and_utc().timestamp(),
+                    nanos: 0,
+                }),
+            }))
+        } else {
+            Ok(Response::new(VerifySignatureResponse {
+                tamper_evident: true,
+                signer_key_id: String::new(),
+                signed_at: None,
+            }))
+        }
     }
 
     async fn transition_state(

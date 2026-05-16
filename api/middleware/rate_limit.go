@@ -6,10 +6,12 @@ package middleware
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -46,18 +48,20 @@ func (rl *RateLimiter) HealthUpdateRateLimit(bpan string) (allowed bool, err err
 }
 
 // HealthUpdateRateLimitMiddleware HTTP middleware
+// Extracts BPAN from chi URL path parameter (e.g. /batteries/{bpan}/health)
 func HealthUpdateRateLimitMiddleware(rl *RateLimiter) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Only apply to health update endpoints
+			// Only apply to PATCH/POST (update operations)
 			if r.Method != http.MethodPatch && r.Method != http.MethodPost {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			// Extract BPAN from URL
-			bpan := r.URL.Query().Get("bpan")
+			// Extract BPAN from chi URL path parameter
+			bpan := chi.URLParam(r, "bpan")
 			if bpan == "" {
+				// No BPAN in path — skip rate limiting (let downstream handler decide)
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -70,8 +74,11 @@ func HealthUpdateRateLimitMiddleware(rl *RateLimiter) func(http.Handler) http.Ha
 			}
 
 			if !allowed {
+				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusTooManyRequests) // 429
-				w.Write([]byte(`{"error":"max 1 health update per battery per hour"}`))
+				json.NewEncoder(w).Encode(map[string]string{
+					"error": "max 1 health update per battery per hour",
+				})
 				return
 			}
 

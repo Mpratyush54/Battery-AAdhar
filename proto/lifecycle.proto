@@ -9,6 +9,7 @@ import "google/protobuf/timestamp.proto";
 message VerifyOperationalRequest {
   string bpan         = 1;
   string requester_id = 2;
+  float  state_of_health = 3; // Actual SoH value — ZK proof is generated against this
 }
 
 message VerifyOperationalResponse {

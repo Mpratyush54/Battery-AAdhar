@@ -22,7 +22,7 @@ pub use stakeholder_repo::StakeholderRepository;
 pub use battery_descriptor_repo::*;
 
 pub mod carbon_repo;
-pub use carbon_repo::CarbonRepositoryImpl;
+pub use carbon_repo::{CarbonRepository, CarbonRepositoryImpl, RepositoryError as CarbonRepoError};
 pub mod dynamic_data_repo;
 pub mod health_repo;
 pub use dynamic_data_repo::DynamicDataRepositoryImpl;

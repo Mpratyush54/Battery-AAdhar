@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/Mpratyush54/Battery-AAdhar/api/grpc"
 	"github.com/Mpratyush54/Battery-AAdhar/api/middleware"
 	"github.com/Mpratyush54/Battery-AAdhar/api/models"
 	"github.com/Mpratyush54/Battery-AAdhar/api/services"
@@ -300,6 +301,53 @@ func VerifyLifecycleOperational(s *services.LifecycleService) http.HandlerFunc {
 		requesterID := middleware.GetUserID(r)
 
 		resp, err := s.VerifyOperational(r.Context(), bpan, requesterID)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		json.NewEncoder(w).Encode(resp)
+	}
+}
+
+// VerifyOperational — POST /api/v1/batteries/{bpan}/verify/operational
+// Direct gRPC-backed handler for routes.go wiring (bypasses LifecycleService).
+func VerifyOperational(cc *grpc.ClientConn) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if cc == nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			json.NewEncoder(w).Encode(map[string]string{"error": "service unavailable"})
+			return
+		}
+		bpan := chi.URLParam(r, "bpan")
+		requesterID := middleware.GetUserID(r)
+
+		svc := services.NewLifecycleService(cc)
+		resp, err := svc.VerifyOperational(r.Context(), bpan, requesterID)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		json.NewEncoder(w).Encode(resp)
+	}
+}
+
+// VerifySignature — POST /api/v1/batteries/{bpan}/verify/signature
+// Direct gRPC-backed handler for routes.go wiring.
+func VerifySignature(cc *grpc.ClientConn) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if cc == nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			json.NewEncoder(w).Encode(map[string]string{"error": "service unavailable"})
+			return
+		}
+		bpan := chi.URLParam(r, "bpan")
+
+		svc := services.NewLifecycleService(cc)
+		resp, err := svc.VerifySignature(r.Context(), bpan)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})

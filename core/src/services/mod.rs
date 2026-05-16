@@ -11,7 +11,9 @@ pub use battery_lifecycle::*;
 pub mod validation;
 pub use validation::*;
 pub mod registration;
-pub use registration::*;
+pub use registration::{
+    BatteryRegistrationRequest, BatteryRegistrationResponse, RegistrationService,
+};
 pub mod key_manager;
 pub use key_manager::{KeyManagerError, KeyManagerImpl, RawKey, WrappedDek};
 pub mod signing;
@@ -26,8 +28,6 @@ pub mod carbon;
 pub use carbon::{CarbonError, CarbonService, CarbonServiceImpl};
 pub mod health;
 pub use health::{HealthError, HealthService, HealthServiceImpl};
-pub mod battery_registration;
-pub use battery_registration::*;
 pub mod reuse;
 pub use reuse::{ReuseCertification, ReuseError, ReuseService, ReuseServiceImpl};
 pub mod recycling;

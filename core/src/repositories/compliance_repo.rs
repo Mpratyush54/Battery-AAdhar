@@ -3,7 +3,7 @@
 use sqlx::{PgPool, Row};
 use uuid::Uuid;
 use chrono::Utc;
-use crate::models::ComplianceViolation;
+use crate::models::{ComplianceViolation, ComplianceSeverity};
 use super::battery_repo::RepositoryError;
 
 pub struct ComplianceRepositoryImpl {
@@ -57,8 +57,38 @@ impl ComplianceRepositoryImpl {
         &self,
         _bpan: &str,
     ) -> Result<Vec<ComplianceViolation>, RepositoryError> {
-        // TODO: Fetch from DB, construct ComplianceViolation objects
-        Ok(vec![])
+        let rows = sqlx::query_as::<_, (uuid::Uuid, String, String, String, String, chrono::DateTime<chrono::Utc>, bool, Option<chrono::DateTime<chrono::Utc>> )>(
+                r#"
+                SELECT id, bpan, violation_type, severity, description, detected_at, requires_action, action_deadline
+                FROM compliance_violation_log WHERE bpan = $1 AND resolved_at IS NULL
+                ORDER BY detected_at DESC
+                "#
+            )
+            .bind(_bpan)
+            .fetch_all(&self.pool)
+            .await
+            .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
+
+        let violations = rows.into_iter().map(|(id, bpan, violation_type, severity, description, detected_at, requires_action, action_deadline)| {
+            ComplianceViolation {
+                id,
+                bpan,
+                violation_type,
+                severity: match severity.as_str() {
+                    "INFO" => ComplianceSeverity::Info,
+                    "WARNING" => ComplianceSeverity::Warning,
+                    "CRITICAL" => ComplianceSeverity::Critical,
+                    _ => ComplianceSeverity::Info,
+                },
+                description,
+                detected_at,
+                requires_action,
+                action_deadline,
+                resolved_at: None,
+            }
+        }).collect();
+
+        Ok(violations)
     }
 
     /// Get all critical unresolved violations

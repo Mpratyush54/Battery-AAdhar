@@ -98,11 +98,66 @@ impl CryptoService for CryptoServiceImpl {
 
     async fn decrypt(
         &self,
-        _request: Request<DecryptRequest>,
+        request: Request<DecryptRequest>,
     ) -> Result<Response<DecryptResponse>, Status> {
-        Err(Status::unimplemented(
-            "Decrypt requires DEK persistence in Day 7 DB integration",
-        ))
+        let req = request.into_inner();
+
+        // Re-derive the DEK for this BPAN (HKDF is deterministic — same inputs produce same key).
+        // In production (Day 22+), the wrapped DEK is fetched from battery_keys table and unwrapped.
+        // For now, we derive it fresh which works because the key hierarchy is deterministic.
+        let kek_version = if req.kek_version > 0 { req.kek_version } else { 1 };
+        let wrapped_dek = self
+            .engine
+            .key_manager
+            .create_dek_for_bpan(&req.bpan, kek_version)
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        let dek = self
+            .engine
+            .key_manager
+            .get_dek_for_bpan(
+                &req.bpan,
+                &wrapped_dek.encrypted_dek,
+                wrapped_dek.kek_version,
+            )
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        // Perform AES-256-GCM decryption
+        use aes_gcm::{
+            aead::{Aead, KeyInit},
+            Aes256Gcm, Nonce,
+        };
+
+        // Ciphertext format: nonce (12 bytes) || ciphertext || tag
+        if req.ciphertext.len() < 12 {
+            return Err(Status::invalid_argument(
+                "ciphertext too short (missing nonce)",
+            ));
+        }
+
+        let nonce_bytes = &req.ciphertext[..12];
+        let ciphertext_with_tag = &req.ciphertext[12..];
+
+        let nonce = Nonce::from_slice(nonce_bytes);
+        let cipher = Aes256Gcm::new_from_slice(dek.as_bytes())
+            .map_err(|_| Status::internal("invalid key length"))?;
+
+        // AAD = BPAN (domain separation, must match encryption)
+        let aad = req.bpan.as_bytes();
+
+        let plaintext = cipher
+            .decrypt(
+                nonce,
+                aes_gcm::aead::Payload {
+                    msg: ciphertext_with_tag,
+                    aad,
+                },
+            )
+            .map_err(|e| Status::internal(format!("decryption failed: {}", e)))?;
+
+        tracing::info!(bpan = %req.bpan, "Decrypt successful");
+
+        Ok(Response::new(DecryptResponse { plaintext }))
     }
 
     // ── Signing ────────────────────────────────────────────────────────────
@@ -110,11 +165,15 @@ impl CryptoService for CryptoServiceImpl {
     async fn sign(&self, request: Request<SignRequest>) -> Result<Response<SignResponse>, Status> {
         let req = request.into_inner();
 
-        let (_private_key, _public_key) = crate::services::SigningServiceImpl::generate_keypair()
+        // Generate a fresh keypair for this signing operation.
+        // In production (Day 22+), keypairs are persisted per-manufacturer in the
+        // certificates table and retrieved by key_id. For now we generate, sign,
+        // and return the public key inline so the caller can verify.
+        let (private_key, public_key) = crate::services::SigningServiceImpl::generate_keypair()
             .map_err(|e| Status::internal(e.to_string()))?;
 
         let signature = crate::services::SigningServiceImpl::sign_message(
-            &crate::services::PrivateKeySeed::new([0u8; 32]),
+            &private_key,
             &req.message,
         )
         .map_err(|e| Status::internal(e.to_string()))?;

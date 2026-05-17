@@ -608,6 +608,165 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/circular-economy/batteries/{bpan}/recycle": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Transitions state to RECYCLED (recycler only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "circular-economy"
+                ],
+                "summary": "Record battery recycling",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Battery PAN",
+                        "name": "bpan",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Recycling record payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RecyclingRecordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/circular-economy/batteries/{bpan}/reuse": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Transitions state to SECOND_LIFE (reuse operator only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "circular-economy"
+                ],
+                "summary": "Certify battery for second-life reuse",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Battery PAN",
+                        "name": "bpan",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Reuse certification payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ReuseCertificationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/circular-economy/dashboard": {
+            "get": {
+                "description": "Returns aggregated reuse and recycling metrics",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "circular-economy"
+                ],
+                "summary": "Get circular economy metrics dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by manufacturer",
+                        "name": "manufacturer_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by chemistry",
+                        "name": "chemistry_type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/compliance/scan": {
             "post": {
                 "security": [
@@ -1691,6 +1850,15 @@ const docTemplate = `{
                                 "type": "string"
                             }
                         }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
                     }
                 }
             }
@@ -2397,6 +2565,42 @@ const docTemplate = `{
                 }
             }
         },
+        "models.RecoveryRates": {
+            "type": "object",
+            "properties": {
+                "cobalt_percent": {
+                    "type": "number"
+                },
+                "lithium_percent": {
+                    "type": "number"
+                },
+                "nickel_percent": {
+                    "type": "number"
+                },
+                "other_percent": {
+                    "type": "number"
+                }
+            }
+        },
+        "models.RecyclingRecordRequest": {
+            "type": "object",
+            "properties": {
+                "method": {
+                    "description": "\"hydrometallurgical\", \"pyrometallurgical\", \"mechanical\"",
+                    "type": "string"
+                },
+                "recovery_rates": {
+                    "$ref": "#/definitions/models.RecoveryRates"
+                },
+                "standard": {
+                    "description": "\"ISO 14040\", \"R2C2\", etc.",
+                    "type": "string"
+                },
+                "weight_kg": {
+                    "type": "number"
+                }
+            }
+        },
         "models.RefreshResponseJSON": {
             "type": "object",
             "properties": {
@@ -2445,6 +2649,21 @@ const docTemplate = `{
                 "status": {
                     "type": "string",
                     "example": "SUCCESS"
+                }
+            }
+        },
+        "models.ReuseCertificationRequest": {
+            "type": "object",
+            "properties": {
+                "application": {
+                    "description": "\"stationary_storage\", \"grid_backup\", \"renewable_integration\"",
+                    "type": "string"
+                },
+                "expected_years": {
+                    "type": "integer"
+                },
+                "soh_percent": {
+                    "type": "number"
                 }
             }
         },

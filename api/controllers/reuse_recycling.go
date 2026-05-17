@@ -31,6 +31,18 @@ func RegisterReuseRecyclingRoutes(r chi.Router, reuseSvc *services.ReuseService,
 }
 
 // handleCertifyReuse handles POST /api/v1/circular-economy/batteries/{bpan}/reuse
+// @Summary      Certify battery for second-life reuse
+// @Description  Transitions state to SECOND_LIFE (reuse operator only)
+// @Tags         circular-economy
+// @Accept       json
+// @Produce      json
+// @Param        bpan  path  string  true  "Battery PAN"
+// @Param        body  body  models.ReuseCertificationRequest  true  "Reuse certification payload"
+// @Success      201  {object}  map[string]interface{}
+// @Failure      400  {object}  string
+// @Failure      503  {object}  string
+// @Router       /api/v1/circular-economy/batteries/{bpan}/reuse [post]
+// @Security     BearerAuth
 func handleCertifyReuse(svc *services.ReuseService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if svc == nil {
@@ -73,6 +85,18 @@ func handleCertifyReuse(svc *services.ReuseService) http.HandlerFunc {
 }
 
 // handleRecordRecycling handles POST /api/v1/circular-economy/batteries/{bpan}/recycle
+// @Summary      Record battery recycling
+// @Description  Transitions state to RECYCLED (recycler only)
+// @Tags         circular-economy
+// @Accept       json
+// @Produce      json
+// @Param        bpan  path  string  true  "Battery PAN"
+// @Param        body  body  models.RecyclingRecordRequest  true  "Recycling record payload"
+// @Success      201  {object}  map[string]interface{}
+// @Failure      400  {object}  string
+// @Failure      503  {object}  string
+// @Router       /api/v1/circular-economy/batteries/{bpan}/recycle [post]
+// @Security     BearerAuth
 func handleRecordRecycling(svc *services.RecyclingService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if svc == nil {
@@ -115,6 +139,15 @@ func handleRecordRecycling(svc *services.RecyclingService) http.HandlerFunc {
 }
 
 // handleGetCircularEconomyMetrics handles GET /api/v1/circular-economy/dashboard
+// @Summary      Get circular economy metrics dashboard
+// @Description  Returns aggregated reuse and recycling metrics
+// @Tags         circular-economy
+// @Produce      json
+// @Param        manufacturer_id  query  string  false  "Filter by manufacturer"
+// @Param        chemistry_type   query  string  false  "Filter by chemistry"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      503  {object}  string
+// @Router       /api/v1/circular-economy/dashboard [get]
 func handleGetCircularEconomyMetrics(svc *services.DashboardService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if svc == nil {

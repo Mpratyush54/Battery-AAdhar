@@ -367,6 +367,30 @@ definitions:
       supply_chain_source:
         type: string
     type: object
+  models.RecoveryRates:
+    properties:
+      cobalt_percent:
+        type: number
+      lithium_percent:
+        type: number
+      nickel_percent:
+        type: number
+      other_percent:
+        type: number
+    type: object
+  models.RecyclingRecordRequest:
+    properties:
+      method:
+        description: '"hydrometallurgical", "pyrometallurgical", "mechanical"'
+        type: string
+      recovery_rates:
+        $ref: '#/definitions/models.RecoveryRates'
+      standard:
+        description: '"ISO 14040", "R2C2", etc.'
+        type: string
+      weight_kg:
+        type: number
+    type: object
   models.RefreshResponseJSON:
     properties:
       message:
@@ -402,6 +426,16 @@ definitions:
       status:
         example: SUCCESS
         type: string
+    type: object
+  models.ReuseCertificationRequest:
+    properties:
+      application:
+        description: '"stationary_storage", "grid_backup", "renewable_integration"'
+        type: string
+      expected_years:
+        type: integer
+      soh_percent:
+        type: number
     type: object
   models.SubmitMaterialResponse:
     properties:
@@ -827,6 +861,109 @@ paths:
       summary: Get battery by query parameter
       tags:
       - battery
+  /api/v1/circular-economy/batteries/{bpan}/recycle:
+    post:
+      consumes:
+      - application/json
+      description: Transitions state to RECYCLED (recycler only)
+      parameters:
+      - description: Battery PAN
+        in: path
+        name: bpan
+        required: true
+        type: string
+      - description: Recycling record payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.RecyclingRecordRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "503":
+          description: Service Unavailable
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Record battery recycling
+      tags:
+      - circular-economy
+  /api/v1/circular-economy/batteries/{bpan}/reuse:
+    post:
+      consumes:
+      - application/json
+      description: Transitions state to SECOND_LIFE (reuse operator only)
+      parameters:
+      - description: Battery PAN
+        in: path
+        name: bpan
+        required: true
+        type: string
+      - description: Reuse certification payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.ReuseCertificationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "503":
+          description: Service Unavailable
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Certify battery for second-life reuse
+      tags:
+      - circular-economy
+  /api/v1/circular-economy/dashboard:
+    get:
+      description: Returns aggregated reuse and recycling metrics
+      parameters:
+      - description: Filter by manufacturer
+        in: query
+        name: manufacturer_id
+        type: string
+      - description: Filter by chemistry
+        in: query
+        name: chemistry_type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            type: string
+      summary: Get circular economy metrics dashboard
+      tags:
+      - circular-economy
   /api/v1/compliance/scan:
     post:
       consumes:
@@ -1481,6 +1618,12 @@ paths:
             type: object
         "500":
           description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "503":
+          description: Service Unavailable
           schema:
             additionalProperties:
               type: string

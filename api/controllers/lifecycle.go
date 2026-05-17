@@ -323,8 +323,17 @@ func VerifyLifecycleOperational(s *services.LifecycleService) http.HandlerFunc {
 	}
 }
 
-// VerifyOperational — POST /api/v1/batteries/{bpan}/verify/operational
-// Direct gRPC-backed handler for routes.go wiring (bypasses LifecycleService).
+// VerifyOperationalHandler — POST /api/v1/batteries/{bpan}/verify/operational
+// @Summary      Verify battery is operational (ZK proof)
+// @Description  Generates a zero-knowledge proof that battery SoH meets threshold
+// @Tags         lifecycle
+// @Produce      json
+// @Param        bpan  path  string  true  "Battery PAN"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      500  {object}  map[string]string
+// @Failure      503  {object}  map[string]string
+// @Router       /batteries/{bpan}/verify/operational [post]
+// @Security     BearerAuth
 func VerifyOperationalHandler(cc *grpc.ClientConn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -348,7 +357,16 @@ func VerifyOperationalHandler(cc *grpc.ClientConn) http.HandlerFunc {
 }
 
 // VerifySignature — POST /api/v1/batteries/{bpan}/verify/signature
-// Direct gRPC-backed handler for routes.go wiring.
+// @Summary      Verify battery data signature
+// @Description  Checks cryptographic integrity of all battery data
+// @Tags         lifecycle
+// @Produce      json
+// @Param        bpan  path  string  true  "Battery PAN"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      500  {object}  map[string]string
+// @Failure      503  {object}  map[string]string
+// @Router       /batteries/{bpan}/verify/signature [post]
+// @Security     BearerAuth
 func VerifySignature(cc *grpc.ClientConn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

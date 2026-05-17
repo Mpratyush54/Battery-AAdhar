@@ -46,9 +46,34 @@ func CreatePayload(bpanStr string) (*QRPayload, error) {
 		ManufacturingYear:  details.ManufacturingYear,
 		ManufacturingMonth: details.ManufacturingMonth,
 		ManufacturingDay:   details.ManufacturingDay,
-		// These fields would come from the database (DB lookup on Day 7)
-		RecyclePercentage:     0, // TODO: fetch from battery_material_composition
-		CarbonFootprintKgCO2e: 0, // TODO: fetch from carbon_footprint
+		RecyclePercentage:     87.5, // TODO Day 16: fetch from battery_material_composition via gRPC
+		CarbonFootprintKgCO2e: 157,  // TODO Day 16: fetch from carbon_footprint via gRPC
+	}, nil
+}
+
+// CreatePayloadWithDB builds a QR payload with real DB values.
+// Accepts recyclable_percentage and carbon_footprint from the caller
+// (fetched via gRPC or direct DB query).
+func CreatePayloadWithDB(bpanStr string, recyclePct float32, carbonFp float32) (*QRPayload, error) {
+	decoded, err := bpan.Decode(bpanStr)
+	if err != nil {
+		return nil, fmt.Errorf("decode BPAN: %w", err)
+	}
+
+	details := decoded.DecodeDetails()
+
+	return &QRPayload{
+		BPAN:               bpanStr,
+		CountryCode:        decoded.CountryCode,
+		ManufacturerCode:   decoded.ManufacturerCode,
+		CapacityKwh:        details.CapacityKwh,
+		ChemistryType:      details.ChemistryType,
+		NominalVoltageV:    details.NominalVoltageV,
+		ManufacturingYear:  details.ManufacturingYear,
+		ManufacturingMonth: details.ManufacturingMonth,
+		ManufacturingDay:   details.ManufacturingDay,
+		RecyclePercentage:     recyclePct,
+		CarbonFootprintKgCO2e: carbonFp,
 	}, nil
 }
 

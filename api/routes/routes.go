@@ -116,6 +116,9 @@ func NewRouter(microservices *config.MicroserviceClients) http.Handler {
 		// QR code routes (generate, validate, public lookup)
 		controllers.RegisterQRRoutes(r)
 
+		// Public endpoints — no authentication required
+		controllers.RegisterPublicRoutes(r)
+
 		// Circular Economy (Reuse/Recycling)
 		if microservices != nil {
 			controllers.RegisterReuseRecyclingRoutes(r,

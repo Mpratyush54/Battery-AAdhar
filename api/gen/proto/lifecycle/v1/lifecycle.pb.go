@@ -26,6 +26,7 @@ type VerifyOperationalRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Bpan          string                 `protobuf:"bytes,1,opt,name=bpan,proto3" json:"bpan,omitempty"`
 	RequesterId   string                 `protobuf:"bytes,2,opt,name=requester_id,json=requesterId,proto3" json:"requester_id,omitempty"`
+	StateOfHealth float32                `protobuf:"fixed32,3,opt,name=state_of_health,json=stateOfHealth,proto3" json:"state_of_health,omitempty"` // Actual SoH value — ZK proof is generated against this
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -72,6 +73,13 @@ func (x *VerifyOperationalRequest) GetRequesterId() string {
 		return x.RequesterId
 	}
 	return ""
+}
+
+func (x *VerifyOperationalRequest) GetStateOfHealth() float32 {
+	if x != nil {
+		return x.StateOfHealth
+	}
+	return 0
 }
 
 type VerifyOperationalResponse struct {
@@ -830,14 +838,467 @@ func (x *RejectTransferResponse) GetSuccess() bool {
 	return false
 }
 
+type ComplianceViolationProto struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Bpan           string                 `protobuf:"bytes,1,opt,name=bpan,proto3" json:"bpan,omitempty"`
+	ViolationType  string                 `protobuf:"bytes,2,opt,name=violation_type,json=violationType,proto3" json:"violation_type,omitempty"`
+	Severity       string                 `protobuf:"bytes,3,opt,name=severity,proto3" json:"severity,omitempty"`
+	Description    string                 `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
+	RequiresAction bool                   `protobuf:"varint,5,opt,name=requires_action,json=requiresAction,proto3" json:"requires_action,omitempty"`
+	ActionDeadline *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=action_deadline,json=actionDeadline,proto3" json:"action_deadline,omitempty"`
+	DetectedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=detected_at,json=detectedAt,proto3" json:"detected_at,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *ComplianceViolationProto) Reset() {
+	*x = ComplianceViolationProto{}
+	mi := &file_proto_lifecycle_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ComplianceViolationProto) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ComplianceViolationProto) ProtoMessage() {}
+
+func (x *ComplianceViolationProto) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ComplianceViolationProto.ProtoReflect.Descriptor instead.
+func (*ComplianceViolationProto) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ComplianceViolationProto) GetBpan() string {
+	if x != nil {
+		return x.Bpan
+	}
+	return ""
+}
+
+func (x *ComplianceViolationProto) GetViolationType() string {
+	if x != nil {
+		return x.ViolationType
+	}
+	return ""
+}
+
+func (x *ComplianceViolationProto) GetSeverity() string {
+	if x != nil {
+		return x.Severity
+	}
+	return ""
+}
+
+func (x *ComplianceViolationProto) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *ComplianceViolationProto) GetRequiresAction() bool {
+	if x != nil {
+		return x.RequiresAction
+	}
+	return false
+}
+
+func (x *ComplianceViolationProto) GetActionDeadline() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ActionDeadline
+	}
+	return nil
+}
+
+func (x *ComplianceViolationProto) GetDetectedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.DetectedAt
+	}
+	return nil
+}
+
+type CheckComplianceRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Bpan          string                 `protobuf:"bytes,1,opt,name=bpan,proto3" json:"bpan,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckComplianceRequest) Reset() {
+	*x = CheckComplianceRequest{}
+	mi := &file_proto_lifecycle_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckComplianceRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckComplianceRequest) ProtoMessage() {}
+
+func (x *CheckComplianceRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckComplianceRequest.ProtoReflect.Descriptor instead.
+func (*CheckComplianceRequest) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *CheckComplianceRequest) GetBpan() string {
+	if x != nil {
+		return x.Bpan
+	}
+	return ""
+}
+
+type CheckComplianceResponse struct {
+	state         protoimpl.MessageState      `protogen:"open.v1"`
+	Bpan          string                      `protobuf:"bytes,1,opt,name=bpan,proto3" json:"bpan,omitempty"`
+	Status        string                      `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	Violations    []*ComplianceViolationProto `protobuf:"bytes,3,rep,name=violations,proto3" json:"violations,omitempty"`
+	CriticalCount uint32                      `protobuf:"varint,4,opt,name=critical_count,json=criticalCount,proto3" json:"critical_count,omitempty"`
+	WarningCount  uint32                      `protobuf:"varint,5,opt,name=warning_count,json=warningCount,proto3" json:"warning_count,omitempty"`
+	LastCheckedAt *timestamppb.Timestamp      `protobuf:"bytes,6,opt,name=last_checked_at,json=lastCheckedAt,proto3" json:"last_checked_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckComplianceResponse) Reset() {
+	*x = CheckComplianceResponse{}
+	mi := &file_proto_lifecycle_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckComplianceResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckComplianceResponse) ProtoMessage() {}
+
+func (x *CheckComplianceResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckComplianceResponse.ProtoReflect.Descriptor instead.
+func (*CheckComplianceResponse) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *CheckComplianceResponse) GetBpan() string {
+	if x != nil {
+		return x.Bpan
+	}
+	return ""
+}
+
+func (x *CheckComplianceResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *CheckComplianceResponse) GetViolations() []*ComplianceViolationProto {
+	if x != nil {
+		return x.Violations
+	}
+	return nil
+}
+
+func (x *CheckComplianceResponse) GetCriticalCount() uint32 {
+	if x != nil {
+		return x.CriticalCount
+	}
+	return 0
+}
+
+func (x *CheckComplianceResponse) GetWarningCount() uint32 {
+	if x != nil {
+		return x.WarningCount
+	}
+	return 0
+}
+
+func (x *CheckComplianceResponse) GetLastCheckedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastCheckedAt
+	}
+	return nil
+}
+
+type ScanAllBatteriesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RequesterId   string                 `protobuf:"bytes,1,opt,name=requester_id,json=requesterId,proto3" json:"requester_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ScanAllBatteriesRequest) Reset() {
+	*x = ScanAllBatteriesRequest{}
+	mi := &file_proto_lifecycle_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ScanAllBatteriesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ScanAllBatteriesRequest) ProtoMessage() {}
+
+func (x *ScanAllBatteriesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ScanAllBatteriesRequest.ProtoReflect.Descriptor instead.
+func (*ScanAllBatteriesRequest) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *ScanAllBatteriesRequest) GetRequesterId() string {
+	if x != nil {
+		return x.RequesterId
+	}
+	return ""
+}
+
+type ScanAllBatteriesResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	TotalScanned    uint32                 `protobuf:"varint,1,opt,name=total_scanned,json=totalScanned,proto3" json:"total_scanned,omitempty"`
+	ViolationsFound uint32                 `protobuf:"varint,2,opt,name=violations_found,json=violationsFound,proto3" json:"violations_found,omitempty"`
+	ScanId          string                 `protobuf:"bytes,3,opt,name=scan_id,json=scanId,proto3" json:"scan_id,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ScanAllBatteriesResponse) Reset() {
+	*x = ScanAllBatteriesResponse{}
+	mi := &file_proto_lifecycle_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ScanAllBatteriesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ScanAllBatteriesResponse) ProtoMessage() {}
+
+func (x *ScanAllBatteriesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ScanAllBatteriesResponse.ProtoReflect.Descriptor instead.
+func (*ScanAllBatteriesResponse) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *ScanAllBatteriesResponse) GetTotalScanned() uint32 {
+	if x != nil {
+		return x.TotalScanned
+	}
+	return 0
+}
+
+func (x *ScanAllBatteriesResponse) GetViolationsFound() uint32 {
+	if x != nil {
+		return x.ViolationsFound
+	}
+	return 0
+}
+
+func (x *ScanAllBatteriesResponse) GetScanId() string {
+	if x != nil {
+		return x.ScanId
+	}
+	return ""
+}
+
+type GenerateComplianceProofRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Bpan          string                 `protobuf:"bytes,1,opt,name=bpan,proto3" json:"bpan,omitempty"`
+	Requirement   string                 `protobuf:"bytes,2,opt,name=requirement,proto3" json:"requirement,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GenerateComplianceProofRequest) Reset() {
+	*x = GenerateComplianceProofRequest{}
+	mi := &file_proto_lifecycle_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GenerateComplianceProofRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GenerateComplianceProofRequest) ProtoMessage() {}
+
+func (x *GenerateComplianceProofRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GenerateComplianceProofRequest.ProtoReflect.Descriptor instead.
+func (*GenerateComplianceProofRequest) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *GenerateComplianceProofRequest) GetBpan() string {
+	if x != nil {
+		return x.Bpan
+	}
+	return ""
+}
+
+func (x *GenerateComplianceProofRequest) GetRequirement() string {
+	if x != nil {
+		return x.Requirement
+	}
+	return ""
+}
+
+type GenerateComplianceProofResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Bpan          string                 `protobuf:"bytes,1,opt,name=bpan,proto3" json:"bpan,omitempty"`
+	Requirement   string                 `protobuf:"bytes,2,opt,name=requirement,proto3" json:"requirement,omitempty"`
+	Statement     string                 `protobuf:"bytes,3,opt,name=statement,proto3" json:"statement,omitempty"`
+	Proof         []byte                 `protobuf:"bytes,4,opt,name=proof,proto3" json:"proof,omitempty"`
+	Commitment    []byte                 `protobuf:"bytes,5,opt,name=commitment,proto3" json:"commitment,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GenerateComplianceProofResponse) Reset() {
+	*x = GenerateComplianceProofResponse{}
+	mi := &file_proto_lifecycle_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GenerateComplianceProofResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GenerateComplianceProofResponse) ProtoMessage() {}
+
+func (x *GenerateComplianceProofResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GenerateComplianceProofResponse.ProtoReflect.Descriptor instead.
+func (*GenerateComplianceProofResponse) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *GenerateComplianceProofResponse) GetBpan() string {
+	if x != nil {
+		return x.Bpan
+	}
+	return ""
+}
+
+func (x *GenerateComplianceProofResponse) GetRequirement() string {
+	if x != nil {
+		return x.Requirement
+	}
+	return ""
+}
+
+func (x *GenerateComplianceProofResponse) GetStatement() string {
+	if x != nil {
+		return x.Statement
+	}
+	return ""
+}
+
+func (x *GenerateComplianceProofResponse) GetProof() []byte {
+	if x != nil {
+		return x.Proof
+	}
+	return nil
+}
+
+func (x *GenerateComplianceProofResponse) GetCommitment() []byte {
+	if x != nil {
+		return x.Commitment
+	}
+	return nil
+}
+
 var File_proto_lifecycle_proto protoreflect.FileDescriptor
 
 const file_proto_lifecycle_proto_rawDesc = "" +
 	"\n" +
-	"\x15proto/lifecycle.proto\x12\x10bpa.lifecycle.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"Q\n" +
+	"\x15proto/lifecycle.proto\x12\x10bpa.lifecycle.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"y\n" +
 	"\x18VerifyOperationalRequest\x12\x12\n" +
 	"\x04bpan\x18\x01 \x01(\tR\x04bpan\x12!\n" +
-	"\frequester_id\x18\x02 \x01(\tR\vrequesterId\"\xfb\x01\n" +
+	"\frequester_id\x18\x02 \x01(\tR\vrequesterId\x12&\n" +
+	"\x0fstate_of_health\x18\x03 \x01(\x02R\rstateOfHealth\"\xfb\x01\n" +
 	"\x19VerifyOperationalResponse\x12%\n" +
 	"\x0eis_operational\x18\x01 \x01(\bR\risOperational\x12\x19\n" +
 	"\bzk_proof\x18\x02 \x01(\fR\azkProof\x12#\n" +
@@ -892,7 +1353,44 @@ const file_proto_lifecycle_proto_rawDesc = "" +
 	"\x12rejecting_owner_id\x18\x02 \x01(\tR\x10rejectingOwnerId\x12\x16\n" +
 	"\x06reason\x18\x03 \x01(\tR\x06reason\"2\n" +
 	"\x16RejectTransferResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xf3\x05\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xbe\x02\n" +
+	"\x18ComplianceViolationProto\x12\x12\n" +
+	"\x04bpan\x18\x01 \x01(\tR\x04bpan\x12%\n" +
+	"\x0eviolation_type\x18\x02 \x01(\tR\rviolationType\x12\x1a\n" +
+	"\bseverity\x18\x03 \x01(\tR\bseverity\x12 \n" +
+	"\vdescription\x18\x04 \x01(\tR\vdescription\x12'\n" +
+	"\x0frequires_action\x18\x05 \x01(\bR\x0erequiresAction\x12C\n" +
+	"\x0faction_deadline\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\x0eactionDeadline\x12;\n" +
+	"\vdetected_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"detectedAt\",\n" +
+	"\x16CheckComplianceRequest\x12\x12\n" +
+	"\x04bpan\x18\x01 \x01(\tR\x04bpan\"\xa1\x02\n" +
+	"\x17CheckComplianceResponse\x12\x12\n" +
+	"\x04bpan\x18\x01 \x01(\tR\x04bpan\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12J\n" +
+	"\n" +
+	"violations\x18\x03 \x03(\v2*.bpa.lifecycle.v1.ComplianceViolationProtoR\n" +
+	"violations\x12%\n" +
+	"\x0ecritical_count\x18\x04 \x01(\rR\rcriticalCount\x12#\n" +
+	"\rwarning_count\x18\x05 \x01(\rR\fwarningCount\x12B\n" +
+	"\x0flast_checked_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\rlastCheckedAt\"<\n" +
+	"\x17ScanAllBatteriesRequest\x12!\n" +
+	"\frequester_id\x18\x01 \x01(\tR\vrequesterId\"\x83\x01\n" +
+	"\x18ScanAllBatteriesResponse\x12#\n" +
+	"\rtotal_scanned\x18\x01 \x01(\rR\ftotalScanned\x12)\n" +
+	"\x10violations_found\x18\x02 \x01(\rR\x0fviolationsFound\x12\x17\n" +
+	"\ascan_id\x18\x03 \x01(\tR\x06scanId\"V\n" +
+	"\x1eGenerateComplianceProofRequest\x12\x12\n" +
+	"\x04bpan\x18\x01 \x01(\tR\x04bpan\x12 \n" +
+	"\vrequirement\x18\x02 \x01(\tR\vrequirement\"\xab\x01\n" +
+	"\x1fGenerateComplianceProofResponse\x12\x12\n" +
+	"\x04bpan\x18\x01 \x01(\tR\x04bpan\x12 \n" +
+	"\vrequirement\x18\x02 \x01(\tR\vrequirement\x12\x1c\n" +
+	"\tstatement\x18\x03 \x01(\tR\tstatement\x12\x14\n" +
+	"\x05proof\x18\x04 \x01(\fR\x05proof\x12\x1e\n" +
+	"\n" +
+	"commitment\x18\x05 \x01(\fR\n" +
+	"commitment2\xc6\b\n" +
 	"\x10LifecycleService\x12l\n" +
 	"\x11VerifyOperational\x12*.bpa.lifecycle.v1.VerifyOperationalRequest\x1a+.bpa.lifecycle.v1.VerifyOperationalResponse\x12i\n" +
 	"\x10VerifyRecyclable\x12).bpa.lifecycle.v1.VerifyRecyclableRequest\x1a*.bpa.lifecycle.v1.VerifyRecyclableResponse\x12f\n" +
@@ -900,7 +1398,10 @@ const file_proto_lifecycle_proto_rawDesc = "" +
 	"\x0fTransitionState\x12(.bpa.lifecycle.v1.TransitionStateRequest\x1a).bpa.lifecycle.v1.TransitionStateResponse\x12i\n" +
 	"\x10InitiateTransfer\x12).bpa.lifecycle.v1.InitiateTransferRequest\x1a*.bpa.lifecycle.v1.InitiateTransferResponse\x12f\n" +
 	"\x0fConfirmTransfer\x12(.bpa.lifecycle.v1.ConfirmTransferRequest\x1a).bpa.lifecycle.v1.ConfirmTransferResponse\x12c\n" +
-	"\x0eRejectTransfer\x12'.bpa.lifecycle.v1.RejectTransferRequest\x1a(.bpa.lifecycle.v1.RejectTransferResponseBNZLgithub.com/Mpratyush54/Battery-AAdhar/api/gen/proto/lifecycle/v1;lifecyclev1b\x06proto3"
+	"\x0eRejectTransfer\x12'.bpa.lifecycle.v1.RejectTransferRequest\x1a(.bpa.lifecycle.v1.RejectTransferResponse\x12f\n" +
+	"\x0fCheckCompliance\x12(.bpa.lifecycle.v1.CheckComplianceRequest\x1a).bpa.lifecycle.v1.CheckComplianceResponse\x12i\n" +
+	"\x10ScanAllBatteries\x12).bpa.lifecycle.v1.ScanAllBatteriesRequest\x1a*.bpa.lifecycle.v1.ScanAllBatteriesResponse\x12~\n" +
+	"\x17GenerateComplianceProof\x120.bpa.lifecycle.v1.GenerateComplianceProofRequest\x1a1.bpa.lifecycle.v1.GenerateComplianceProofResponseBNZLgithub.com/Mpratyush54/Battery-AAdhar/api/gen/proto/lifecycle/v1;lifecyclev1b\x06proto3"
 
 var (
 	file_proto_lifecycle_proto_rawDescOnce sync.Once
@@ -914,46 +1415,63 @@ func file_proto_lifecycle_proto_rawDescGZIP() []byte {
 	return file_proto_lifecycle_proto_rawDescData
 }
 
-var file_proto_lifecycle_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_proto_lifecycle_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_proto_lifecycle_proto_goTypes = []any{
-	(*VerifyOperationalRequest)(nil),  // 0: bpa.lifecycle.v1.VerifyOperationalRequest
-	(*VerifyOperationalResponse)(nil), // 1: bpa.lifecycle.v1.VerifyOperationalResponse
-	(*VerifyRecyclableRequest)(nil),   // 2: bpa.lifecycle.v1.VerifyRecyclableRequest
-	(*VerifyRecyclableResponse)(nil),  // 3: bpa.lifecycle.v1.VerifyRecyclableResponse
-	(*VerifySignatureRequest)(nil),    // 4: bpa.lifecycle.v1.VerifySignatureRequest
-	(*VerifySignatureResponse)(nil),   // 5: bpa.lifecycle.v1.VerifySignatureResponse
-	(*TransitionStateRequest)(nil),    // 6: bpa.lifecycle.v1.TransitionStateRequest
-	(*TransitionStateResponse)(nil),   // 7: bpa.lifecycle.v1.TransitionStateResponse
-	(*InitiateTransferRequest)(nil),   // 8: bpa.lifecycle.v1.InitiateTransferRequest
-	(*InitiateTransferResponse)(nil),  // 9: bpa.lifecycle.v1.InitiateTransferResponse
-	(*ConfirmTransferRequest)(nil),    // 10: bpa.lifecycle.v1.ConfirmTransferRequest
-	(*ConfirmTransferResponse)(nil),   // 11: bpa.lifecycle.v1.ConfirmTransferResponse
-	(*RejectTransferRequest)(nil),     // 12: bpa.lifecycle.v1.RejectTransferRequest
-	(*RejectTransferResponse)(nil),    // 13: bpa.lifecycle.v1.RejectTransferResponse
-	(*timestamppb.Timestamp)(nil),     // 14: google.protobuf.Timestamp
+	(*VerifyOperationalRequest)(nil),        // 0: bpa.lifecycle.v1.VerifyOperationalRequest
+	(*VerifyOperationalResponse)(nil),       // 1: bpa.lifecycle.v1.VerifyOperationalResponse
+	(*VerifyRecyclableRequest)(nil),         // 2: bpa.lifecycle.v1.VerifyRecyclableRequest
+	(*VerifyRecyclableResponse)(nil),        // 3: bpa.lifecycle.v1.VerifyRecyclableResponse
+	(*VerifySignatureRequest)(nil),          // 4: bpa.lifecycle.v1.VerifySignatureRequest
+	(*VerifySignatureResponse)(nil),         // 5: bpa.lifecycle.v1.VerifySignatureResponse
+	(*TransitionStateRequest)(nil),          // 6: bpa.lifecycle.v1.TransitionStateRequest
+	(*TransitionStateResponse)(nil),         // 7: bpa.lifecycle.v1.TransitionStateResponse
+	(*InitiateTransferRequest)(nil),         // 8: bpa.lifecycle.v1.InitiateTransferRequest
+	(*InitiateTransferResponse)(nil),        // 9: bpa.lifecycle.v1.InitiateTransferResponse
+	(*ConfirmTransferRequest)(nil),          // 10: bpa.lifecycle.v1.ConfirmTransferRequest
+	(*ConfirmTransferResponse)(nil),         // 11: bpa.lifecycle.v1.ConfirmTransferResponse
+	(*RejectTransferRequest)(nil),           // 12: bpa.lifecycle.v1.RejectTransferRequest
+	(*RejectTransferResponse)(nil),          // 13: bpa.lifecycle.v1.RejectTransferResponse
+	(*ComplianceViolationProto)(nil),        // 14: bpa.lifecycle.v1.ComplianceViolationProto
+	(*CheckComplianceRequest)(nil),          // 15: bpa.lifecycle.v1.CheckComplianceRequest
+	(*CheckComplianceResponse)(nil),         // 16: bpa.lifecycle.v1.CheckComplianceResponse
+	(*ScanAllBatteriesRequest)(nil),         // 17: bpa.lifecycle.v1.ScanAllBatteriesRequest
+	(*ScanAllBatteriesResponse)(nil),        // 18: bpa.lifecycle.v1.ScanAllBatteriesResponse
+	(*GenerateComplianceProofRequest)(nil),  // 19: bpa.lifecycle.v1.GenerateComplianceProofRequest
+	(*GenerateComplianceProofResponse)(nil), // 20: bpa.lifecycle.v1.GenerateComplianceProofResponse
+	(*timestamppb.Timestamp)(nil),           // 21: google.protobuf.Timestamp
 }
 var file_proto_lifecycle_proto_depIdxs = []int32{
-	14, // 0: bpa.lifecycle.v1.VerifyOperationalResponse.proof_issued_at:type_name -> google.protobuf.Timestamp
-	14, // 1: bpa.lifecycle.v1.VerifySignatureResponse.signed_at:type_name -> google.protobuf.Timestamp
-	0,  // 2: bpa.lifecycle.v1.LifecycleService.VerifyOperational:input_type -> bpa.lifecycle.v1.VerifyOperationalRequest
-	2,  // 3: bpa.lifecycle.v1.LifecycleService.VerifyRecyclable:input_type -> bpa.lifecycle.v1.VerifyRecyclableRequest
-	4,  // 4: bpa.lifecycle.v1.LifecycleService.VerifySignature:input_type -> bpa.lifecycle.v1.VerifySignatureRequest
-	6,  // 5: bpa.lifecycle.v1.LifecycleService.TransitionState:input_type -> bpa.lifecycle.v1.TransitionStateRequest
-	8,  // 6: bpa.lifecycle.v1.LifecycleService.InitiateTransfer:input_type -> bpa.lifecycle.v1.InitiateTransferRequest
-	10, // 7: bpa.lifecycle.v1.LifecycleService.ConfirmTransfer:input_type -> bpa.lifecycle.v1.ConfirmTransferRequest
-	12, // 8: bpa.lifecycle.v1.LifecycleService.RejectTransfer:input_type -> bpa.lifecycle.v1.RejectTransferRequest
-	1,  // 9: bpa.lifecycle.v1.LifecycleService.VerifyOperational:output_type -> bpa.lifecycle.v1.VerifyOperationalResponse
-	3,  // 10: bpa.lifecycle.v1.LifecycleService.VerifyRecyclable:output_type -> bpa.lifecycle.v1.VerifyRecyclableResponse
-	5,  // 11: bpa.lifecycle.v1.LifecycleService.VerifySignature:output_type -> bpa.lifecycle.v1.VerifySignatureResponse
-	7,  // 12: bpa.lifecycle.v1.LifecycleService.TransitionState:output_type -> bpa.lifecycle.v1.TransitionStateResponse
-	9,  // 13: bpa.lifecycle.v1.LifecycleService.InitiateTransfer:output_type -> bpa.lifecycle.v1.InitiateTransferResponse
-	11, // 14: bpa.lifecycle.v1.LifecycleService.ConfirmTransfer:output_type -> bpa.lifecycle.v1.ConfirmTransferResponse
-	13, // 15: bpa.lifecycle.v1.LifecycleService.RejectTransfer:output_type -> bpa.lifecycle.v1.RejectTransferResponse
-	9,  // [9:16] is the sub-list for method output_type
-	2,  // [2:9] is the sub-list for method input_type
-	2,  // [2:2] is the sub-list for extension type_name
-	2,  // [2:2] is the sub-list for extension extendee
-	0,  // [0:2] is the sub-list for field type_name
+	21, // 0: bpa.lifecycle.v1.VerifyOperationalResponse.proof_issued_at:type_name -> google.protobuf.Timestamp
+	21, // 1: bpa.lifecycle.v1.VerifySignatureResponse.signed_at:type_name -> google.protobuf.Timestamp
+	21, // 2: bpa.lifecycle.v1.ComplianceViolationProto.action_deadline:type_name -> google.protobuf.Timestamp
+	21, // 3: bpa.lifecycle.v1.ComplianceViolationProto.detected_at:type_name -> google.protobuf.Timestamp
+	14, // 4: bpa.lifecycle.v1.CheckComplianceResponse.violations:type_name -> bpa.lifecycle.v1.ComplianceViolationProto
+	21, // 5: bpa.lifecycle.v1.CheckComplianceResponse.last_checked_at:type_name -> google.protobuf.Timestamp
+	0,  // 6: bpa.lifecycle.v1.LifecycleService.VerifyOperational:input_type -> bpa.lifecycle.v1.VerifyOperationalRequest
+	2,  // 7: bpa.lifecycle.v1.LifecycleService.VerifyRecyclable:input_type -> bpa.lifecycle.v1.VerifyRecyclableRequest
+	4,  // 8: bpa.lifecycle.v1.LifecycleService.VerifySignature:input_type -> bpa.lifecycle.v1.VerifySignatureRequest
+	6,  // 9: bpa.lifecycle.v1.LifecycleService.TransitionState:input_type -> bpa.lifecycle.v1.TransitionStateRequest
+	8,  // 10: bpa.lifecycle.v1.LifecycleService.InitiateTransfer:input_type -> bpa.lifecycle.v1.InitiateTransferRequest
+	10, // 11: bpa.lifecycle.v1.LifecycleService.ConfirmTransfer:input_type -> bpa.lifecycle.v1.ConfirmTransferRequest
+	12, // 12: bpa.lifecycle.v1.LifecycleService.RejectTransfer:input_type -> bpa.lifecycle.v1.RejectTransferRequest
+	15, // 13: bpa.lifecycle.v1.LifecycleService.CheckCompliance:input_type -> bpa.lifecycle.v1.CheckComplianceRequest
+	17, // 14: bpa.lifecycle.v1.LifecycleService.ScanAllBatteries:input_type -> bpa.lifecycle.v1.ScanAllBatteriesRequest
+	19, // 15: bpa.lifecycle.v1.LifecycleService.GenerateComplianceProof:input_type -> bpa.lifecycle.v1.GenerateComplianceProofRequest
+	1,  // 16: bpa.lifecycle.v1.LifecycleService.VerifyOperational:output_type -> bpa.lifecycle.v1.VerifyOperationalResponse
+	3,  // 17: bpa.lifecycle.v1.LifecycleService.VerifyRecyclable:output_type -> bpa.lifecycle.v1.VerifyRecyclableResponse
+	5,  // 18: bpa.lifecycle.v1.LifecycleService.VerifySignature:output_type -> bpa.lifecycle.v1.VerifySignatureResponse
+	7,  // 19: bpa.lifecycle.v1.LifecycleService.TransitionState:output_type -> bpa.lifecycle.v1.TransitionStateResponse
+	9,  // 20: bpa.lifecycle.v1.LifecycleService.InitiateTransfer:output_type -> bpa.lifecycle.v1.InitiateTransferResponse
+	11, // 21: bpa.lifecycle.v1.LifecycleService.ConfirmTransfer:output_type -> bpa.lifecycle.v1.ConfirmTransferResponse
+	13, // 22: bpa.lifecycle.v1.LifecycleService.RejectTransfer:output_type -> bpa.lifecycle.v1.RejectTransferResponse
+	16, // 23: bpa.lifecycle.v1.LifecycleService.CheckCompliance:output_type -> bpa.lifecycle.v1.CheckComplianceResponse
+	18, // 24: bpa.lifecycle.v1.LifecycleService.ScanAllBatteries:output_type -> bpa.lifecycle.v1.ScanAllBatteriesResponse
+	20, // 25: bpa.lifecycle.v1.LifecycleService.GenerateComplianceProof:output_type -> bpa.lifecycle.v1.GenerateComplianceProofResponse
+	16, // [16:26] is the sub-list for method output_type
+	6,  // [6:16] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_proto_lifecycle_proto_init() }
@@ -967,7 +1485,7 @@ func file_proto_lifecycle_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_lifecycle_proto_rawDesc), len(file_proto_lifecycle_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

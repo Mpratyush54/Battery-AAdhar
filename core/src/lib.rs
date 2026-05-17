@@ -30,6 +30,7 @@ use services::material::MaterialService;
 use services::registration::RegistrationService;
 use services::signing::SigningServiceImpl;
 use services::zk_proofs::ZkProverImpl;
+use services::compliance::ComplianceServiceImpl;
 use sqlx::{Pool, Postgres};
 use std::sync::Arc;
 
@@ -47,6 +48,7 @@ pub struct BpaEngine {
     pub recycling_service: Arc<dyn crate::services::recycling::RecyclingService>,
     pub reuse_repo: Arc<dyn crate::repositories::reuse_repo::ReuseRepository>,
     pub recycling_repo: Arc<dyn crate::repositories::recycling_repo::RecyclingRepository>,
+    pub compliance_service: Arc<ComplianceServiceImpl>,
 }
 
 impl BpaEngine {
@@ -82,6 +84,31 @@ impl BpaEngine {
             crate::services::recycling::RecyclingServiceImpl::new(recycling_repo.clone()),
         );
 
+        let health_repo = Arc::new(
+            crate::repositories::health_repo::HealthRepositoryImpl::new(db_pool.clone()),
+        );
+        let compliance_repo = Arc::new(
+            crate::repositories::compliance_repo::ComplianceRepositoryImpl::new(db_pool.clone()),
+        );
+        let material_repo = Arc::new(
+            crate::repositories::material_repo::MaterialRepositoryImpl::new(db_pool.clone()),
+        );
+        let carbon_repo = Arc::new(
+            crate::repositories::carbon_repo::CarbonRepositoryImpl::new(db_pool.clone()),
+        );
+        let battery_repo = Arc::new(
+            crate::repositories::battery_repo::BatteryRepositoryImpl::new(db_pool.clone()),
+        );
+
+        let compliance_service = Arc::new(ComplianceServiceImpl::new(
+            zk_prover.clone(),
+            health_repo,
+            compliance_repo,
+            material_repo,
+            carbon_repo,
+            battery_repo,
+        ));
+
         Ok(Self {
             registration: RegistrationService::new(db_pool.clone(), encryption.clone()),
             encryption,
@@ -95,6 +122,7 @@ impl BpaEngine {
             recycling_service,
             reuse_repo,
             recycling_repo,
+            compliance_service,
         })
     }
 

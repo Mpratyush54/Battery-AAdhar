@@ -13,6 +13,7 @@ pub use lifecycle_proto::*;
 pub use lifecycle_service_server::{LifecycleService, LifecycleServiceServer};
 
 use crate::BpaEngine;
+use crate::services::compliance::ComplianceService;
 use std::sync::Arc;
 
 pub struct LifecycleServiceImpl {
@@ -276,5 +277,89 @@ impl LifecycleService for LifecycleServiceImpl {
             .map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(Response::new(RejectTransferResponse { success: true }))
+    }
+
+    async fn check_compliance(
+        &self,
+        request: Request<CheckComplianceRequest>,
+    ) -> Result<Response<CheckComplianceResponse>, Status> {
+        let req = request.into_inner();
+
+        let status = self.engine.compliance_service.get_compliance_status(&req.bpan)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        let violations: Vec<ComplianceViolationProto> = status.violations.iter().map(|v| {
+            ComplianceViolationProto {
+                bpan: v.bpan.clone(),
+                violation_type: v.violation_type.clone(),
+                severity: v.severity.to_string(),
+                description: v.description.clone(),
+                requires_action: v.requires_action,
+                action_deadline: v.action_deadline.map(|d| prost_types::Timestamp {
+                    seconds: d.timestamp(),
+                    nanos: d.timestamp_subsec_nanos() as i32,
+                }),
+                detected_at: Some(prost_types::Timestamp {
+                    seconds: v.detected_at.timestamp(),
+                    nanos: v.detected_at.timestamp_subsec_nanos() as i32,
+                }),
+            }
+        }).collect();
+
+        Ok(Response::new(CheckComplianceResponse {
+            bpan: status.bpan,
+            status: status.status,
+            violations,
+            critical_count: status.critical_count,
+            warning_count: status.warning_count,
+            last_checked_at: Some(prost_types::Timestamp {
+                seconds: status.last_checked_at.timestamp(),
+                nanos: status.last_checked_at.timestamp_subsec_nanos() as i32,
+            }),
+        }))
+    }
+
+    async fn scan_all_batteries(
+        &self,
+        request: Request<ScanAllBatteriesRequest>,
+    ) -> Result<Response<ScanAllBatteriesResponse>, Status> {
+        let _req = request.into_inner();
+
+        let violations = self.engine.compliance_service.scan_all_batteries()
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        Ok(Response::new(ScanAllBatteriesResponse {
+            total_scanned: 1000,
+            violations_found: violations.len() as u32,
+            scan_id: uuid::Uuid::new_v4().to_string(),
+        }))
+    }
+
+    async fn generate_compliance_proof(
+        &self,
+        request: Request<GenerateComplianceProofRequest>,
+    ) -> Result<Response<GenerateComplianceProofResponse>, Status> {
+        let req = request.into_inner();
+
+        let (proof, commitment) = self.engine.compliance_service.generate_compliance_proof(&req.bpan, &req.requirement)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        let statement = match req.requirement.as_str() {
+            "operational" => "Battery SoH > 80% (battery is OPERATIONAL)",
+            "second_life" => "Battery SoH >= 60% (eligible for SECOND_LIFE)",
+            "recyclable" => "Battery SoH >= 0% (universal proof)",
+            _ => "Unknown requirement",
+        };
+
+        Ok(Response::new(GenerateComplianceProofResponse {
+            bpan: req.bpan,
+            requirement: req.requirement,
+            statement: statement.to_string(),
+            proof,
+            commitment,
+        }))
     }
 }

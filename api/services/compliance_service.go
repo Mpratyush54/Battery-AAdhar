@@ -34,76 +34,69 @@ func NewComplianceServiceWithClient(cc *grpc.ClientConn) *ComplianceService {
 	}
 }
 
-// CheckCompliance checks a single battery's compliance status.
-func (s *ComplianceService) CheckCompliance(
+// GetComplianceStatus checks a single battery's compliance status via gRPC.
+func (s *ComplianceService) GetComplianceStatus(
 	ctx context.Context,
 	bpan string,
-	soh float32,
-	hasMaterial bool,
-	hasCarbon bool,
 ) (*models.ComplianceStatusResponse, error) {
-	if bpan == "" {
-		return nil, fmt.Errorf("bpan is required")
+	if s.lifecycleClient == nil {
+		return nil, fmt.Errorf("compliance service: gRPC client not connected")
 	}
 
-	slog.Info("checking compliance",
-		"bpan", bpan,
-		"soh", soh,
-		"has_material", hasMaterial,
-		"has_carbon", hasCarbon,
-	)
-
-	var violations []models.ComplianceViolation
-	status := "COMPLIANT"
-
-	if soh < 30 {
-		violations = append(violations, models.ComplianceViolation{
-			ViolationType:  "END_OF_LIFE",
-			Severity:       "CRITICAL",
-			Description:    fmt.Sprintf("Battery SoH %.1f%% < 30%%, end-of-life recycling required", soh),
-			RequiresAction: true,
-			DetectedAt:     time.Now(),
-		})
-		status = "VIOLATIONS_EXIST"
-	} else if soh < 80 {
-		violations = append(violations, models.ComplianceViolation{
-			ViolationType:  "SECOND_LIFE_ELIGIBLE",
-			Severity:       "INFO",
-			Description:    fmt.Sprintf("Battery SoH %.1f%% eligible for second-life", soh),
-			RequiresAction: false,
-			DetectedAt:     time.Now(),
-		})
-		status = "WARNINGS_EXIST"
+	resp, err := s.lifecycleClient.CheckCompliance(ctx, &lifecyclev1.CheckComplianceRequest{
+		Bpan: bpan,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("gRPC error: %w", err)
 	}
 
-	if !hasMaterial {
-		violations = append(violations, models.ComplianceViolation{
-			ViolationType:  "MISSING_BMCS",
-			Severity:       "CRITICAL",
-			Description:    "Material Composition (BMCS) not submitted",
-			RequiresAction: true,
-			DetectedAt:     time.Now(),
-		})
-		status = "VIOLATIONS_EXIST"
+	violations := make([]models.ComplianceViolation, len(resp.Violations))
+	for i, v := range resp.Violations {
+		var deadline *time.Time
+		if v.ActionDeadline != nil {
+			t := time.Unix(v.ActionDeadline.Seconds, int64(v.ActionDeadline.Nanos))
+			deadline = &t
+		}
+		detectedAt := time.Unix(v.DetectedAt.Seconds, int64(v.DetectedAt.Nanos))
+
+		violations[i] = models.ComplianceViolation{
+			ViolationType:  v.ViolationType,
+			Severity:       v.Severity,
+			Description:    v.Description,
+			RequiresAction: v.RequiresAction,
+			ActionDeadline: deadline,
+			DetectedAt:     detectedAt,
+		}
 	}
 
-	_ = hasCarbon // Used in future compliance rules
+	lastChecked := time.Unix(resp.LastCheckedAt.Seconds, int64(resp.LastCheckedAt.Nanos))
 
 	return &models.ComplianceStatusResponse{
-		BPAN:       bpan,
-		Status:     status,
-		Violations: violations,
+		BPAN:          resp.Bpan,
+		Status:        resp.Status,
+		Violations:    violations,
+		CriticalCount: resp.CriticalCount,
+		WarningCount:  resp.WarningCount,
+		LastCheckedAt: lastChecked,
 	}, nil
 }
 
-// TriggerComplianceScan triggers a full compliance scan.
+// TriggerComplianceScan triggers a full compliance scan via gRPC.
 func (s *ComplianceService) TriggerComplianceScan(ctx context.Context) (*models.ComplianceDashboard, error) {
-	slog.Info("triggering compliance scan")
+	if s.lifecycleClient == nil {
+		return nil, fmt.Errorf("compliance service: gRPC client not connected")
+	}
 
-	// TODO: Wire to Rust gRPC for full scan
+	slog.Info("triggering compliance scan via gRPC")
+
+	resp, err := s.lifecycleClient.ScanAllBatteries(ctx, &lifecyclev1.ScanAllBatteriesRequest{})
+	if err != nil {
+		return nil, fmt.Errorf("gRPC error: %w", err)
+	}
+
 	return &models.ComplianceDashboard{
-		TotalBatteries:          0,
-		BatteriesWithViolations: 0,
+		TotalBatteries:          resp.TotalScanned,
+		BatteriesWithViolations: resp.ViolationsFound,
 		CriticalViolations:      0,
 		WarningViolations:       0,
 		ComplianceRate:          100.0,
@@ -120,35 +113,63 @@ func (s *ComplianceService) VerifyOperational(
 		return nil, fmt.Errorf("compliance service: gRPC client not connected")
 	}
 
-	resp, err := s.lifecycleClient.VerifyOperational(ctx, &lifecyclev1.VerifyOperationalRequest{
-		Bpan: bpan,
+	resp, err := s.lifecycleClient.GenerateComplianceProof(ctx, &lifecyclev1.GenerateComplianceProofRequest{
+		Bpan:       bpan,
+		Requirement: "operational",
 	})
 	if err != nil {
 		return nil, fmt.Errorf("gRPC error: %w", err)
 	}
 
 	return &models.ComplianceProofResponse{
-		BPAN:       bpan,
-		Requirement: "operational",
-		Statement:  fmt.Sprintf("Battery SoH > 80%% (actual: %.1f%%)", soh),
-		Proof:      resp.ZkProof,
-		Commitment: resp.PublicInputs,
+		BPAN:        resp.Bpan,
+		Requirement: resp.Requirement,
+		Statement:   resp.Statement,
+		Proof:       resp.Proof,
+		Commitment:  resp.Commitment,
+	}, nil
+}
+
+// VerifySecondLife generates a ZK proof for second-life eligibility.
+func (s *ComplianceService) VerifySecondLife(
+	ctx context.Context,
+	bpan string,
+) (*models.ComplianceProofResponse, error) {
+	if s.lifecycleClient == nil {
+		return nil, fmt.Errorf("compliance service: gRPC client not connected")
+	}
+
+	resp, err := s.lifecycleClient.GenerateComplianceProof(ctx, &lifecyclev1.GenerateComplianceProofRequest{
+		Bpan:       bpan,
+		Requirement: "second_life",
+	})
+	if err != nil {
+		return nil, fmt.Errorf("gRPC error: %w", err)
+	}
+
+	return &models.ComplianceProofResponse{
+		BPAN:        resp.Bpan,
+		Requirement: resp.Requirement,
+		Statement:   resp.Statement,
+		Proof:       resp.Proof,
+		Commitment:  resp.Commitment,
 	}, nil
 }
 
 // GetViolations retrieves compliance violations for a battery.
 func (s *ComplianceService) GetViolations(ctx context.Context, bpan string) ([]models.ComplianceViolation, error) {
-	slog.Info("fetching violations", "bpan", bpan)
-
-	// TODO: Wire to Rust gRPC
-	return []models.ComplianceViolation{}, nil
+	status, err := s.GetComplianceStatus(ctx, bpan)
+	if err != nil {
+		return nil, err
+	}
+	return status.Violations, nil
 }
 
 // GetComplianceDashboard retrieves aggregated compliance stats.
 func (s *ComplianceService) GetComplianceDashboard(ctx context.Context) (*models.ComplianceDashboard, error) {
 	slog.Info("fetching compliance dashboard")
 
-	// TODO: Wire to Rust gRPC
+	// TODO: Wire to Rust gRPC for aggregated stats
 	return &models.ComplianceDashboard{
 		TotalBatteries:          0,
 		BatteriesWithViolations: 0,

@@ -87,14 +87,63 @@ message RejectTransferResponse {
   bool success = 1;
 }
 
+message ComplianceViolationProto {
+  string bpan = 1;
+  string violation_type = 2;
+  string severity = 3;
+  string description = 4;
+  bool requires_action = 5;
+  google.protobuf.Timestamp action_deadline = 6;
+  google.protobuf.Timestamp detected_at = 7;
+}
+
+message CheckComplianceRequest {
+  string bpan = 1;
+}
+
+message CheckComplianceResponse {
+  string bpan = 1;
+  string status = 2;
+  repeated ComplianceViolationProto violations = 3;
+  uint32 critical_count = 4;
+  uint32 warning_count = 5;
+  google.protobuf.Timestamp last_checked_at = 6;
+}
+
+message ScanAllBatteriesRequest {
+  string requester_id = 1;
+}
+
+message ScanAllBatteriesResponse {
+  uint32 total_scanned = 1;
+  uint32 violations_found = 2;
+  string scan_id = 3;
+}
+
+message GenerateComplianceProofRequest {
+  string bpan = 1;
+  string requirement = 2;
+}
+
+message GenerateComplianceProofResponse {
+  string bpan = 1;
+  string requirement = 2;
+  string statement = 3;
+  bytes proof = 4;
+  bytes commitment = 5;
+}
+
 service LifecycleService {
   rpc VerifyOperational (VerifyOperationalRequest) returns (VerifyOperationalResponse);
   rpc VerifyRecyclable  (VerifyRecyclableRequest)  returns (VerifyRecyclableResponse);
   rpc VerifySignature   (VerifySignatureRequest)   returns (VerifySignatureResponse);
 
-  // New methods for Day 12
   rpc TransitionState  (TransitionStateRequest)  returns (TransitionStateResponse);
   rpc InitiateTransfer (InitiateTransferRequest) returns (InitiateTransferResponse);
   rpc ConfirmTransfer  (ConfirmTransferRequest)  returns (ConfirmTransferResponse);
   rpc RejectTransfer   (RejectTransferRequest)   returns (RejectTransferResponse);
+
+  rpc CheckCompliance       (CheckComplianceRequest)       returns (CheckComplianceResponse);
+  rpc ScanAllBatteries      (ScanAllBatteriesRequest)      returns (ScanAllBatteriesResponse);
+  rpc GenerateComplianceProof(GenerateComplianceProofRequest) returns (GenerateComplianceProofResponse);
 }

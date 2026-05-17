@@ -18,9 +18,7 @@ func GetBatteryCompliance(complianceService *services.ComplianceService) http.Ha
 	return func(w http.ResponseWriter, r *http.Request) {
 		bpan := chi.URLParam(r, "bpan")
 
-		// For now, return a basic compliance check
-		// TODO: Wire to full Rust compliance service
-		status, err := complianceService.CheckCompliance(r.Context(), bpan, 100.0, true, true)
+		status, err := complianceService.GetComplianceStatus(r.Context(), bpan)
 		if err != nil {
 			slog.Error("compliance check failed", "bpan", bpan, "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -136,10 +134,58 @@ func GetComplianceDashboard(complianceService *services.ComplianceService) http.
 	}
 }
 
+// VerifyComplianceSecondLife — POST /api/v1/compliance/verify/second-life
+// Generates a ZK proof that battery is eligible for second-life use.
+func VerifyComplianceSecondLife(complianceService *services.ComplianceService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		bpan := chi.URLParam(r, "bpan")
+		claims := middleware.ClaimsFromContext(r.Context())
+
+		if claims.Role != "regulator" && claims.Role != "government" && claims.Role != "admin" {
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": "only government regulator can verify compliance",
+			})
+			return
+		}
+
+		if bpan == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "bpan required"})
+			return
+		}
+
+		proof, err := complianceService.VerifySecondLife(r.Context(), bpan)
+		if err != nil {
+			slog.Error("second-life proof generation failed", "bpan", bpan, "error", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "proof generation failed"})
+			return
+		}
+
+		slog.Info("second-life compliance proof generated",
+			"bpan", bpan,
+			"verifier", claims.Subject,
+		)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(models.ComplianceProofResponse{
+			BPAN:        bpan,
+			Requirement: "second_life",
+			Statement:   "Battery SoH >= 60% (eligible for SECOND_LIFE)",
+			Proof:       proof.Proof,
+			Commitment:  proof.Commitment,
+			Note:        "This proof was generated without revealing the actual SoH value",
+		})
+	}
+}
+
 // RegisterComplianceRoutes registers all compliance endpoints
 func RegisterComplianceRoutes(r chi.Router, complianceService *services.ComplianceService) {
 	r.Get("/batteries/{bpan}/compliance", GetBatteryCompliance(complianceService))
 	r.Post("/compliance/scan", TriggerComplianceScan(complianceService))
 	r.Post("/batteries/{bpan}/verify/operational", VerifyComplianceOperational(complianceService))
+	r.Post("/batteries/{bpan}/verify/second-life", VerifyComplianceSecondLife(complianceService))
 	r.Get("/dashboard/compliance", GetComplianceDashboard(complianceService))
 }

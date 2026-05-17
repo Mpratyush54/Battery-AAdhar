@@ -188,16 +188,6 @@ func handleServiceUnavailable(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, `{"error":"service unavailable — Rust gRPC engine not connected"}`, http.StatusServiceUnavailable)
 }
 
-// GetBatteryByQuery — GET /api/v1/battery
-// @Summary Get battery by query parameter
-// @Description Retrieve battery information by BPAN query parameter
-// @Tags battery
-// @Param bpan query string true "BPAN"
-// @Accept json
-// @Produce json
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]string
-// @Router /api/v1/battery [get]
 func GetBatteryByQuery(w http.ResponseWriter, r *http.Request) {
 	controllers.GetBatteryController(w, r)
 }

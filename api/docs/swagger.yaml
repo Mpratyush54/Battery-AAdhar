@@ -502,6 +502,34 @@ paths:
       summary: Compare carbon footprints (A vs B)
       tags:
       - carbon
+  /api/v1/batteries/{bpan}:
+    get:
+      consumes:
+      - application/json
+      description: Decodes BPAN and returns human-readable details (public endpoint)
+      parameters:
+      - description: BPAN
+        in: path
+        name: bpan
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Full battery details
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid BPAN
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get battery by BPAN path parameter
+      tags:
+      - battery
   /api/v1/batteries/{bpan}/carbon:
     get:
       consumes:
@@ -837,7 +865,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieve battery information by BPAN query parameter
+      description: Returns public battery data by decoding the BPAN (no DB lookup
+        needed)
       parameters:
       - description: BPAN
         in: query
@@ -848,17 +877,37 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Battery details
           schema:
             additionalProperties: true
             type: object
         "400":
-          description: Bad Request
+          description: Invalid or missing BPAN
           schema:
             additionalProperties:
               type: string
             type: object
       summary: Get battery by query parameter
+      tags:
+      - battery
+  /api/v1/battery/register:
+    post:
+      consumes:
+      - application/json
+      description: Legacy registration endpoint — use POST /api/v1/batteries/register
+        for atomic registration
+      produces:
+      - application/json
+      responses:
+        "501":
+          description: Not implemented — use /api/v1/batteries/register
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Register battery (legacy endpoint)
       tags:
       - battery
   /api/v1/circular-economy/batteries/{bpan}/recycle:

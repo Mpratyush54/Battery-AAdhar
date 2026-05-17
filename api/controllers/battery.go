@@ -9,8 +9,14 @@ import (
 )
 
 // RegisterBatteryController handles POST /api/v1/battery/register.
-// This is a placeholder — the real registration is handled by the
-// registration controller which calls the Rust gRPC engine.
+// @Summary Register battery (legacy endpoint)
+// @Description Legacy registration endpoint — use POST /api/v1/batteries/register for atomic registration
+// @Tags battery
+// @Accept json
+// @Produce json
+// @Success 501 {object} map[string]string "Not implemented — use /api/v1/batteries/register"
+// @Router /api/v1/battery/register [post]
+// @Security Bearer
 func RegisterBatteryController(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		http.Error(res, "Method not allowed", http.StatusMethodNotAllowed)
@@ -21,7 +27,15 @@ func RegisterBatteryController(res http.ResponseWriter, req *http.Request) {
 }
 
 // GetBatteryController handles GET /api/v1/battery?bpan=...
-// Returns public battery data by decoding the BPAN (no DB lookup needed for decoded fields).
+// @Summary Get battery by query parameter
+// @Description Returns public battery data by decoding the BPAN (no DB lookup needed)
+// @Tags battery
+// @Param bpan query string true "BPAN"
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{} "Battery details"
+// @Failure 400 {object} map[string]string "Invalid or missing BPAN"
+// @Router /api/v1/battery [get]
 func GetBatteryController(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		http.Error(res, "Method not allowed", http.StatusMethodNotAllowed)
@@ -68,7 +82,15 @@ func GetBatteryController(res http.ResponseWriter, req *http.Request) {
 }
 
 // GetBatteryByBPAN handles GET /api/v1/batteries/{bpan}
-// Decodes BPAN and returns human-readable details (public endpoint).
+// @Summary Get battery by BPAN path parameter
+// @Description Decodes BPAN and returns human-readable details (public endpoint)
+// @Tags battery
+// @Param bpan path string true "BPAN"
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{} "Full battery details"
+// @Failure 400 {object} map[string]string "Invalid BPAN"
+// @Router /api/v1/batteries/{bpan} [get]
 func GetBatteryByBPAN(w http.ResponseWriter, r *http.Request) {
 	bpanStr := chi.URLParam(r, "bpan")
 

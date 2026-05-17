@@ -105,6 +105,48 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/batteries/{bpan}": {
+            "get": {
+                "description": "Decodes BPAN and returns human-readable details (public endpoint)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "battery"
+                ],
+                "summary": "Get battery by BPAN path parameter",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "BPAN",
+                        "name": "bpan",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Full battery details",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid BPAN",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/batteries/{bpan}/carbon": {
             "get": {
                 "description": "Retrieve BCF (all roles can view verified data)",
@@ -568,7 +610,7 @@ const docTemplate = `{
         },
         "/api/v1/battery": {
             "get": {
-                "description": "Retrieve battery information by BPAN query parameter",
+                "description": "Returns public battery data by decoding the BPAN (no DB lookup needed)",
                 "consumes": [
                     "application/json"
                 ],
@@ -590,14 +632,45 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Battery details",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid or missing BPAN",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/battery/register": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Legacy registration endpoint — use POST /api/v1/batteries/register for atomic registration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "battery"
+                ],
+                "summary": "Register battery (legacy endpoint)",
+                "responses": {
+                    "501": {
+                        "description": "Not implemented — use /api/v1/batteries/register",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {

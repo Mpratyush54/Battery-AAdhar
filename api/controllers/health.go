@@ -128,12 +128,16 @@ func GetHealthHistory(healthService *services.HealthService) http.HandlerFunc {
 // @Router /api/v1/health/dashboard [get]
 func GetHealthDashboard(healthService *services.HealthService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO: Implement dashboard aggregation
+		dashboard, err := healthService.GetHealthDashboard(r.Context())
+		if err != nil {
+			slog.Error("health dashboard failed", "error", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "dashboard unavailable"})
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"avg_soh_by_manufacturer": map[string]float32{},
-			"avg_soh_by_chemistry":    map[string]float32{},
-		})
+		json.NewEncoder(w).Encode(dashboard)
 	}
 }
 

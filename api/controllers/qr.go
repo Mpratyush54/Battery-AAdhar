@@ -5,9 +5,10 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 
-	qrpkg "github.com/Mpratyush54/Battery-AAdhar/api/qr"
+	"github.com/Mpratyush54/Battery-AAdhar/api/services"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -22,32 +23,24 @@ import (
 // @Failure      500  {object}  map[string]string  "QR generation failed"
 // @Router       /batteries/{bpan}/qr [get]
 // @Security     BearerAuth
-func GetQRCode(w http.ResponseWriter, r *http.Request) {
-	bpanStr := chi.URLParam(r, "bpan")
+func GetQRCode(qrService *services.QrService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		bpanStr := chi.URLParam(r, "bpan")
 
-	// Create QR payload
-	payload, err := qrpkg.CreatePayload(bpanStr)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
-		return
+		pngBytes, err := qrService.GenerateQRCode(r.Context(), bpanStr)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+
+		// Return PNG with metadata
+		w.Header().Set("Content-Type", "image/png")
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s_qr.png", bpanStr))
+		w.WriteHeader(http.StatusOK)
+		w.Write(pngBytes)
 	}
-
-	// Generate QR PNG
-	pngBytes, err := qrpkg.GenerateQR(payload)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": fmt.Sprintf("QR generation failed: %v", err)})
-		return
-	}
-
-	// Return PNG with metadata
-	w.Header().Set("Content-Type", "image/png")
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s_qr.png", bpanStr))
-	w.WriteHeader(http.StatusOK)
-	w.Write(pngBytes)
 }
 
 // ScanQRCode godoc
@@ -59,15 +52,38 @@ func GetQRCode(w http.ResponseWriter, r *http.Request) {
 // @Param        body   body   object  true  "QR payload"
 // @Success      200  {object}  map[string]interface{}
 // @Failure      400  {object}  map[string]string
-// @Failure      501  {object}  map[string]string  "Not implemented"
+// @Failure      500  {object}  map[string]string  "Validation failed"
 // @Router       /batteries/scan [post]
-func ScanQRCode(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusNotImplemented)
-	w.Write([]byte(`{"error":"not_implemented"}`))
+// @Security     BearerAuth
+func ScanQRCode(qrService *services.QrService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			PayloadJSON string `json:"payload_json"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "invalid request body"})
+			return
+		}
+
+		valid, err := qrService.ValidatePayload(r.Context(), req.PayloadJSON)
+		if err != nil {
+			slog.Warn("QR scan validation failed", "error", err)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"valid": valid,
+		})
+	}
 }
 
-func RegisterQRRoutes(r chi.Router) {
-	r.Get("/batteries/{bpan}/qr", GetQRCode)
-	r.Post("/batteries/scan", ScanQRCode)
+func RegisterQRRoutes(r chi.Router, qrService *services.QrService) {
+	r.Get("/batteries/{bpan}/qr", GetQRCode(qrService))
+	r.Post("/batteries/scan", ScanQRCode(qrService))
 }

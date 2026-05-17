@@ -45,13 +45,13 @@ func TestAuthenticate(t *testing.T) {
 	t.Run("With Authorization Header", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
 
-		// Create a realistic valid JWT (unverified)
+		// Create a realistic valid JWT signed with the fallback secret
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 			"sub":  "123",
 			"role": "authenticated",
 			"exp":  time.Now().Add(time.Hour).Unix(),
 		})
-		tokenString, _ := token.SignedString([]byte("secret"))
+		tokenString, _ := token.SignedString([]byte("fallback_secret_key"))
 
 		req.Header.Set("Authorization", "Bearer "+tokenString)
 		rr := httptest.NewRecorder()

@@ -160,3 +160,17 @@ func (s *LifecycleService) VerifySignature(
 	}
 	return resp, nil
 }
+
+// GetOwnershipHistory returns the full chain of custody for a battery
+func (s *LifecycleService) GetOwnershipHistory(
+	ctx context.Context,
+	bpan string,
+) (*lifecyclev1.GetOwnershipHistoryResponse, error) {
+	resp, err := s.lifecycleClient.GetOwnershipHistory(ctx, &lifecyclev1.GetOwnershipHistoryRequest{
+		Bpan: bpan,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("gRPC error: %w", err)
+	}
+	return resp, nil
+}

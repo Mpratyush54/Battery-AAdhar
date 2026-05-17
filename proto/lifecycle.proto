@@ -133,6 +133,23 @@ message GenerateComplianceProofResponse {
   bytes commitment = 5;
 }
 
+message OwnershipEntry {
+  string owner_id = 1;
+  string owner_role = 2;
+  string transfer_reason = 3;
+  google.protobuf.Timestamp transferred_at = 4;
+  string previous_owner_id = 5;
+}
+
+message GetOwnershipHistoryRequest {
+  string bpan = 1;
+}
+
+message GetOwnershipHistoryResponse {
+  string bpan = 1;
+  repeated OwnershipEntry entries = 2;
+}
+
 service LifecycleService {
   rpc VerifyOperational (VerifyOperationalRequest) returns (VerifyOperationalResponse);
   rpc VerifyRecyclable  (VerifyRecyclableRequest)  returns (VerifyRecyclableResponse);
@@ -146,4 +163,6 @@ service LifecycleService {
   rpc CheckCompliance       (CheckComplianceRequest)       returns (CheckComplianceResponse);
   rpc ScanAllBatteries      (ScanAllBatteriesRequest)      returns (ScanAllBatteriesResponse);
   rpc GenerateComplianceProof(GenerateComplianceProofRequest) returns (GenerateComplianceProofResponse);
+
+  rpc GetOwnershipHistory   (GetOwnershipHistoryRequest)   returns (GetOwnershipHistoryResponse);
 }

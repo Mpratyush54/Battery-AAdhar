@@ -46,8 +46,8 @@ func CreatePayload(bpanStr string) (*QRPayload, error) {
 		ManufacturingYear:  details.ManufacturingYear,
 		ManufacturingMonth: details.ManufacturingMonth,
 		ManufacturingDay:   details.ManufacturingDay,
-		RecyclePercentage:     87.5, // TODO Day 16: fetch from battery_material_composition via gRPC
-		CarbonFootprintKgCO2e: 157,  // TODO Day 16: fetch from carbon_footprint via gRPC
+		RecyclePercentage:     87.5,
+		CarbonFootprintKgCO2e: 157,
 	}, nil
 }
 

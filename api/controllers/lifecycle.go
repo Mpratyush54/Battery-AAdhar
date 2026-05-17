@@ -210,10 +210,23 @@ func RejectTransfer(s *services.LifecycleService) http.HandlerFunc {
 // @Security     BearerAuth
 func GetOwnershipHistory(s *services.LifecycleService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		bpan := chi.URLParam(r, "bpan")
+
+		if s == nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			json.NewEncoder(w).Encode(map[string]string{"error": "service unavailable"})
+			return
+		}
+
+		resp, err := s.GetOwnershipHistory(r.Context(), bpan)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		// TODO Day 13: wire to audit log query
-		w.WriteHeader(http.StatusNotImplemented)
-		json.NewEncoder(w).Encode(map[string]string{"error": "not_implemented"})
+		json.NewEncoder(w).Encode(resp)
 	}
 }
 

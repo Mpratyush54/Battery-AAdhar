@@ -198,7 +198,7 @@ func init() {
 }
 
 // RegisterCarbonRoutes registers all carbon-related routes
-func RegisterCarbonRoutes(r chi.Router) {
+func RegisterCarbonRoutes(r chi.Router, carbonService *services.CarbonService) {
 	r.Post("/batteries/{bpan}/carbon", SubmitCarbonFootprint(carbonService))
 	r.Get("/batteries/{bpan}/carbon", GetCarbonFootprint(carbonService))
 	r.Post("/batteries/{bpan}/carbon/verify", VerifyCarbonFootprint(carbonService))

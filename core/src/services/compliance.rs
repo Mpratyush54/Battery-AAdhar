@@ -3,7 +3,7 @@
 //! Implements 6 compliance rules and generates ZK proofs for verification.
 
 use crate::models::{ComplianceSeverity, ComplianceStatus, ComplianceViolation};
-use crate::repositories::battery_repo::BatteryRepository;
+use crate::repositories::battery_repo::{BatteryRepository, BatteryRepositoryImpl};
 use crate::repositories::carbon_repo::{CarbonRepository, CarbonRepositoryImpl};
 use crate::repositories::compliance_repo::ComplianceRepositoryImpl;
 use crate::repositories::health_repo::HealthRepositoryImpl;
@@ -89,7 +89,6 @@ impl ComplianceServiceImpl {
         }
     }
 
-    #[cfg(test)]
     pub fn for_tests(zk_prover: Arc<ZkProverImpl>) -> Self {
         use crate::repositories::battery_repo::BatteryRepositoryImpl;
         use crate::repositories::carbon_repo::CarbonRepositoryImpl;
@@ -106,6 +105,22 @@ impl ComplianceServiceImpl {
             carbon_repo: Arc::new(CarbonRepositoryImpl::new(pool.clone())),
             battery_repo: Arc::new(BatteryRepositoryImpl::new(pool)),
         }
+    }
+
+    pub fn new_stub(zk_prover: Arc<ZkProverImpl>) -> Self {
+        ComplianceServiceImpl {
+            zk_prover,
+            health_repo: Arc::new(HealthRepositoryImpl::new_stub()),
+            compliance_repo: Arc::new(ComplianceRepositoryImpl::new_stub()),
+            material_repo: Arc::new(MaterialRepositoryImpl::new_stub()),
+            carbon_repo: Arc::new(CarbonRepositoryImpl::new_stub()),
+            battery_repo: Arc::new(BatteryRepositoryImpl::new_stub()),
+        }
+    }
+
+    fn check_pool(&self) -> Result<(), ComplianceError> {
+        // Stub mode: compliance checks work without DB
+        Ok(())
     }
 
     /// Rule 1: Check SoH for lifecycle eligibility

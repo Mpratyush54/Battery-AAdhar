@@ -7,12 +7,20 @@ use crate::models::{ComplianceViolation, ComplianceSeverity};
 use super::battery_repo::RepositoryError;
 
 pub struct ComplianceRepositoryImpl {
-    pool: PgPool,
+    pool: Option<PgPool>,
 }
 
 impl ComplianceRepositoryImpl {
     pub fn new(pool: PgPool) -> Self {
-        ComplianceRepositoryImpl { pool }
+        ComplianceRepositoryImpl { pool: Some(pool) }
+    }
+
+    pub fn new_stub() -> Self {
+        ComplianceRepositoryImpl { pool: None }
+    }
+
+    fn pool(&self) -> Result<&PgPool, RepositoryError> {
+        self.pool.as_ref().ok_or(RepositoryError::NotFound("stub mode".to_string()))
     }
 
     /// Log a compliance violation
@@ -45,7 +53,7 @@ impl ComplianceRepositoryImpl {
         .bind(requires_action)
         .bind(deadline)
         .bind(now)
-        .execute(&self.pool)
+        .execute(self.pool()?)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -65,7 +73,7 @@ impl ComplianceRepositoryImpl {
                 "#
             )
             .bind(_bpan)
-            .fetch_all(&self.pool)
+            .fetch_all(self.pool()?)
             .await
             .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -103,7 +111,7 @@ impl ComplianceRepositoryImpl {
             ORDER BY detected_at DESC
             "#,
         )
-        .fetch_all(&self.pool)
+        .fetch_all(self.pool()?)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -123,7 +131,7 @@ impl ComplianceRepositoryImpl {
             "SELECT bpan, violation_type, description FROM compliance_violation_log WHERE severity = $1 AND resolved_at IS NULL",
         )
         .bind(severity)
-        .fetch_all(&self.pool)
+        .fetch_all(self.pool()?)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -147,7 +155,7 @@ impl ComplianceRepositoryImpl {
         sqlx::query("UPDATE compliance_violation_log SET resolved_at = $1 WHERE id = $2")
             .bind(now)
             .bind(violation_id)
-            .execute(&self.pool)
+            .execute(self.pool()?)
             .await
             .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -168,7 +176,7 @@ impl ComplianceRepositoryImpl {
             FROM compliance_violation_log
             "#
         )
-        .fetch_one(&self.pool)
+        .fetch_one(self.pool()?)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 

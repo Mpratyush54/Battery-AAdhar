@@ -40,4 +40,3 @@ async-trait = "0.1.83"
 tonic-build = "0.12"
 prost = "0.13"
 protoc-bin-vendored = "3"
- 

@@ -55,7 +55,7 @@ func NewRouter(microservices *config.MicroserviceClients) http.Handler {
 
 		// Public endpoints — no auth required beyond claim parse
 		r.Group(func(r chi.Router) {
-			r.Get("/battery", controllers.GetBatteryController)
+			r.Get("/battery", GetBatteryByQuery)
 			r.Get("/batteries/{bpan}", controllers.GetBatteryByBPAN)
 		})
 
@@ -73,7 +73,7 @@ func NewRouter(microservices *config.MicroserviceClients) http.Handler {
 		// Service provider endpoints
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.RequireResource(models.ResourceBatteryHealth, models.ActionUpdate))
-			r.Patch("/batteries/{bpan}/status", handleUpdateStatus)
+			r.Patch("/batteries/{bpan}/status", UpdateBatteryStatus)
 		})
 
 		// Compliance / ZK verification endpoints (verifier role)
@@ -91,14 +91,36 @@ func NewRouter(microservices *config.MicroserviceClients) http.Handler {
 		// Admin-only
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.IsRole("admin"))
-			r.Post("/manufacturers", handleRegisterManufacturer)
-			r.Get("/manufacturers", handleListManufacturers)
+			r.Post("/manufacturers", RegisterManufacturer)
+			r.Get("/manufacturers", ListManufacturers)
 		})
 
 		// ── Controller-based routes (each controller registers its own group) ──
+		var healthSvc *services.HealthService
+		var carbonSvc *services.CarbonService
+		var qrSvc *services.QrService
+		var batterySvc *services.BatteryService
+		var complianceSvc *services.ComplianceService
+		var encSvc *services.EncryptionService
+
+		if microservices != nil {
+			healthSvc = services.NewHealthServiceWithClient(microservices.GrpcConn)
+			carbonSvc = services.NewCarbonServiceWithClient(microservices.GrpcConn)
+			qrSvc = services.NewQrServiceWithClient(microservices.GrpcConn)
+			encSvc = services.NewEncryptionService(microservices.GrpcConn.CryptoClient)
+			batterySvc = services.NewBatteryServiceWithClient(microservices.GrpcConn, encSvc)
+			complianceSvc = services.NewComplianceServiceWithClient(microservices.GrpcConn)
+		} else {
+			healthSvc = services.NewHealthService()
+			carbonSvc = services.NewCarbonService()
+			qrSvc = services.NewQrService()
+			batterySvc = services.NewBatteryService(nil)
+			complianceSvc = services.NewComplianceService()
+		}
+
 		controllers.RegisterMaterialRoutes(r)
-		controllers.RegisterCarbonRoutes(r)
-		controllers.RegisterHealthRoutes(r, services.NewHealthService())
+		controllers.RegisterCarbonRoutes(r, carbonSvc)
+		controllers.RegisterHealthRoutes(r, healthSvc)
 
 		// Lifecycle routes (ownership transfers, state transitions)
 		if microservices != nil {
@@ -108,16 +130,16 @@ func NewRouter(microservices *config.MicroserviceClients) http.Handler {
 		}
 
 		// Compliance routes (scan, violations, ZK proofs)
-		controllers.RegisterComplianceRoutes(r, services.NewComplianceService())
+		controllers.RegisterComplianceRoutes(r, complianceSvc)
 
 		// Telemetry routes (ingest, query, history)
 		controllers.RegisterTelemetryRoutes(r)
 
 		// QR code routes (generate, validate, public lookup)
-		controllers.RegisterQRRoutes(r)
+		controllers.RegisterQRRoutes(r, qrSvc)
 
 		// Public endpoints — no authentication required
-		controllers.RegisterPublicRoutes(r)
+		controllers.RegisterPublicRoutes(r, batterySvc, qrSvc)
 
 		// Circular Economy (Reuse/Recycling)
 		if microservices != nil {
@@ -164,4 +186,57 @@ func handleRegistrationUnavailable(w http.ResponseWriter, r *http.Request) {
 
 func handleServiceUnavailable(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, `{"error":"service unavailable — Rust gRPC engine not connected"}`, http.StatusServiceUnavailable)
+}
+
+// GetBatteryByQuery — GET /api/v1/battery
+// @Summary Get battery by query parameter
+// @Description Retrieve battery information by BPAN query parameter
+// @Tags battery
+// @Param bpan query string true "BPAN"
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Router /api/v1/battery [get]
+func GetBatteryByQuery(w http.ResponseWriter, r *http.Request) {
+	controllers.GetBatteryController(w, r)
+}
+
+// UpdateBatteryStatus — PATCH /api/v1/batteries/{bpan}/status
+// @Summary Update battery status
+// @Description Update battery lifecycle status (service provider only)
+// @Tags battery
+// @Param bpan path string true "BPAN"
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Router /api/v1/batteries/{bpan}/status [patch]
+// @Security Bearer
+func UpdateBatteryStatus(w http.ResponseWriter, r *http.Request) {
+	handleUpdateStatus(w, r)
+}
+
+// RegisterManufacturer — POST /api/v1/manufacturers
+// @Summary Register manufacturer
+// @Description Register a new manufacturer (admin only)
+// @Tags manufacturer
+// @Accept json
+// @Produce json
+// @Success 201 {object} map[string]interface{}
+// @Router /api/v1/manufacturers [post]
+// @Security Bearer
+func RegisterManufacturer(w http.ResponseWriter, r *http.Request) {
+	handleRegisterManufacturer(w, r)
+}
+
+// ListManufacturers — GET /api/v1/manufacturers
+// @Summary List manufacturers
+// @Description List all registered manufacturers (admin only)
+// @Tags manufacturer
+// @Produce json
+// @Success 200 {array} map[string]interface{}
+// @Router /api/v1/manufacturers [get]
+// @Security Bearer
+func ListManufacturers(w http.ResponseWriter, r *http.Request) {
+	handleListManufacturers(w, r)
 }

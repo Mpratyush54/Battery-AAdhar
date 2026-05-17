@@ -7,18 +7,23 @@ use sqlx::{PgPool, Row};
 use uuid::Uuid;
 
 pub struct HealthRepositoryImpl {
-    pool: PgPool,
+    pool: Option<PgPool>,
 }
 
 impl HealthRepositoryImpl {
     pub fn new(pool: PgPool) -> Self {
-        HealthRepositoryImpl { pool }
+        HealthRepositoryImpl { pool: Some(pool) }
+    }
+
+    pub fn new_stub() -> Self {
+        HealthRepositoryImpl { pool: None }
     }
 
     pub async fn insert_health_record(
         &self,
         record: &HealthRecord,
     ) -> Result<String, RepositoryError> {
+        let pool = self.pool.as_ref().ok_or(RepositoryError::NotFound("stub mode".to_string()))?;
         let id = Uuid::new_v4().to_string();
 
         sqlx::query(
@@ -48,7 +53,7 @@ impl HealthRepositoryImpl {
         .bind(&record.reported_by)
         .bind(record.reported_at)
         .bind(record.record_number as i32)
-        .execute(&self.pool)
+        .execute(pool)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -59,6 +64,7 @@ impl HealthRepositoryImpl {
         &self,
         bpan: &str,
     ) -> Result<Option<HealthRecord>, RepositoryError> {
+        let pool = self.pool.as_ref().ok_or(RepositoryError::NotFound("stub mode".to_string()))?;
         let row = sqlx::query(
             r#"
             SELECT * FROM battery_health 
@@ -67,7 +73,7 @@ impl HealthRepositoryImpl {
             "#,
         )
         .bind(bpan)
-        .fetch_optional(&self.pool)
+        .fetch_optional(pool)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -122,6 +128,7 @@ impl HealthRepositoryImpl {
         bpan: &str,
         limit: i32,
     ) -> Result<Vec<HealthRecord>, RepositoryError> {
+        let pool = self.pool.as_ref().ok_or(RepositoryError::NotFound("stub mode".to_string()))?;
         let rows = sqlx::query(
             r#"
             SELECT * FROM battery_health 
@@ -131,7 +138,7 @@ impl HealthRepositoryImpl {
         )
         .bind(bpan)
         .bind(limit)
-        .fetch_all(&self.pool)
+        .fetch_all(pool)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -184,6 +191,7 @@ impl HealthRepositoryImpl {
         &self,
         manufacturer_id: &str,
     ) -> Result<f32, RepositoryError> {
+        let pool = self.pool.as_ref().ok_or(RepositoryError::NotFound("stub mode".to_string()))?;
         let avg = sqlx::query_scalar::<_, Option<f32>>(
             r#"
             SELECT AVG(h.state_of_health_percent) 
@@ -193,7 +201,7 @@ impl HealthRepositoryImpl {
             "#,
         )
         .bind(manufacturer_id)
-        .fetch_optional(&self.pool)
+        .fetch_optional(pool)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?
         .flatten()
@@ -206,6 +214,7 @@ impl HealthRepositoryImpl {
         &self,
         chemistry_type: &str,
     ) -> Result<f32, RepositoryError> {
+        let pool = self.pool.as_ref().ok_or(RepositoryError::NotFound("stub mode".to_string()))?;
         let avg = sqlx::query_scalar::<_, Option<f32>>(
             r#"
             SELECT AVG(h.state_of_health_percent) 
@@ -216,7 +225,7 @@ impl HealthRepositoryImpl {
             "#,
         )
         .bind(chemistry_type)
-        .fetch_optional(&self.pool)
+        .fetch_optional(pool)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?
         .flatten()
@@ -227,6 +236,7 @@ impl HealthRepositoryImpl {
 
     pub async fn check_rate_limit(&self, bpan: &str) -> Result<bool, RepositoryError> {
         // Check if there was a health update in the last hour
+        let pool = self.pool.as_ref().ok_or(RepositoryError::NotFound("stub mode".to_string()))?;
         let recent_count = sqlx::query_scalar::<_, i64>(
             r#"
             SELECT COUNT(*) FROM battery_health 
@@ -234,7 +244,7 @@ impl HealthRepositoryImpl {
             "#,
         )
         .bind(bpan)
-        .fetch_one(&self.pool)
+        .fetch_one(pool)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 

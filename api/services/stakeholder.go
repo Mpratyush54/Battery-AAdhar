@@ -14,7 +14,6 @@ import (
 // StakeholderService handles all stakeholder operations
 type StakeholderService struct {
 	encryptionService *EncryptionService
-	// In Day 7: add repository for persistence
 }
 
 // NewStakeholderService creates a new stakeholder service
@@ -29,7 +28,6 @@ func (s *StakeholderService) RegisterStakeholder(
 	ctx context.Context,
 	reg *models.StakeholderRegistration,
 ) (*models.Stakeholder, error) {
-	// Validate input
 	if reg.OrganizationName == "" {
 		return nil, fmt.Errorf("organization_name required")
 	}
@@ -44,14 +42,12 @@ func (s *StakeholderService) RegisterStakeholder(
 		CountryCode:      reg.CountryCode,
 		ContactEmail:     reg.ContactEmail,
 		ContactPhone:     reg.ContactPhone,
-		Status:           "pending", // Await KYC verification
+		Status:           "pending",
 	}
 
-	// Encrypt Aadhaar/KYC document via Rust
-	// Use stakeholder ID as the "BPAN" for encryption purposes (unique per stakeholder)
 	encrypted, err := s.encryptionService.Encrypt(
 		ctx,
-		stakeholder.ID.String(), // Use ID as encryption context
+		stakeholder.ID.String(),
 		"aadhaar_document",
 		reg.AadhaarDocument,
 	)
@@ -62,7 +58,6 @@ func (s *StakeholderService) RegisterStakeholder(
 
 	stakeholder.AadhaarEncrypted = encrypted.Ciphertext
 
-	// TODO Day 7: Persist to DB via repository
 	slog.Info("stakeholder registered", "id", stakeholder.ID, "type", stakeholder.StakeholderType)
 
 	return stakeholder, nil
@@ -70,8 +65,8 @@ func (s *StakeholderService) RegisterStakeholder(
 
 // GetStakeholder retrieves a stakeholder by ID
 func (s *StakeholderService) GetStakeholder(ctx context.Context, id string) (*models.Stakeholder, error) {
-	// TODO Day 7: Fetch from repository
-	return nil, fmt.Errorf("not yet implemented")
+	slog.Info("get_stakeholder", "id", id)
+	return nil, fmt.Errorf("stakeholder lookup requires DB wiring (Day 17+)")
 }
 
 // DecryptKYCDocument decrypts a stakeholder's KYC document

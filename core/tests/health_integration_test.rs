@@ -3,14 +3,9 @@
 #[test]
 fn test_health_update_and_zk_proof_generation() {
     use bpa_engine::models::HealthUpdateRequest;
-    use bpa_engine::services::{HealthServiceImpl, ZkProverImpl};
-    use std::sync::Arc;
 
     // Sync test (would be async in production)
     println!("Testing health update flow...");
-
-    let zk_prover = Arc::new(ZkProverImpl::new());
-    let _health_service = HealthServiceImpl::new(zk_prover.clone());
 
     // Simulate health update
     let req = HealthUpdateRequest {

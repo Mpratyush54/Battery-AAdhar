@@ -169,7 +169,31 @@ func (s *ComplianceService) GetViolations(ctx context.Context, bpan string) ([]m
 func (s *ComplianceService) GetComplianceDashboard(ctx context.Context) (*models.ComplianceDashboard, error) {
 	slog.Info("fetching compliance dashboard")
 
-	// TODO: Wire to Rust gRPC for aggregated stats
+	if s.lifecycleClient != nil {
+		resp, err := s.lifecycleClient.ScanAllBatteries(ctx, &lifecyclev1.ScanAllBatteriesRequest{})
+		if err != nil {
+			return nil, fmt.Errorf("gRPC error: %w", err)
+		}
+
+		total := resp.TotalScanned
+		violations := resp.ViolationsFound
+		compliant := total - violations
+		var rate float32
+		if total > 0 {
+			rate = float32(compliant) / float32(total) * 100.0
+		} else {
+			rate = 100.0
+		}
+
+		return &models.ComplianceDashboard{
+			TotalBatteries:          total,
+			BatteriesWithViolations: violations,
+			CriticalViolations:      0,
+			WarningViolations:       0,
+			ComplianceRate:          float32(rate),
+		}, nil
+	}
+
 	return &models.ComplianceDashboard{
 		TotalBatteries:          0,
 		BatteriesWithViolations: 0,

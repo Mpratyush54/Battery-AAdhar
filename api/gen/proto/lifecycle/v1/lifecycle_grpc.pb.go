@@ -29,6 +29,7 @@ const (
 	LifecycleService_CheckCompliance_FullMethodName         = "/bpa.lifecycle.v1.LifecycleService/CheckCompliance"
 	LifecycleService_ScanAllBatteries_FullMethodName        = "/bpa.lifecycle.v1.LifecycleService/ScanAllBatteries"
 	LifecycleService_GenerateComplianceProof_FullMethodName = "/bpa.lifecycle.v1.LifecycleService/GenerateComplianceProof"
+	LifecycleService_GetOwnershipHistory_FullMethodName     = "/bpa.lifecycle.v1.LifecycleService/GetOwnershipHistory"
 )
 
 // LifecycleServiceClient is the client API for LifecycleService service.
@@ -45,6 +46,7 @@ type LifecycleServiceClient interface {
 	CheckCompliance(ctx context.Context, in *CheckComplianceRequest, opts ...grpc.CallOption) (*CheckComplianceResponse, error)
 	ScanAllBatteries(ctx context.Context, in *ScanAllBatteriesRequest, opts ...grpc.CallOption) (*ScanAllBatteriesResponse, error)
 	GenerateComplianceProof(ctx context.Context, in *GenerateComplianceProofRequest, opts ...grpc.CallOption) (*GenerateComplianceProofResponse, error)
+	GetOwnershipHistory(ctx context.Context, in *GetOwnershipHistoryRequest, opts ...grpc.CallOption) (*GetOwnershipHistoryResponse, error)
 }
 
 type lifecycleServiceClient struct {
@@ -155,6 +157,16 @@ func (c *lifecycleServiceClient) GenerateComplianceProof(ctx context.Context, in
 	return out, nil
 }
 
+func (c *lifecycleServiceClient) GetOwnershipHistory(ctx context.Context, in *GetOwnershipHistoryRequest, opts ...grpc.CallOption) (*GetOwnershipHistoryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetOwnershipHistoryResponse)
+	err := c.cc.Invoke(ctx, LifecycleService_GetOwnershipHistory_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LifecycleServiceServer is the server API for LifecycleService service.
 // All implementations must embed UnimplementedLifecycleServiceServer
 // for forward compatibility.
@@ -169,6 +181,7 @@ type LifecycleServiceServer interface {
 	CheckCompliance(context.Context, *CheckComplianceRequest) (*CheckComplianceResponse, error)
 	ScanAllBatteries(context.Context, *ScanAllBatteriesRequest) (*ScanAllBatteriesResponse, error)
 	GenerateComplianceProof(context.Context, *GenerateComplianceProofRequest) (*GenerateComplianceProofResponse, error)
+	GetOwnershipHistory(context.Context, *GetOwnershipHistoryRequest) (*GetOwnershipHistoryResponse, error)
 	mustEmbedUnimplementedLifecycleServiceServer()
 }
 
@@ -208,6 +221,9 @@ func (UnimplementedLifecycleServiceServer) ScanAllBatteries(context.Context, *Sc
 }
 func (UnimplementedLifecycleServiceServer) GenerateComplianceProof(context.Context, *GenerateComplianceProofRequest) (*GenerateComplianceProofResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GenerateComplianceProof not implemented")
+}
+func (UnimplementedLifecycleServiceServer) GetOwnershipHistory(context.Context, *GetOwnershipHistoryRequest) (*GetOwnershipHistoryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetOwnershipHistory not implemented")
 }
 func (UnimplementedLifecycleServiceServer) mustEmbedUnimplementedLifecycleServiceServer() {}
 func (UnimplementedLifecycleServiceServer) testEmbeddedByValue()                          {}
@@ -410,6 +426,24 @@ func _LifecycleService_GenerateComplianceProof_Handler(srv interface{}, ctx cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LifecycleService_GetOwnershipHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOwnershipHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LifecycleServiceServer).GetOwnershipHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LifecycleService_GetOwnershipHistory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LifecycleServiceServer).GetOwnershipHistory(ctx, req.(*GetOwnershipHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // LifecycleService_ServiceDesc is the grpc.ServiceDesc for LifecycleService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -456,6 +490,10 @@ var LifecycleService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GenerateComplianceProof",
 			Handler:    _LifecycleService_GenerateComplianceProof_Handler,
+		},
+		{
+			MethodName: "GetOwnershipHistory",
+			Handler:    _LifecycleService_GetOwnershipHistory_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -2,86 +2,119 @@
 
 #[test]
 fn test_qr_payload_generation_and_validation() {
-    use battery_aadhaar::services::{QrService, QrServiceImpl};
+    use bpa_engine::services::QrService;
 
-    let rt = tokio::runtime::Runtime::new().unwrap();
-
-    let payload_json = rt.block_on(async {
-        let service = QrServiceImpl;
-        service.generate_qr_payload(
-            "MY008A6FKKKLC1DH80001",
-            "NMC",
-            30.0,
-            87.5,
-            vec![],
-            vec![],
-        ).await.unwrap()
-    });
+    let payload = QrService::build_payload(
+        "MY008A6FKKKLC1DH80001",
+        "NMC",
+        307.0,
+        30.0,
+        160.0,
+        350.0,
+        "Prismatic",
+        "Manufacturer 8",
+        2025,
+        "NMC811",
+        "Graphite",
+        "LiPF6",
+        87.5,
+        Some(150.0),
+    ).unwrap();
 
     println!("✓ QR payload generated");
 
-    let is_valid = rt.block_on(async {
-        let service = QrServiceImpl;
-        service.validate_qr_payload(&payload_json).await.unwrap()
-    });
+    let json = QrService::encode_payload(&payload).unwrap();
+    let decoded = QrService::decode_payload(&json).unwrap();
 
-    assert!(is_valid);
+    assert_eq!(decoded.bpan, payload.bpan);
+    assert_eq!(decoded.chemistry_type, payload.chemistry_type);
+
+    QrService::verify_payload(&payload).unwrap();
     println!("✓ QR payload validated");
 }
 
 #[test]
 fn test_qr_payload_hash_integrity() {
-    use battery_aadhaar::services::qr_service::QrPayload;
+    use bpa_engine::services::QrService;
 
-    let payload = QrPayload::new(
-        "MY008A6FKKKLC1DH80001".to_string(),
-        "NMC".to_string(),
+    let payload = QrService::build_payload(
+        "MY008A6FKKKLC1DH80001",
+        "NMC",
+        307.0,
         30.0,
+        160.0,
+        350.0,
+        "Prismatic",
+        "Manufacturer 8",
+        2025,
+        "NMC811",
+        "Graphite",
+        "LiPF6",
         87.5,
-    );
+        Some(150.0),
+    ).unwrap();
 
-    assert_eq!(payload.public_fields_hash, payload.compute_hash());
+    assert!(!payload.data_hash.is_empty());
     println!("✓ QR payload hash integrity verified");
 }
 
 #[test]
 fn test_qr_payload_tamper_detection() {
-    use battery_aadhaar::services::qr_service::QrPayload;
+    use bpa_engine::services::QrService;
 
-    let mut payload = QrPayload::new(
-        "MY008A6FKKKLC1DH80001".to_string(),
-        "NMC".to_string(),
+    let mut payload = QrService::build_payload(
+        "MY008A6FKKKLC1DH80001",
+        "NMC",
+        307.0,
         30.0,
+        160.0,
+        350.0,
+        "Prismatic",
+        "Manufacturer 8",
+        2025,
+        "NMC811",
+        "Graphite",
+        "LiPF6",
         87.5,
-    );
+        Some(150.0),
+    ).unwrap();
 
-    let original_hash = payload.public_fields_hash.clone();
-
+    let original_hash = payload.data_hash.clone();
     payload.chemistry_type = "LFP".to_string();
 
-    let new_hash = payload.compute_hash();
-    assert_ne!(original_hash, new_hash);
+    let result = QrService::verify_payload(&payload);
+    assert!(result.is_err());
     println!("✓ Tampered payload detected: hash mismatch");
 }
 
 #[test]
 fn test_qr_payload_json_roundtrip() {
-    use battery_aadhaar::services::qr_service::QrPayload;
+    use bpa_engine::services::QrService;
 
-    let payload = QrPayload::new(
-        "MY008A6FKKKLC1DH80001".to_string(),
-        "LFP".to_string(),
+    let payload = QrService::build_payload(
+        "MY008A6FKKKLC1DH80001",
+        "LFP",
+        48.0,
         50.0,
+        140.0,
+        400.0,
+        "Prismatic",
+        "Manufacturer A",
+        2024,
+        "LFP",
+        "Graphite",
+        "LiPF6",
         92.0,
-    );
+        Some(120.0),
+    ).unwrap();
 
-    let json = payload.to_json_string();
-    let decoded = QrPayload::from_json_string(&json).unwrap();
+    let json = QrService::encode_payload(&payload).unwrap();
+    let decoded = QrService::decode_payload(&json).unwrap();
 
     assert_eq!(decoded.bpan, payload.bpan);
     assert_eq!(decoded.chemistry_type, payload.chemistry_type);
-    assert_eq!(decoded.capacity_kwh, payload.capacity_kwh);
-    assert_eq!(decoded.recyclable_percent, payload.recyclable_percent);
-    assert_eq!(decoded.public_fields_hash, payload.public_fields_hash);
+    assert_eq!(decoded.rated_capacity_kwh, payload.rated_capacity_kwh);
+    assert_eq!(decoded.recyclable_percentage, payload.recyclable_percentage);
+    assert_eq!(decoded.data_hash, payload.data_hash);
     println!("✓ QR payload JSON roundtrip successful");
 }

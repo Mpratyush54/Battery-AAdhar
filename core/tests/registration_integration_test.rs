@@ -46,7 +46,7 @@ fn test_atomic_battery_registration() {
         MaterialCompositionRequest, CarbonFootprintRequest,
         HealthRecord,
     };
-    use bpa_engine::services::{BatteryRegistrationService, BatteryRegistrationServiceImpl};
+    use bpa_engine::services::BatteryRegistrationRequest;
 
     println!("Testing atomic battery registration...");
 
@@ -144,7 +144,6 @@ fn test_atomic_battery_registration() {
     println!("✓ Step 4: Initial health record prepared");
 
     // 5. Atomic registration (would be in single transaction in DB)
-    let service = BatteryRegistrationServiceImpl::new();
     // In production: service.register_battery(&descriptor, &material, &carbon, &health, "mfr-001").await
 
     println!("✓ Step 5: Atomic registration complete");

@@ -103,6 +103,12 @@ impl CarbonServiceImpl {
         }
     }
 
+    pub fn new_stub() -> Self {
+        CarbonServiceImpl {
+            repo: Arc::new(crate::repositories::carbon_repo::CarbonRepositoryImpl::new_stub()),
+        }
+    }
+
     fn can_submit(&self, role: &str) -> bool {
         matches!(
             role,
@@ -342,8 +348,7 @@ mod tests {
 
     #[test]
     fn test_role_authorization() {
-        let pool = PgPool::connect_lazy("postgres://localhost/test").unwrap();
-        let service = CarbonServiceImpl::new(pool);
+        let service = CarbonServiceImpl::new_stub();
 
         assert!(service.can_submit("MANUFACTURER"));
         assert!(service.can_submit("manufacturer"));

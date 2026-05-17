@@ -9,20 +9,63 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "https://bpa.pratyushes.dev/terms",
-        "contact": {
-            "name": "BPA Engineering Team",
-            "email": "bpa-dev@bpa.pratyushes.dev"
-        },
-        "license": {
-            "name": "Apache 2.0",
-            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-        },
+        "contact": {},
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/batteries/register": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Atomic registration: descriptor + BMCS + BCF + initial health",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "battery"
+                ],
+                "summary": "Register new battery with all static data",
+                "parameters": [
+                    {
+                        "description": "Complete battery data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.BatteryRegistrationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "BPAN generated",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid data",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/batteries/{bpan_a}/carbon/compare/{bpan_b}": {
             "get": {
                 "description": "Emission delta per stage, identify lower-emission battery",
@@ -208,6 +251,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/batteries/{bpan}/compliance": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Returns compliance status and violations for a battery",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "compliance"
+                ],
+                "summary": "Get battery compliance status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "BPAN",
+                        "name": "bpan",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ComplianceStatusResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/batteries/{bpan}/health": {
             "get": {
                 "consumes": [
@@ -335,6 +424,262 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/batteries/{bpan}/status": {
+            "patch": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Update battery lifecycle status (service provider only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "battery"
+                ],
+                "summary": "Update battery status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "BPAN",
+                        "name": "bpan",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/batteries/{bpan}/verify/operational": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Generates a ZK proof that battery meets operational standards (government/regulator only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "compliance"
+                ],
+                "summary": "Verify battery operational compliance (ZK proof)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "BPAN",
+                        "name": "bpan",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ComplianceProofResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/batteries/{bpan}/verify/second-life": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Generates a ZK proof that battery is eligible for second-life use (government/regulator only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "compliance"
+                ],
+                "summary": "Verify second-life eligibility (ZK proof)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "BPAN",
+                        "name": "bpan",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ComplianceProofResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/battery": {
+            "get": {
+                "description": "Retrieve battery information by BPAN query parameter",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "battery"
+                ],
+                "summary": "Get battery by query parameter",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "BPAN",
+                        "name": "bpan",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/compliance/scan": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Scans all batteries for compliance violations (regulator only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "compliance"
+                ],
+                "summary": "Trigger compliance scan for all batteries",
+                "responses": {
+                    "202": {
+                        "description": "Scan completed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (non-regulator)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/dashboard/compliance": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Returns aggregated compliance statistics (regulator/admin only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "compliance"
+                ],
+                "summary": "Get compliance dashboard",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ComplianceDashboard"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/health/dashboard": {
             "get": {
                 "consumes": [
@@ -352,6 +697,166 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.HealthDashboard"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/manufacturers": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "List all registered manufacturers (admin only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "manufacturer"
+                ],
+                "summary": "List manufacturers",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Register a new manufacturer (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "manufacturer"
+                ],
+                "summary": "Register manufacturer",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/public/battery/{bpan}": {
+            "get": {
+                "description": "Returns only public fields for a battery (no authentication required)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "public"
+                ],
+                "summary": "Get public battery information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "BPAN",
+                        "name": "bpan",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Public battery data",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Battery not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/public/qr/validate": {
+            "post": {
+                "description": "Validates a QR code payload for integrity (no authentication required)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "public"
+                ],
+                "summary": "Validate QR code payload",
+                "parameters": [
+                    {
+                        "description": "QR payload to validate",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.QrValidationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Validation result",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Validation failed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -491,6 +996,11 @@ const docTemplate = `{
         },
         "/batteries/scan": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Decodes a QR code payload and returns battery information",
                 "consumes": [
                     "application/json"
@@ -530,165 +1040,8 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "501": {
-                        "description": "Not implemented",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/batteries/{bpan}": {
-            "get": {
-                "description": "Decode BPAN and return battery static data (public endpoint)",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "battery"
-                ],
-                "summary": "Get battery by BPAN",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Battery PAN (21-char)",
-                        "name": "bpan",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid BPAN",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/batteries/{bpan}/audit": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns the hash-chain audit trail for a battery (government/admin only)",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "compliance"
-                ],
-                "summary": "Get audit trail",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Battery PAN",
-                        "name": "bpan",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "additionalProperties": true
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "501": {
-                        "description": "Not implemented",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/batteries/{bpan}/compliance": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns the current compliance status against BPA regulations",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "compliance"
-                ],
-                "summary": "Check battery compliance status",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Battery PAN",
-                        "name": "bpan",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "404": {
-                        "description": "Battery not found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "501": {
-                        "description": "Not implemented",
+                    "500": {
+                        "description": "Validation failed",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -799,7 +1152,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns the full chain of ownership for a battery",
+                "description": "Returns the full chain of custody for a battery",
                 "produces": [
                     "application/json"
                 ],
@@ -827,17 +1180,8 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
                     "501": {
-                        "description": "Not implemented",
+                        "description": "Not Implemented",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -855,7 +1199,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Records an ownership transfer event for a battery",
+                "description": "Starts a dual-party consent ownership transfer",
                 "consumes": [
                     "application/json"
                 ],
@@ -865,7 +1209,7 @@ const docTemplate = `{
                 "tags": [
                     "lifecycle"
                 ],
-                "summary": "Transfer battery ownership",
+                "summary": "Initiate battery ownership transfer",
                 "parameters": [
                     {
                         "type": "string",
@@ -875,21 +1219,23 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Ownership transfer payload",
+                        "description": "Transfer payload",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/models.TransferInitiateRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "202": {
+                        "description": "Accepted",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
@@ -901,17 +1247,8 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "501": {
-                        "description": "Not implemented",
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -981,7 +1318,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Records a recycling event with material recovery data (recycler only)",
+                "description": "Transitions state to RECYCLED (recycler only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -999,15 +1336,6 @@ const docTemplate = `{
                         "name": "bpan",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "Recycling record payload",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object"
-                        }
                     }
                 ],
                 "responses": {
@@ -1018,17 +1346,8 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "501": {
-                        "description": "Not implemented",
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1046,7 +1365,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Records a reuse certification event (reuse operator)",
+                "description": "Transitions state to SECOND_LIFE (reuse operator only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1064,15 +1383,6 @@ const docTemplate = `{
                         "name": "bpan",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "Reuse certification payload",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object"
-                        }
                     }
                 ],
                 "responses": {
@@ -1083,17 +1393,8 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "501": {
-                        "description": "Not implemented",
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1285,21 +1586,86 @@ const docTemplate = `{
                 }
             }
         },
-        "/batteries/{bpan}/violations": {
-            "get": {
+        "/batteries/{bpan}/transition": {
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns all recorded compliance violations for a battery",
+                "description": "Moves a battery through the FSM (e.g. OPERATIONAL → SECOND_LIFE)",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "compliance"
+                    "lifecycle"
                 ],
-                "summary": "Get compliance violations",
+                "summary": "Transition battery lifecycle state",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Battery PAN",
+                        "name": "bpan",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Transition payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.TransitionStateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/batteries/{bpan}/verify/operational": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Generates a zero-knowledge proof that battery SoH meets threshold",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lifecycle"
+                ],
+                "summary": "Verify battery is operational (ZK proof)",
                 "parameters": [
                     {
                         "type": "string",
@@ -1313,24 +1679,12 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "additionalProperties": true
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
                             "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "additionalProperties": true
                         }
                     },
-                    "501": {
-                        "description": "Not implemented",
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1341,62 +1695,102 @@ const docTemplate = `{
                 }
             }
         },
-        "/battery": {
-            "get": {
-                "description": "Fetches battery details via BPAN from the Core Engine",
+        "/batteries/{bpan}/verify/signature": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Checks cryptographic integrity of all battery data",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "battery"
+                    "lifecycle"
                 ],
-                "summary": "Fetch a battery",
+                "summary": "Verify battery data signature",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "BPAN of the battery",
+                        "description": "Battery PAN",
                         "name": "bpan",
-                        "in": "query",
+                        "in": "path",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Successful retrieval",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.GetBatteryResponseJSON"
-                        }
-                    },
-                    "400": {
-                        "description": "Missing BPAN",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Battery not found",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "405": {
-                        "description": "Method not allowed",
-                        "schema": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal Server/Microservice Error",
+                        "description": "Internal Server Error",
                         "schema": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
             }
         },
-        "/battery/register": {
+        "/ownership/transfer/{id}/confirm": {
             "post": {
-                "description": "Registers a new battery with the BPA Core Engine",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Confirms a pending transfer (either party). Transfer completes when both confirm.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lifecycle"
+                ],
+                "summary": "Confirm an ownership transfer",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Transfer ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ownership/transfer/{id}/reject": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Rejects a pending transfer (either party can reject)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1404,43 +1798,53 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "battery"
+                    "lifecycle"
                 ],
-                "summary": "Register a new battery",
+                "summary": "Reject an ownership transfer",
                 "parameters": [
                     {
-                        "description": "Battery registration payload",
-                        "name": "payload",
+                        "type": "string",
+                        "description": "Transfer ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Rejection reason",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.RegisterBatteryPayload"
+                            "$ref": "#/definitions/models.TransferRejectRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Successful registration",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.RegisterBatteryResponseJSON"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
-                        "description": "Invalid payload",
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "405": {
-                        "description": "Method not allowed",
-                        "schema": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "500": {
-                        "description": "Internal Server/Microservice Error",
+                        "description": "Internal Server Error",
                         "schema": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -1448,6 +1852,75 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "controllers.QrValidationRequest": {
+            "type": "object",
+            "properties": {
+                "payload_json": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.BatteryDescriptorRequest": {
+            "type": "object",
+            "properties": {
+                "capacity_kwh": {
+                    "type": "number"
+                },
+                "cell_count": {
+                    "type": "integer"
+                },
+                "cell_type": {
+                    "type": "string"
+                },
+                "cell_voltage_nominal_v": {
+                    "type": "number"
+                },
+                "chemistry_type": {
+                    "type": "string"
+                },
+                "declared_cycle_life": {
+                    "type": "integer"
+                },
+                "manufacture_date": {
+                    "type": "string"
+                },
+                "manufacturer_id": {
+                    "type": "string"
+                },
+                "manufacturing_country": {
+                    "type": "string"
+                },
+                "manufacturing_facility": {
+                    "type": "string"
+                },
+                "nominal_current_a": {
+                    "type": "number"
+                },
+                "nominal_voltage_v": {
+                    "type": "number"
+                },
+                "warranty_years": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.BatteryRegistrationRequest": {
+            "type": "object",
+            "properties": {
+                "carbon": {
+                    "$ref": "#/definitions/models.CarbonFootprintRequest"
+                },
+                "descriptor": {
+                    "$ref": "#/definitions/models.BatteryDescriptorRequest"
+                },
+                "health": {
+                    "$ref": "#/definitions/models.HealthUpdateRequest"
+                },
+                "material": {
+                    "$ref": "#/definitions/models.MaterialCompositionRequest"
+                }
+            }
+        },
         "models.CarbonComparison": {
             "type": "object",
             "properties": {
@@ -1571,16 +2044,121 @@ const docTemplate = `{
                 }
             }
         },
-        "models.GetBatteryResponseJSON": {
+        "models.ComplianceDashboard": {
+            "type": "object",
+            "properties": {
+                "batteries_with_violations": {
+                    "type": "integer"
+                },
+                "compliance_rate_percent": {
+                    "type": "number"
+                },
+                "critical_violations": {
+                    "type": "integer"
+                },
+                "last_scan_at": {
+                    "type": "string"
+                },
+                "total_batteries": {
+                    "type": "integer"
+                },
+                "violations_by_manufacturer": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "violations_by_type": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "warning_violations": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.ComplianceProofResponse": {
             "type": "object",
             "properties": {
                 "bpan": {
                     "type": "string"
                 },
-                "chemistryType": {
+                "commitment": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "note": {
+                    "type": "string"
+                },
+                "proof": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "requirement": {
+                    "description": "\"operational\", \"second_life\", \"recyclable\"",
+                    "type": "string"
+                },
+                "statement": {
+                    "description": "Human-readable claim",
+                    "type": "string"
+                }
+            }
+        },
+        "models.ComplianceStatusResponse": {
+            "type": "object",
+            "properties": {
+                "bpan": {
+                    "type": "string"
+                },
+                "critical_count": {
+                    "type": "integer"
+                },
+                "last_checked_at": {
                     "type": "string"
                 },
                 "status": {
+                    "description": "\"COMPLIANT\", \"WARNINGS_EXIST\", \"VIOLATIONS_EXIST\"",
+                    "type": "string"
+                },
+                "violations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ComplianceViolation"
+                    }
+                },
+                "warning_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.ComplianceViolation": {
+            "type": "object",
+            "properties": {
+                "action_deadline": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "detected_at": {
+                    "type": "string"
+                },
+                "requires_action": {
+                    "type": "boolean"
+                },
+                "severity": {
+                    "description": "\"INFO\", \"WARNING\", \"CRITICAL\"",
+                    "type": "string"
+                },
+                "violation_type": {
                     "type": "string"
                 }
             }
@@ -1828,92 +2406,6 @@ const docTemplate = `{
                 }
             }
         },
-        "models.RegisterBatteryPayload": {
-            "type": "object",
-            "properties": {
-                "actorId": {
-                    "type": "string",
-                    "example": "123e4567-e89b-12d3-a456-426614174000"
-                },
-                "batchNumber": {
-                    "type": "string",
-                    "example": "BAT2026"
-                },
-                "batteryCategory": {
-                    "type": "string",
-                    "example": "EV-M"
-                },
-                "chemistryType": {
-                    "type": "string",
-                    "example": "LFP"
-                },
-                "complianceClass": {
-                    "type": "string",
-                    "example": "AIS-156"
-                },
-                "energyDensity": {
-                    "type": "number",
-                    "example": 150
-                },
-                "factoryCode": {
-                    "type": "string",
-                    "example": "FAC01"
-                },
-                "formFactor": {
-                    "type": "string",
-                    "example": "PRISMATIC"
-                },
-                "manufacturerCode": {
-                    "type": "string",
-                    "example": "ABC"
-                },
-                "manufacturerId": {
-                    "type": "string",
-                    "example": "123e4567-e89b-12d3-a456-426614174000"
-                },
-                "nominalVoltage": {
-                    "type": "number",
-                    "example": 48
-                },
-                "productionYear": {
-                    "type": "integer",
-                    "example": 2026
-                },
-                "ratedCapacityKwh": {
-                    "type": "number",
-                    "example": 2.5
-                },
-                "sequenceNumber": {
-                    "type": "string",
-                    "example": "01"
-                },
-                "serialNumber": {
-                    "type": "string",
-                    "example": "SN12345678"
-                },
-                "weightKg": {
-                    "type": "number",
-                    "example": 25
-                }
-            }
-        },
-        "models.RegisterBatteryResponseJSON": {
-            "type": "object",
-            "properties": {
-                "bpan": {
-                    "type": "string"
-                },
-                "registrationId": {
-                    "type": "string"
-                },
-                "staticHash": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
         "models.RegisterStakeholderPayload": {
             "type": "object",
             "properties": {
@@ -1970,6 +2462,39 @@ const docTemplate = `{
                 }
             }
         },
+        "models.TransferInitiateRequest": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "string"
+                },
+                "to_owner_id": {
+                    "type": "string"
+                },
+                "to_owner_role": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.TransferRejectRequest": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.TransitionStateRequest": {
+            "type": "object",
+            "properties": {
+                "details": {
+                    "type": "string"
+                },
+                "new_state": {
+                    "type": "string"
+                }
+            }
+        },
         "models.VerificationRequest": {
             "type": "object",
             "properties": {
@@ -1979,25 +2504,17 @@ const docTemplate = `{
                 }
             }
         }
-    },
-    "securityDefinitions": {
-        "BearerAuth": {
-            "description": "JWT Bearer token (access_token cookie or Authorization header)",
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
-        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "2.0",
-	Host:             "localhost:8080",
-	BasePath:         "/api/v1",
+	Version:          "",
+	Host:             "",
+	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Battery Pack Aadhaar (BPA) API",
-	Description:      "Zero-Knowledge Battery Authentication Platform — REST API Gateway",
+	Title:            "",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

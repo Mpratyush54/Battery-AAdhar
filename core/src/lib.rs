@@ -23,6 +23,12 @@ pub mod lifecycle_v1 {
 pub mod circular_economy_v1 {
     tonic::include_proto!("bpa.circular_economy.v1");
 }
+pub mod health_v1 {
+    tonic::include_proto!("bpa.health.v1");
+}
+pub mod carbon_v1 {
+    tonic::include_proto!("bpa.carbon.v1");
+}
 
 use services::encryption::EncryptionService;
 use services::key_manager::KeyManagerImpl;

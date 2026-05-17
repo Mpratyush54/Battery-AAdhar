@@ -1290,6 +1290,178 @@ func (x *GenerateComplianceProofResponse) GetCommitment() []byte {
 	return nil
 }
 
+type OwnershipEntry struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	OwnerId         string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3" json:"owner_id,omitempty"`
+	OwnerRole       string                 `protobuf:"bytes,2,opt,name=owner_role,json=ownerRole,proto3" json:"owner_role,omitempty"`
+	TransferReason  string                 `protobuf:"bytes,3,opt,name=transfer_reason,json=transferReason,proto3" json:"transfer_reason,omitempty"`
+	TransferredAt   *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=transferred_at,json=transferredAt,proto3" json:"transferred_at,omitempty"`
+	PreviousOwnerId string                 `protobuf:"bytes,5,opt,name=previous_owner_id,json=previousOwnerId,proto3" json:"previous_owner_id,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *OwnershipEntry) Reset() {
+	*x = OwnershipEntry{}
+	mi := &file_proto_lifecycle_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OwnershipEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OwnershipEntry) ProtoMessage() {}
+
+func (x *OwnershipEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OwnershipEntry.ProtoReflect.Descriptor instead.
+func (*OwnershipEntry) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *OwnershipEntry) GetOwnerId() string {
+	if x != nil {
+		return x.OwnerId
+	}
+	return ""
+}
+
+func (x *OwnershipEntry) GetOwnerRole() string {
+	if x != nil {
+		return x.OwnerRole
+	}
+	return ""
+}
+
+func (x *OwnershipEntry) GetTransferReason() string {
+	if x != nil {
+		return x.TransferReason
+	}
+	return ""
+}
+
+func (x *OwnershipEntry) GetTransferredAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.TransferredAt
+	}
+	return nil
+}
+
+func (x *OwnershipEntry) GetPreviousOwnerId() string {
+	if x != nil {
+		return x.PreviousOwnerId
+	}
+	return ""
+}
+
+type GetOwnershipHistoryRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Bpan          string                 `protobuf:"bytes,1,opt,name=bpan,proto3" json:"bpan,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetOwnershipHistoryRequest) Reset() {
+	*x = GetOwnershipHistoryRequest{}
+	mi := &file_proto_lifecycle_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetOwnershipHistoryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetOwnershipHistoryRequest) ProtoMessage() {}
+
+func (x *GetOwnershipHistoryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetOwnershipHistoryRequest.ProtoReflect.Descriptor instead.
+func (*GetOwnershipHistoryRequest) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *GetOwnershipHistoryRequest) GetBpan() string {
+	if x != nil {
+		return x.Bpan
+	}
+	return ""
+}
+
+type GetOwnershipHistoryResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Bpan          string                 `protobuf:"bytes,1,opt,name=bpan,proto3" json:"bpan,omitempty"`
+	Entries       []*OwnershipEntry      `protobuf:"bytes,2,rep,name=entries,proto3" json:"entries,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetOwnershipHistoryResponse) Reset() {
+	*x = GetOwnershipHistoryResponse{}
+	mi := &file_proto_lifecycle_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetOwnershipHistoryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetOwnershipHistoryResponse) ProtoMessage() {}
+
+func (x *GetOwnershipHistoryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_lifecycle_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetOwnershipHistoryResponse.ProtoReflect.Descriptor instead.
+func (*GetOwnershipHistoryResponse) Descriptor() ([]byte, []int) {
+	return file_proto_lifecycle_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *GetOwnershipHistoryResponse) GetBpan() string {
+	if x != nil {
+		return x.Bpan
+	}
+	return ""
+}
+
+func (x *GetOwnershipHistoryResponse) GetEntries() []*OwnershipEntry {
+	if x != nil {
+		return x.Entries
+	}
+	return nil
+}
+
 var File_proto_lifecycle_proto protoreflect.FileDescriptor
 
 const file_proto_lifecycle_proto_rawDesc = "" +
@@ -1390,7 +1562,19 @@ const file_proto_lifecycle_proto_rawDesc = "" +
 	"\x05proof\x18\x04 \x01(\fR\x05proof\x12\x1e\n" +
 	"\n" +
 	"commitment\x18\x05 \x01(\fR\n" +
-	"commitment2\xc6\b\n" +
+	"commitment\"\xe2\x01\n" +
+	"\x0eOwnershipEntry\x12\x19\n" +
+	"\bowner_id\x18\x01 \x01(\tR\aownerId\x12\x1d\n" +
+	"\n" +
+	"owner_role\x18\x02 \x01(\tR\townerRole\x12'\n" +
+	"\x0ftransfer_reason\x18\x03 \x01(\tR\x0etransferReason\x12A\n" +
+	"\x0etransferred_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\rtransferredAt\x12*\n" +
+	"\x11previous_owner_id\x18\x05 \x01(\tR\x0fpreviousOwnerId\"0\n" +
+	"\x1aGetOwnershipHistoryRequest\x12\x12\n" +
+	"\x04bpan\x18\x01 \x01(\tR\x04bpan\"m\n" +
+	"\x1bGetOwnershipHistoryResponse\x12\x12\n" +
+	"\x04bpan\x18\x01 \x01(\tR\x04bpan\x12:\n" +
+	"\aentries\x18\x02 \x03(\v2 .bpa.lifecycle.v1.OwnershipEntryR\aentries2\xba\t\n" +
 	"\x10LifecycleService\x12l\n" +
 	"\x11VerifyOperational\x12*.bpa.lifecycle.v1.VerifyOperationalRequest\x1a+.bpa.lifecycle.v1.VerifyOperationalResponse\x12i\n" +
 	"\x10VerifyRecyclable\x12).bpa.lifecycle.v1.VerifyRecyclableRequest\x1a*.bpa.lifecycle.v1.VerifyRecyclableResponse\x12f\n" +
@@ -1401,7 +1585,8 @@ const file_proto_lifecycle_proto_rawDesc = "" +
 	"\x0eRejectTransfer\x12'.bpa.lifecycle.v1.RejectTransferRequest\x1a(.bpa.lifecycle.v1.RejectTransferResponse\x12f\n" +
 	"\x0fCheckCompliance\x12(.bpa.lifecycle.v1.CheckComplianceRequest\x1a).bpa.lifecycle.v1.CheckComplianceResponse\x12i\n" +
 	"\x10ScanAllBatteries\x12).bpa.lifecycle.v1.ScanAllBatteriesRequest\x1a*.bpa.lifecycle.v1.ScanAllBatteriesResponse\x12~\n" +
-	"\x17GenerateComplianceProof\x120.bpa.lifecycle.v1.GenerateComplianceProofRequest\x1a1.bpa.lifecycle.v1.GenerateComplianceProofResponseBNZLgithub.com/Mpratyush54/Battery-AAdhar/api/gen/proto/lifecycle/v1;lifecyclev1b\x06proto3"
+	"\x17GenerateComplianceProof\x120.bpa.lifecycle.v1.GenerateComplianceProofRequest\x1a1.bpa.lifecycle.v1.GenerateComplianceProofResponse\x12r\n" +
+	"\x13GetOwnershipHistory\x12,.bpa.lifecycle.v1.GetOwnershipHistoryRequest\x1a-.bpa.lifecycle.v1.GetOwnershipHistoryResponseBNZLgithub.com/Mpratyush54/Battery-AAdhar/api/gen/proto/lifecycle/v1;lifecyclev1b\x06proto3"
 
 var (
 	file_proto_lifecycle_proto_rawDescOnce sync.Once
@@ -1415,7 +1600,7 @@ func file_proto_lifecycle_proto_rawDescGZIP() []byte {
 	return file_proto_lifecycle_proto_rawDescData
 }
 
-var file_proto_lifecycle_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_proto_lifecycle_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_proto_lifecycle_proto_goTypes = []any{
 	(*VerifyOperationalRequest)(nil),        // 0: bpa.lifecycle.v1.VerifyOperationalRequest
 	(*VerifyOperationalResponse)(nil),       // 1: bpa.lifecycle.v1.VerifyOperationalResponse
@@ -1438,40 +1623,47 @@ var file_proto_lifecycle_proto_goTypes = []any{
 	(*ScanAllBatteriesResponse)(nil),        // 18: bpa.lifecycle.v1.ScanAllBatteriesResponse
 	(*GenerateComplianceProofRequest)(nil),  // 19: bpa.lifecycle.v1.GenerateComplianceProofRequest
 	(*GenerateComplianceProofResponse)(nil), // 20: bpa.lifecycle.v1.GenerateComplianceProofResponse
-	(*timestamppb.Timestamp)(nil),           // 21: google.protobuf.Timestamp
+	(*OwnershipEntry)(nil),                  // 21: bpa.lifecycle.v1.OwnershipEntry
+	(*GetOwnershipHistoryRequest)(nil),      // 22: bpa.lifecycle.v1.GetOwnershipHistoryRequest
+	(*GetOwnershipHistoryResponse)(nil),     // 23: bpa.lifecycle.v1.GetOwnershipHistoryResponse
+	(*timestamppb.Timestamp)(nil),           // 24: google.protobuf.Timestamp
 }
 var file_proto_lifecycle_proto_depIdxs = []int32{
-	21, // 0: bpa.lifecycle.v1.VerifyOperationalResponse.proof_issued_at:type_name -> google.protobuf.Timestamp
-	21, // 1: bpa.lifecycle.v1.VerifySignatureResponse.signed_at:type_name -> google.protobuf.Timestamp
-	21, // 2: bpa.lifecycle.v1.ComplianceViolationProto.action_deadline:type_name -> google.protobuf.Timestamp
-	21, // 3: bpa.lifecycle.v1.ComplianceViolationProto.detected_at:type_name -> google.protobuf.Timestamp
+	24, // 0: bpa.lifecycle.v1.VerifyOperationalResponse.proof_issued_at:type_name -> google.protobuf.Timestamp
+	24, // 1: bpa.lifecycle.v1.VerifySignatureResponse.signed_at:type_name -> google.protobuf.Timestamp
+	24, // 2: bpa.lifecycle.v1.ComplianceViolationProto.action_deadline:type_name -> google.protobuf.Timestamp
+	24, // 3: bpa.lifecycle.v1.ComplianceViolationProto.detected_at:type_name -> google.protobuf.Timestamp
 	14, // 4: bpa.lifecycle.v1.CheckComplianceResponse.violations:type_name -> bpa.lifecycle.v1.ComplianceViolationProto
-	21, // 5: bpa.lifecycle.v1.CheckComplianceResponse.last_checked_at:type_name -> google.protobuf.Timestamp
-	0,  // 6: bpa.lifecycle.v1.LifecycleService.VerifyOperational:input_type -> bpa.lifecycle.v1.VerifyOperationalRequest
-	2,  // 7: bpa.lifecycle.v1.LifecycleService.VerifyRecyclable:input_type -> bpa.lifecycle.v1.VerifyRecyclableRequest
-	4,  // 8: bpa.lifecycle.v1.LifecycleService.VerifySignature:input_type -> bpa.lifecycle.v1.VerifySignatureRequest
-	6,  // 9: bpa.lifecycle.v1.LifecycleService.TransitionState:input_type -> bpa.lifecycle.v1.TransitionStateRequest
-	8,  // 10: bpa.lifecycle.v1.LifecycleService.InitiateTransfer:input_type -> bpa.lifecycle.v1.InitiateTransferRequest
-	10, // 11: bpa.lifecycle.v1.LifecycleService.ConfirmTransfer:input_type -> bpa.lifecycle.v1.ConfirmTransferRequest
-	12, // 12: bpa.lifecycle.v1.LifecycleService.RejectTransfer:input_type -> bpa.lifecycle.v1.RejectTransferRequest
-	15, // 13: bpa.lifecycle.v1.LifecycleService.CheckCompliance:input_type -> bpa.lifecycle.v1.CheckComplianceRequest
-	17, // 14: bpa.lifecycle.v1.LifecycleService.ScanAllBatteries:input_type -> bpa.lifecycle.v1.ScanAllBatteriesRequest
-	19, // 15: bpa.lifecycle.v1.LifecycleService.GenerateComplianceProof:input_type -> bpa.lifecycle.v1.GenerateComplianceProofRequest
-	1,  // 16: bpa.lifecycle.v1.LifecycleService.VerifyOperational:output_type -> bpa.lifecycle.v1.VerifyOperationalResponse
-	3,  // 17: bpa.lifecycle.v1.LifecycleService.VerifyRecyclable:output_type -> bpa.lifecycle.v1.VerifyRecyclableResponse
-	5,  // 18: bpa.lifecycle.v1.LifecycleService.VerifySignature:output_type -> bpa.lifecycle.v1.VerifySignatureResponse
-	7,  // 19: bpa.lifecycle.v1.LifecycleService.TransitionState:output_type -> bpa.lifecycle.v1.TransitionStateResponse
-	9,  // 20: bpa.lifecycle.v1.LifecycleService.InitiateTransfer:output_type -> bpa.lifecycle.v1.InitiateTransferResponse
-	11, // 21: bpa.lifecycle.v1.LifecycleService.ConfirmTransfer:output_type -> bpa.lifecycle.v1.ConfirmTransferResponse
-	13, // 22: bpa.lifecycle.v1.LifecycleService.RejectTransfer:output_type -> bpa.lifecycle.v1.RejectTransferResponse
-	16, // 23: bpa.lifecycle.v1.LifecycleService.CheckCompliance:output_type -> bpa.lifecycle.v1.CheckComplianceResponse
-	18, // 24: bpa.lifecycle.v1.LifecycleService.ScanAllBatteries:output_type -> bpa.lifecycle.v1.ScanAllBatteriesResponse
-	20, // 25: bpa.lifecycle.v1.LifecycleService.GenerateComplianceProof:output_type -> bpa.lifecycle.v1.GenerateComplianceProofResponse
-	16, // [16:26] is the sub-list for method output_type
-	6,  // [6:16] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	24, // 5: bpa.lifecycle.v1.CheckComplianceResponse.last_checked_at:type_name -> google.protobuf.Timestamp
+	24, // 6: bpa.lifecycle.v1.OwnershipEntry.transferred_at:type_name -> google.protobuf.Timestamp
+	21, // 7: bpa.lifecycle.v1.GetOwnershipHistoryResponse.entries:type_name -> bpa.lifecycle.v1.OwnershipEntry
+	0,  // 8: bpa.lifecycle.v1.LifecycleService.VerifyOperational:input_type -> bpa.lifecycle.v1.VerifyOperationalRequest
+	2,  // 9: bpa.lifecycle.v1.LifecycleService.VerifyRecyclable:input_type -> bpa.lifecycle.v1.VerifyRecyclableRequest
+	4,  // 10: bpa.lifecycle.v1.LifecycleService.VerifySignature:input_type -> bpa.lifecycle.v1.VerifySignatureRequest
+	6,  // 11: bpa.lifecycle.v1.LifecycleService.TransitionState:input_type -> bpa.lifecycle.v1.TransitionStateRequest
+	8,  // 12: bpa.lifecycle.v1.LifecycleService.InitiateTransfer:input_type -> bpa.lifecycle.v1.InitiateTransferRequest
+	10, // 13: bpa.lifecycle.v1.LifecycleService.ConfirmTransfer:input_type -> bpa.lifecycle.v1.ConfirmTransferRequest
+	12, // 14: bpa.lifecycle.v1.LifecycleService.RejectTransfer:input_type -> bpa.lifecycle.v1.RejectTransferRequest
+	15, // 15: bpa.lifecycle.v1.LifecycleService.CheckCompliance:input_type -> bpa.lifecycle.v1.CheckComplianceRequest
+	17, // 16: bpa.lifecycle.v1.LifecycleService.ScanAllBatteries:input_type -> bpa.lifecycle.v1.ScanAllBatteriesRequest
+	19, // 17: bpa.lifecycle.v1.LifecycleService.GenerateComplianceProof:input_type -> bpa.lifecycle.v1.GenerateComplianceProofRequest
+	22, // 18: bpa.lifecycle.v1.LifecycleService.GetOwnershipHistory:input_type -> bpa.lifecycle.v1.GetOwnershipHistoryRequest
+	1,  // 19: bpa.lifecycle.v1.LifecycleService.VerifyOperational:output_type -> bpa.lifecycle.v1.VerifyOperationalResponse
+	3,  // 20: bpa.lifecycle.v1.LifecycleService.VerifyRecyclable:output_type -> bpa.lifecycle.v1.VerifyRecyclableResponse
+	5,  // 21: bpa.lifecycle.v1.LifecycleService.VerifySignature:output_type -> bpa.lifecycle.v1.VerifySignatureResponse
+	7,  // 22: bpa.lifecycle.v1.LifecycleService.TransitionState:output_type -> bpa.lifecycle.v1.TransitionStateResponse
+	9,  // 23: bpa.lifecycle.v1.LifecycleService.InitiateTransfer:output_type -> bpa.lifecycle.v1.InitiateTransferResponse
+	11, // 24: bpa.lifecycle.v1.LifecycleService.ConfirmTransfer:output_type -> bpa.lifecycle.v1.ConfirmTransferResponse
+	13, // 25: bpa.lifecycle.v1.LifecycleService.RejectTransfer:output_type -> bpa.lifecycle.v1.RejectTransferResponse
+	16, // 26: bpa.lifecycle.v1.LifecycleService.CheckCompliance:output_type -> bpa.lifecycle.v1.CheckComplianceResponse
+	18, // 27: bpa.lifecycle.v1.LifecycleService.ScanAllBatteries:output_type -> bpa.lifecycle.v1.ScanAllBatteriesResponse
+	20, // 28: bpa.lifecycle.v1.LifecycleService.GenerateComplianceProof:output_type -> bpa.lifecycle.v1.GenerateComplianceProofResponse
+	23, // 29: bpa.lifecycle.v1.LifecycleService.GetOwnershipHistory:output_type -> bpa.lifecycle.v1.GetOwnershipHistoryResponse
+	19, // [19:30] is the sub-list for method output_type
+	8,  // [8:19] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_proto_lifecycle_proto_init() }
@@ -1485,7 +1677,7 @@ func file_proto_lifecycle_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_lifecycle_proto_rawDesc), len(file_proto_lifecycle_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   21,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

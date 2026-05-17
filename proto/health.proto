@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package bpa.health.v1;
+
+option go_package = "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/health/v1;healthv1";
+
+import "google/protobuf/timestamp.proto";
+
+message HealthRecordProto {
+  string bpan = 1;
+  double state_of_health_percent = 2;
+  string health_status = 3;
+  int32 cycle_count = 4;
+  double degradation_rate_percent_per_cycle = 5;
+  string degradation_class = 6;
+  double min_temperature_celsius = 7;
+  double max_temperature_celsius = 8;
+  double average_temperature_celsius = 9;
+  double cell_voltage_min_mv = 10;
+  double cell_voltage_max_mv = 11;
+  double internal_resistance_mohm = 12;
+  string error_flags = 13;
+  bool is_healthy = 14;
+  string reported_by = 15;
+  google.protobuf.Timestamp reported_at = 16;
+  uint32 record_number = 17;
+}
+
+message UpdateHealthRequest {
+  string bpan = 1;
+  double state_of_health_percent = 2;
+  int32 cycle_count = 3;
+  string degradation_class = 4;
+  double min_temperature_celsius = 5;
+  double max_temperature_celsius = 6;
+  double average_temperature_celsius = 7;
+  double cell_voltage_min_mv = 8;
+  double cell_voltage_max_mv = 9;
+  double internal_resistance_mohm = 10;
+  string error_flags = 11;
+  string requester_id = 12;
+}
+
+message UpdateHealthResponse {
+  string record_id = 1;
+  string bpan = 2;
+  double state_of_health_percent = 3;
+  string health_status = 4;
+  google.protobuf.Timestamp reported_at = 5;
+}
+
+message GetHealthRequest {
+  string bpan = 1;
+}
+
+message GetHealthResponse {
+  HealthRecordProto record = 1;
+}
+
+message GetHealthHistoryRequest {
+  string bpan = 1;
+  int32 limit = 2;
+}
+
+message GetHealthHistoryResponse {
+  repeated HealthRecordProto records = 1;
+}
+
+message GetAvgSoHRequest {
+  string manufacturer_id = 1;
+  string chemistry_type = 2;
+}
+
+message GetAvgSoHResponse {
+  double avg_soh_percent = 1;
+  int64 sample_count = 2;
+}
+
+message HealthDashboardRequest {}
+
+message HealthDashboardResponse {
+  map<string, double> avg_soh_by_manufacturer = 1;
+  map<string, double> avg_soh_by_chemistry = 2;
+  double overall_avg_soh = 3;
+  int64 total_records = 4;
+}
+
+service HealthService {
+  rpc UpdateHealth (UpdateHealthRequest) returns (UpdateHealthResponse);
+  rpc GetHealth (GetHealthRequest) returns (GetHealthResponse);
+  rpc GetHealthHistory (GetHealthHistoryRequest) returns (GetHealthHistoryResponse);
+  rpc GetAvgSoH (GetAvgSoHRequest) returns (GetAvgSoHResponse);
+  rpc GetDashboard (HealthDashboardRequest) returns (HealthDashboardResponse);
+}

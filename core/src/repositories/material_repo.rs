@@ -57,12 +57,20 @@ pub trait MaterialRepository: Send + Sync {
 
 /// Concrete Postgres-backed implementation.
 pub struct MaterialRepositoryImpl {
-    pool: PgPool,
+    pool: Option<PgPool>,
 }
 
 impl MaterialRepositoryImpl {
     pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+        Self { pool: Some(pool) }
+    }
+
+    pub fn new_stub() -> Self {
+        Self { pool: None }
+    }
+
+    fn pool(&self) -> Result<&PgPool, MaterialRepoError> {
+        self.pool.as_ref().ok_or(MaterialRepoError::NotFound("stub mode".to_string()))
     }
 
     /// Compute a hash-chain event hash: SHA-256(previous_event_hash || data_hash).
@@ -110,7 +118,7 @@ impl MaterialRepository for MaterialRepositoryImpl {
         .bind(row.recyclable_percentage)
         .bind(&row.encrypted_details)
         .bind(now)
-        .execute(&self.pool)
+        .execute(self.pool()?)
         .await
         .map_err(|e| {
             if e.to_string().contains("unique") || e.to_string().contains("duplicate") {
@@ -133,7 +141,7 @@ impl MaterialRepository for MaterialRepositoryImpl {
             "#,
         )
         .bind(&row.bpan)
-        .fetch_optional(&self.pool)
+        .fetch_optional(self.pool()?)
         .await
         .map_err(|e| MaterialRepoError::DatabaseError(e.to_string()))?
         .unwrap_or_else(|| "0".repeat(64)); // genesis hash
@@ -157,7 +165,7 @@ impl MaterialRepository for MaterialRepositoryImpl {
         .bind(&previous_event_hash)
         .bind(&event_hash)
         .bind(now)
-        .execute(&self.pool)
+        .execute(self.pool()?)
         .await
         .map_err(|e| MaterialRepoError::DatabaseError(e.to_string()))?;
 
@@ -181,7 +189,7 @@ impl MaterialRepository for MaterialRepositoryImpl {
             "#,
         )
         .bind(bpan)
-        .fetch_optional(&self.pool)
+        .fetch_optional(self.pool()?)
         .await
         .map_err(|e| MaterialRepoError::DatabaseError(e.to_string()))?;
 
@@ -230,7 +238,7 @@ impl MaterialRepository for MaterialRepositoryImpl {
         let result = sqlx::query(&query)
             .bind(new_value)
             .bind(bpan)
-            .execute(&self.pool)
+            .execute(self.pool()?)
             .await
             .map_err(|e| MaterialRepoError::DatabaseError(e.to_string()))?;
 

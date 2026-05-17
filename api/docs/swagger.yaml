@@ -1,5 +1,49 @@
-basePath: /api/v1
 definitions:
+  controllers.QrValidationRequest:
+    properties:
+      payload_json:
+        type: string
+    type: object
+  models.BatteryDescriptorRequest:
+    properties:
+      capacity_kwh:
+        type: number
+      cell_count:
+        type: integer
+      cell_type:
+        type: string
+      cell_voltage_nominal_v:
+        type: number
+      chemistry_type:
+        type: string
+      declared_cycle_life:
+        type: integer
+      manufacture_date:
+        type: string
+      manufacturer_id:
+        type: string
+      manufacturing_country:
+        type: string
+      manufacturing_facility:
+        type: string
+      nominal_current_a:
+        type: number
+      nominal_voltage_v:
+        type: number
+      warranty_years:
+        type: integer
+    type: object
+  models.BatteryRegistrationRequest:
+    properties:
+      carbon:
+        $ref: '#/definitions/models.CarbonFootprintRequest'
+      descriptor:
+        $ref: '#/definitions/models.BatteryDescriptorRequest'
+      health:
+        $ref: '#/definitions/models.HealthUpdateRequest'
+      material:
+        $ref: '#/definitions/models.MaterialCompositionRequest'
+    type: object
   models.CarbonComparison:
     properties:
       bpan_a:
@@ -81,13 +125,84 @@ definitions:
       verified_by:
         type: string
     type: object
-  models.GetBatteryResponseJSON:
+  models.ComplianceDashboard:
+    properties:
+      batteries_with_violations:
+        type: integer
+      compliance_rate_percent:
+        type: number
+      critical_violations:
+        type: integer
+      last_scan_at:
+        type: string
+      total_batteries:
+        type: integer
+      violations_by_manufacturer:
+        additionalProperties:
+          format: int32
+          type: integer
+        type: object
+      violations_by_type:
+        additionalProperties:
+          format: int32
+          type: integer
+        type: object
+      warning_violations:
+        type: integer
+    type: object
+  models.ComplianceProofResponse:
     properties:
       bpan:
         type: string
-      chemistryType:
+      commitment:
+        items:
+          type: integer
+        type: array
+      note:
+        type: string
+      proof:
+        items:
+          type: integer
+        type: array
+      requirement:
+        description: '"operational", "second_life", "recyclable"'
+        type: string
+      statement:
+        description: Human-readable claim
+        type: string
+    type: object
+  models.ComplianceStatusResponse:
+    properties:
+      bpan:
+        type: string
+      critical_count:
+        type: integer
+      last_checked_at:
         type: string
       status:
+        description: '"COMPLIANT", "WARNINGS_EXIST", "VIOLATIONS_EXIST"'
+        type: string
+      violations:
+        items:
+          $ref: '#/definitions/models.ComplianceViolation'
+        type: array
+      warning_count:
+        type: integer
+    type: object
+  models.ComplianceViolation:
+    properties:
+      action_deadline:
+        type: string
+      description:
+        type: string
+      detected_at:
+        type: string
+      requires_action:
+        type: boolean
+      severity:
+        description: '"INFO", "WARNING", "CRITICAL"'
+        type: string
+      violation_type:
         type: string
     type: object
   models.HealthDashboard:
@@ -258,68 +373,6 @@ definitions:
         example: Token refreshed successfully
         type: string
     type: object
-  models.RegisterBatteryPayload:
-    properties:
-      actorId:
-        example: 123e4567-e89b-12d3-a456-426614174000
-        type: string
-      batchNumber:
-        example: BAT2026
-        type: string
-      batteryCategory:
-        example: EV-M
-        type: string
-      chemistryType:
-        example: LFP
-        type: string
-      complianceClass:
-        example: AIS-156
-        type: string
-      energyDensity:
-        example: 150
-        type: number
-      factoryCode:
-        example: FAC01
-        type: string
-      formFactor:
-        example: PRISMATIC
-        type: string
-      manufacturerCode:
-        example: ABC
-        type: string
-      manufacturerId:
-        example: 123e4567-e89b-12d3-a456-426614174000
-        type: string
-      nominalVoltage:
-        example: 48
-        type: number
-      productionYear:
-        example: 2026
-        type: integer
-      ratedCapacityKwh:
-        example: 2.5
-        type: number
-      sequenceNumber:
-        example: "01"
-        type: string
-      serialNumber:
-        example: SN12345678
-        type: string
-      weightKg:
-        example: 25
-        type: number
-    type: object
-  models.RegisterBatteryResponseJSON:
-    properties:
-      bpan:
-        type: string
-      registrationId:
-        type: string
-      staticHash:
-        type: string
-      status:
-        type: string
-    type: object
   models.RegisterStakeholderPayload:
     properties:
       aadharDocumentBase64:
@@ -359,24 +412,35 @@ definitions:
       success:
         type: boolean
     type: object
+  models.TransferInitiateRequest:
+    properties:
+      reason:
+        type: string
+      to_owner_id:
+        type: string
+      to_owner_role:
+        type: string
+    type: object
+  models.TransferRejectRequest:
+    properties:
+      reason:
+        type: string
+    type: object
+  models.TransitionStateRequest:
+    properties:
+      details:
+        type: string
+      new_state:
+        type: string
+    type: object
   models.VerificationRequest:
     properties:
       standard:
         description: ISO 14040, PEF, EU ETS
         type: string
     type: object
-host: localhost:8080
 info:
-  contact:
-    email: bpa-dev@bpa.pratyushes.dev
-    name: BPA Engineering Team
-  description: Zero-Knowledge Battery Authentication Platform — REST API Gateway
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
-  termsOfService: https://bpa.pratyushes.dev/terms
-  title: Battery Pack Aadhaar (BPA) API
-  version: "2.0"
+  contact: {}
 paths:
   /api/v1/batteries/{bpan_a}/carbon/compare/{bpan_b}:
     get:
@@ -500,6 +564,35 @@ paths:
       summary: Verify carbon footprint (third-party verifier only)
       tags:
       - carbon
+  /api/v1/batteries/{bpan}/compliance:
+    get:
+      consumes:
+      - application/json
+      description: Returns compliance status and violations for a battery
+      parameters:
+      - description: BPAN
+        in: path
+        name: bpan
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ComplianceStatusResponse'
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get battery compliance status
+      tags:
+      - compliance
   /api/v1/batteries/{bpan}/health:
     get:
       consumes:
@@ -582,6 +675,203 @@ paths:
       summary: Get battery health time-series
       tags:
       - health
+  /api/v1/batteries/{bpan}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update battery lifecycle status (service provider only)
+      parameters:
+      - description: BPAN
+        in: path
+        name: bpan
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Update battery status
+      tags:
+      - battery
+  /api/v1/batteries/{bpan}/verify/operational:
+    post:
+      description: Generates a ZK proof that battery meets operational standards (government/regulator
+        only)
+      parameters:
+      - description: BPAN
+        in: path
+        name: bpan
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ComplianceProofResponse'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Verify battery operational compliance (ZK proof)
+      tags:
+      - compliance
+  /api/v1/batteries/{bpan}/verify/second-life:
+    post:
+      description: Generates a ZK proof that battery is eligible for second-life use
+        (government/regulator only)
+      parameters:
+      - description: BPAN
+        in: path
+        name: bpan
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ComplianceProofResponse'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Verify second-life eligibility (ZK proof)
+      tags:
+      - compliance
+  /api/v1/batteries/register:
+    post:
+      consumes:
+      - application/json
+      description: 'Atomic registration: descriptor + BMCS + BCF + initial health'
+      parameters:
+      - description: Complete battery data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.BatteryRegistrationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: BPAN generated
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid data
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Register new battery with all static data
+      tags:
+      - battery
+  /api/v1/battery:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve battery information by BPAN query parameter
+      parameters:
+      - description: BPAN
+        in: query
+        name: bpan
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get battery by query parameter
+      tags:
+      - battery
+  /api/v1/compliance/scan:
+    post:
+      consumes:
+      - application/json
+      description: Scans all batteries for compliance violations (regulator only)
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Scan completed
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden (non-regulator)
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Trigger compliance scan for all batteries
+      tags:
+      - compliance
+  /api/v1/dashboard/compliance:
+    get:
+      description: Returns aggregated compliance statistics (regulator/admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ComplianceDashboard'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get compliance dashboard
+      tags:
+      - compliance
   /api/v1/health/dashboard:
     get:
       consumes:
@@ -596,6 +886,110 @@ paths:
       summary: Get battery health dashboard metrics
       tags:
       - health
+  /api/v1/manufacturers:
+    get:
+      description: List all registered manufacturers (admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+      security:
+      - Bearer: []
+      summary: List manufacturers
+      tags:
+      - manufacturer
+    post:
+      consumes:
+      - application/json
+      description: Register a new manufacturer (admin only)
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Register manufacturer
+      tags:
+      - manufacturer
+  /api/v1/public/battery/{bpan}:
+    get:
+      consumes:
+      - application/json
+      description: Returns only public fields for a battery (no authentication required)
+      parameters:
+      - description: BPAN
+        in: path
+        name: bpan
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Public battery data
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Battery not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get public battery information
+      tags:
+      - public
+  /api/v1/public/qr/validate:
+    post:
+      consumes:
+      - application/json
+      description: Validates a QR code payload for integrity (no authentication required)
+      parameters:
+      - description: QR payload to validate
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.QrValidationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Validation result
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Validation failed
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Validate QR code payload
+      tags:
+      - public
   /auth/login:
     post:
       consumes:
@@ -682,109 +1076,6 @@ paths:
       summary: Register a new stakeholder
       tags:
       - auth
-  /batteries/{bpan}:
-    get:
-      description: Decode BPAN and return battery static data (public endpoint)
-      parameters:
-      - description: Battery PAN (21-char)
-        in: path
-        name: bpan
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Invalid BPAN
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Get battery by BPAN
-      tags:
-      - battery
-  /batteries/{bpan}/audit:
-    get:
-      description: Returns the hash-chain audit trail for a battery (government/admin
-        only)
-      parameters:
-      - description: Battery PAN
-        in: path
-        name: bpan
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              additionalProperties: true
-              type: object
-            type: array
-        "403":
-          description: Forbidden
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "501":
-          description: Not implemented
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Get audit trail
-      tags:
-      - compliance
-  /batteries/{bpan}/compliance:
-    get:
-      description: Returns the current compliance status against BPA regulations
-      parameters:
-      - description: Battery PAN
-        in: path
-        name: bpan
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "404":
-          description: Battery not found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "501":
-          description: Not implemented
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Check battery compliance status
-      tags:
-      - compliance
   /batteries/{bpan}/material:
     get:
       parameters:
@@ -848,7 +1139,7 @@ paths:
       - Material
   /batteries/{bpan}/ownership/history:
     get:
-      description: Returns the full chain of ownership for a battery
+      description: Returns the full chain of custody for a battery
       parameters:
       - description: Battery PAN
         in: path
@@ -865,14 +1156,8 @@ paths:
               additionalProperties: true
               type: object
             type: array
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
         "501":
-          description: Not implemented
+          description: Not Implemented
           schema:
             additionalProperties:
               type: string
@@ -886,26 +1171,27 @@ paths:
     post:
       consumes:
       - application/json
-      description: Records an ownership transfer event for a battery
+      description: Starts a dual-party consent ownership transfer
       parameters:
       - description: Battery PAN
         in: path
         name: bpan
         required: true
         type: string
-      - description: Ownership transfer payload
+      - description: Transfer payload
         in: body
         name: body
         required: true
         schema:
-          type: object
+          $ref: '#/definitions/models.TransferInitiateRequest'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "202":
+          description: Accepted
           schema:
-            additionalProperties: true
+            additionalProperties:
+              type: string
             type: object
         "400":
           description: Bad Request
@@ -913,21 +1199,15 @@ paths:
             additionalProperties:
               type: string
             type: object
-        "403":
-          description: Forbidden
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "501":
-          description: Not implemented
+        "500":
+          description: Internal Server Error
           schema:
             additionalProperties:
               type: string
             type: object
       security:
       - BearerAuth: []
-      summary: Transfer battery ownership
+      summary: Initiate battery ownership transfer
       tags:
       - lifecycle
   /batteries/{bpan}/qr:
@@ -967,20 +1247,13 @@ paths:
     post:
       consumes:
       - application/json
-      description: Records a recycling event with material recovery data (recycler
-        only)
+      description: Transitions state to RECYCLED (recycler only)
       parameters:
       - description: Battery PAN
         in: path
         name: bpan
         required: true
         type: string
-      - description: Recycling record payload
-        in: body
-        name: body
-        required: true
-        schema:
-          type: object
       produces:
       - application/json
       responses:
@@ -989,14 +1262,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
-        "403":
-          description: Forbidden
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "501":
-          description: Not implemented
+        "500":
+          description: Internal Server Error
           schema:
             additionalProperties:
               type: string
@@ -1010,19 +1277,13 @@ paths:
     post:
       consumes:
       - application/json
-      description: Records a reuse certification event (reuse operator)
+      description: Transitions state to SECOND_LIFE (reuse operator only)
       parameters:
       - description: Battery PAN
         in: path
         name: bpan
         required: true
         type: string
-      - description: Reuse certification payload
-        in: body
-        name: body
-        required: true
-        schema:
-          type: object
       produces:
       - application/json
       responses:
@@ -1031,14 +1292,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
-        "403":
-          description: Forbidden
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "501":
-          description: Not implemented
+        "500":
+          description: Internal Server Error
           schema:
             additionalProperties:
               type: string
@@ -1165,9 +1420,51 @@ paths:
       summary: Get telemetry history
       tags:
       - telemetry
-  /batteries/{bpan}/violations:
-    get:
-      description: Returns all recorded compliance violations for a battery
+  /batteries/{bpan}/transition:
+    post:
+      consumes:
+      - application/json
+      description: Moves a battery through the FSM (e.g. OPERATIONAL → SECOND_LIFE)
+      parameters:
+      - description: Battery PAN
+        in: path
+        name: bpan
+        required: true
+        type: string
+      - description: Transition payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.TransitionStateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Transition battery lifecycle state
+      tags:
+      - lifecycle
+  /batteries/{bpan}/verify/operational:
+    post:
+      description: Generates a zero-knowledge proof that battery SoH meets threshold
       parameters:
       - description: Battery PAN
         in: path
@@ -1180,27 +1477,47 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              additionalProperties: true
-              type: object
-            type: array
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
-        "501":
-          description: Not implemented
+        "500":
+          description: Internal Server Error
           schema:
             additionalProperties:
               type: string
             type: object
       security:
       - BearerAuth: []
-      summary: Get compliance violations
+      summary: Verify battery is operational (ZK proof)
       tags:
-      - compliance
+      - lifecycle
+  /batteries/{bpan}/verify/signature:
+    post:
+      description: Checks cryptographic integrity of all battery data
+      parameters:
+      - description: Battery PAN
+        in: path
+        name: bpan
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Verify battery data signature
+      tags:
+      - lifecycle
   /batteries/scan:
     post:
       consumes:
@@ -1227,88 +1544,87 @@ paths:
             additionalProperties:
               type: string
             type: object
-        "501":
-          description: Not implemented
+        "500":
+          description: Validation failed
           schema:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Scan and decode a QR code
       tags:
       - qr
-  /battery:
-    get:
-      description: Fetches battery details via BPAN from the Core Engine
+  /ownership/transfer/{id}/confirm:
+    post:
+      description: Confirms a pending transfer (either party). Transfer completes
+        when both confirm.
       parameters:
-      - description: BPAN of the battery
-        in: query
-        name: bpan
+      - description: Transfer ID
+        in: path
+        name: id
         required: true
         type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Successful retrieval
+          description: OK
           schema:
-            $ref: '#/definitions/models.GetBatteryResponseJSON'
-        "400":
-          description: Missing BPAN
-          schema:
-            type: string
-        "404":
-          description: Battery not found
-          schema:
-            type: string
-        "405":
-          description: Method not allowed
-          schema:
-            type: string
+            additionalProperties: true
+            type: object
         "500":
-          description: Internal Server/Microservice Error
+          description: Internal Server Error
           schema:
-            type: string
-      summary: Fetch a battery
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Confirm an ownership transfer
       tags:
-      - battery
-  /battery/register:
+      - lifecycle
+  /ownership/transfer/{id}/reject:
     post:
       consumes:
       - application/json
-      description: Registers a new battery with the BPA Core Engine
+      description: Rejects a pending transfer (either party can reject)
       parameters:
-      - description: Battery registration payload
+      - description: Transfer ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Rejection reason
         in: body
-        name: payload
+        name: body
         required: true
         schema:
-          $ref: '#/definitions/models.RegisterBatteryPayload'
+          $ref: '#/definitions/models.TransferRejectRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: Successful registration
+          description: OK
           schema:
-            $ref: '#/definitions/models.RegisterBatteryResponseJSON'
+            additionalProperties:
+              type: string
+            type: object
         "400":
-          description: Invalid payload
+          description: Bad Request
           schema:
-            type: string
-        "405":
-          description: Method not allowed
-          schema:
-            type: string
+            additionalProperties:
+              type: string
+            type: object
         "500":
-          description: Internal Server/Microservice Error
+          description: Internal Server Error
           schema:
-            type: string
-      summary: Register a new battery
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Reject an ownership transfer
       tags:
-      - battery
-securityDefinitions:
-  BearerAuth:
-    description: JWT Bearer token (access_token cookie or Authorization header)
-    in: header
-    name: Authorization
-    type: apiKey
+      - lifecycle
 swagger: "2.0"

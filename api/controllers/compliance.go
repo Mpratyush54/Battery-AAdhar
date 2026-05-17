@@ -14,6 +14,16 @@ import (
 )
 
 // GetBatteryCompliance — GET /api/v1/batteries/{bpan}/compliance
+// @Summary Get battery compliance status
+// @Description Returns compliance status and violations for a battery
+// @Tags compliance
+// @Param bpan path string true "BPAN"
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.ComplianceStatusResponse
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/v1/batteries/{bpan}/compliance [get]
+// @Security Bearer
 func GetBatteryCompliance(complianceService *services.ComplianceService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		bpan := chi.URLParam(r, "bpan")
@@ -33,6 +43,15 @@ func GetBatteryCompliance(complianceService *services.ComplianceService) http.Ha
 }
 
 // TriggerComplianceScan — POST /api/v1/compliance/scan
+// @Summary Trigger compliance scan for all batteries
+// @Description Scans all batteries for compliance violations (regulator only)
+// @Tags compliance
+// @Accept json
+// @Produce json
+// @Success 202 {object} map[string]interface{} "Scan completed"
+// @Failure 403 {object} map[string]string "Forbidden (non-regulator)"
+// @Router /api/v1/compliance/scan [post]
+// @Security Bearer
 func TriggerComplianceScan(complianceService *services.ComplianceService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		claims := middleware.ClaimsFromContext(r.Context())
@@ -65,8 +84,17 @@ func TriggerComplianceScan(complianceService *services.ComplianceService) http.H
 	}
 }
 
-// VerifyComplianceOperational — POST /api/v1/compliance/verify/operational
-// Generates a ZK proof that battery meets operational standards.
+// VerifyComplianceOperational — POST /api/v1/batteries/{bpan}/verify/operational
+// @Summary Verify battery operational compliance (ZK proof)
+// @Description Generates a ZK proof that battery meets operational standards (government/regulator only)
+// @Tags compliance
+// @Param bpan path string true "BPAN"
+// @Produce json
+// @Success 200 {object} models.ComplianceProofResponse
+// @Failure 400 {object} map[string]string "Bad request"
+// @Failure 403 {object} map[string]string "Forbidden"
+// @Router /api/v1/batteries/{bpan}/verify/operational [post]
+// @Security Bearer
 func VerifyComplianceOperational(complianceService *services.ComplianceService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		bpan := chi.URLParam(r, "bpan")
@@ -113,29 +141,17 @@ func VerifyComplianceOperational(complianceService *services.ComplianceService) 
 	}
 }
 
-// GetComplianceDashboard — GET /api/v1/dashboard/compliance
-func GetComplianceDashboard(complianceService *services.ComplianceService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		claims := middleware.ClaimsFromContext(r.Context())
-
-		if claims.Role != "regulator" && claims.Role != "admin" {
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
-
-		dashboard, err := complianceService.GetComplianceDashboard(r.Context())
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(dashboard)
-	}
-}
-
-// VerifyComplianceSecondLife — POST /api/v1/compliance/verify/second-life
-// Generates a ZK proof that battery is eligible for second-life use.
+// VerifyComplianceSecondLife — POST /api/v1/batteries/{bpan}/verify/second-life
+// @Summary Verify second-life eligibility (ZK proof)
+// @Description Generates a ZK proof that battery is eligible for second-life use (government/regulator only)
+// @Tags compliance
+// @Param bpan path string true "BPAN"
+// @Produce json
+// @Success 200 {object} models.ComplianceProofResponse
+// @Failure 400 {object} map[string]string "Bad request"
+// @Failure 403 {object} map[string]string "Forbidden"
+// @Router /api/v1/batteries/{bpan}/verify/second-life [post]
+// @Security Bearer
 func VerifyComplianceSecondLife(complianceService *services.ComplianceService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		bpan := chi.URLParam(r, "bpan")
@@ -178,6 +194,35 @@ func VerifyComplianceSecondLife(complianceService *services.ComplianceService) h
 			Commitment:  proof.Commitment,
 			Note:        "This proof was generated without revealing the actual SoH value",
 		})
+	}
+}
+
+// GetComplianceDashboard — GET /api/v1/dashboard/compliance
+// @Summary Get compliance dashboard
+// @Description Returns aggregated compliance statistics (regulator/admin only)
+// @Tags compliance
+// @Produce json
+// @Success 200 {object} models.ComplianceDashboard
+// @Failure 403 {object} map[string]string "Forbidden"
+// @Router /api/v1/dashboard/compliance [get]
+// @Security Bearer
+func GetComplianceDashboard(complianceService *services.ComplianceService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		claims := middleware.ClaimsFromContext(r.Context())
+
+		if claims.Role != "regulator" && claims.Role != "admin" {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		dashboard, err := complianceService.GetComplianceDashboard(r.Context())
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(dashboard)
 	}
 }
 

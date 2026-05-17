@@ -362,4 +362,34 @@ impl LifecycleService for LifecycleServiceImpl {
             commitment,
         }))
     }
+
+    async fn get_ownership_history(
+        &self,
+        request: Request<GetOwnershipHistoryRequest>,
+    ) -> Result<Response<GetOwnershipHistoryResponse>, Status> {
+        let req = request.into_inner();
+
+        let repo = crate::repositories::lifecycle_repo::LifecycleRepositoryImpl::new(self.engine.db_pool.clone());
+        let records = repo.get_ownership_history(&req.bpan)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        let entries: Vec<OwnershipEntry> = records.into_iter().map(|r| {
+            OwnershipEntry {
+                owner_id: r.owner_id,
+                owner_role: r.owner_type,
+                transfer_reason: r.transfer_reason.unwrap_or_default(),
+                transferred_at: Some(prost_types::Timestamp {
+                    seconds: r.start_time.timestamp(),
+                    nanos: r.start_time.timestamp_subsec_nanos() as i32,
+                }),
+                previous_owner_id: String::new(),
+            }
+        }).collect();
+
+        Ok(Response::new(GetOwnershipHistoryResponse {
+            bpan: req.bpan,
+            entries,
+        }))
+    }
 }

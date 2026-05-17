@@ -6,18 +6,32 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+
+	batteryv1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/battery/v1"
+	"github.com/Mpratyush54/Battery-AAdhar/api/grpc"
 )
 
 // BatteryService handles all battery operations
 type BatteryService struct {
 	encryptionService *EncryptionService
-	// TODO Day 7: Add repository for persistence
+	batteryClient     batteryv1.BatteryServiceClient
 }
 
 // NewBatteryService creates a new battery service
 func NewBatteryService(encService *EncryptionService) *BatteryService {
 	return &BatteryService{
 		encryptionService: encService,
+	}
+}
+
+// NewBatteryServiceWithClient creates a battery service with gRPC client
+func NewBatteryServiceWithClient(cc *grpc.ClientConn, encService *EncryptionService) *BatteryService {
+	if cc == nil {
+		return NewBatteryService(encService)
+	}
+	return &BatteryService{
+		encryptionService: encService,
+		batteryClient:     cc.BatteryClient,
 	}
 }
 
@@ -37,7 +51,7 @@ type BatteryFull struct {
 // BatteryHealth represents a State of Health record
 type BatteryHealth struct {
 	SoH       float32 `json:"soh"`
-	Status    string  `json:"status"` // "operational", "second_life", "eol"
+	Status    string  `json:"status"`
 	UpdatedAt string  `json:"updated_at"`
 }
 
@@ -62,8 +76,22 @@ func (s *BatteryService) GetBatteryFull(
 	ctx context.Context,
 	bpan string,
 ) (*BatteryFull, error) {
-	// TODO Day 7: Implement with actual DB queries
-	// For now, return stub
+	if s.batteryClient != nil {
+		resp, err := s.batteryClient.GetBattery(ctx, &batteryv1.GetBatteryRequest{
+			Bpan: bpan,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("gRPC error: %w", err)
+		}
+		return &BatteryFull{
+			BPAN:             resp.Bpan,
+			Manufacturer:     "Manufacturer 8",
+			StaticData:       map[string]interface{}{"capacity_kwh": resp.StaticData.GetBatteryCapacityKwh()},
+			ComplianceStatus: "operational",
+		}, nil
+	}
+
+	slog.Warn("battery service: gRPC client not connected, returning stub")
 	return &BatteryFull{
 		BPAN:         bpan,
 		Manufacturer: "Manufacturer 8",
@@ -82,13 +110,13 @@ func (s *BatteryService) ListBatteries(
 	offset int32,
 	filters map[string]string,
 ) ([]*BatteryFull, int64, error) {
-	// TODO Day 7: Implement with pagination + filtering
 	slog.Info("list_batteries",
 		"limit", limit,
 		"offset", offset,
 		"filters", filters,
 	)
 
+	// ListBatteries requires proto extension (Day 17+)
 	return []*BatteryFull{}, 0, nil
 }
 
@@ -102,7 +130,6 @@ func (s *BatteryService) UpdateBatteryHealth(
 		return "", fmt.Errorf("SoH must be 0–100, got %f", newSoH)
 	}
 
-	// Determine status based on SoH
 	var newStatus string
 	if newSoH > 80 {
 		newStatus = "operational"
@@ -112,7 +139,23 @@ func (s *BatteryService) UpdateBatteryHealth(
 		newStatus = "eol"
 	}
 
-	// TODO Day 7: Persist via repository
+	if s.batteryClient != nil {
+		status := batteryv1.BatteryStatus_BATTERY_STATUS_OPERATIONAL
+		if newSoH < 60 {
+			status = batteryv1.BatteryStatus_BATTERY_STATUS_END_OF_LIFE
+		} else if newSoH < 80 {
+			status = batteryv1.BatteryStatus_BATTERY_STATUS_SECOND_LIFE
+		}
+
+		_, err := s.batteryClient.UpdateBatteryStatus(ctx, &batteryv1.UpdateBatteryStatusRequest{
+			Bpan:          bpan,
+			StateOfHealth: newSoH,
+			NewStatus:     status,
+		})
+		if err != nil {
+			return "", fmt.Errorf("gRPC error: %w", err)
+		}
+	}
 
 	slog.Info("battery_health_updated",
 		"bpan", bpan,
@@ -127,13 +170,12 @@ func (s *BatteryService) UpdateBatteryHealth(
 func (s *BatteryService) GetZKProof(
 	ctx context.Context,
 	bpan string,
-	proofType string, // "operational", "second_life", "eol"
+	proofType string,
 ) (map[string]interface{}, error) {
-	// TODO Day 7: Call Rust service to generate/retrieve proof
-
+	// GetZKProof requires proto extension (Day 17+)
 	return map[string]interface{}{
 		"bpan":       bpan,
 		"proof_type": proofType,
-		"status":     "not_yet_implemented",
+		"status":     "requires proto extension",
 	}, nil
 }

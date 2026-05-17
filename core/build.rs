@@ -16,6 +16,8 @@ fn main() {
         "proto/auth.proto",
         "proto/lifecycle.proto",
         "proto/circular_economy.proto",
+        "proto/health.proto",
+        "proto/carbon.proto",
     ];
 
     // Compile all protos together

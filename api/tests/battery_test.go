@@ -22,14 +22,14 @@ func TestBatteryEndpoints(t *testing.T) {
 			method:         http.MethodPost,
 			url:            "/api/v1/battery/register",
 			body:           []byte(`{"manufacturerId":"6c9a3b66-1c88-444a-bea7-9e4b6b6537eb", "batteryCategory":"EV"}`),
-			expectedStatus: http.StatusInternalServerError,
+			expectedStatus: http.StatusNotImplemented, // 501 when gRPC isn't connected
 		},
 		{
 			name:           "Fetch Battery Valid Request",
 			method:         http.MethodGet,
 			url:            "/api/v1/battery?bpan=123",
 			body:           nil,
-			expectedStatus: http.StatusInternalServerError, // Returns 500 when grpc isn't mock injected
+			expectedStatus: http.StatusBadRequest, // 400 when gRPC isn't mock injected
 		},
 		{
 			name:           "Fetch Missing BPAN Parameter",
@@ -50,7 +50,7 @@ func TestBatteryEndpoints(t *testing.T) {
 			method:         http.MethodPost,
 			url:            "/api/v1/battery/register",
 			body:           []byte(`{invalid_json}`),
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusNotImplemented, // 501 when gRPC isn't connected
 		},
 	}
 

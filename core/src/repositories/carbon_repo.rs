@@ -40,12 +40,20 @@ pub trait CarbonRepository: Send + Sync {
 }
 
 pub struct CarbonRepositoryImpl {
-    pool: PgPool,
+    pool: Option<PgPool>,
 }
 
 impl CarbonRepositoryImpl {
     pub fn new(pool: PgPool) -> Self {
-        CarbonRepositoryImpl { pool }
+        CarbonRepositoryImpl { pool: Some(pool) }
+    }
+
+    pub fn new_stub() -> Self {
+        CarbonRepositoryImpl { pool: None }
+    }
+
+    fn pool(&self) -> Result<&PgPool, RepositoryError> {
+        self.pool.as_ref().ok_or(RepositoryError::NotFound("stub mode".to_string()))
     }
 }
 
@@ -74,7 +82,7 @@ impl CarbonRepository for CarbonRepositoryImpl {
         .bind(cf.total_emissions_kg_co2e as f64)
         .bind(cf.verified)
         .bind(now)
-        .execute(&self.pool)
+        .execute(self.pool()?)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -91,7 +99,7 @@ impl CarbonRepository for CarbonRepositoryImpl {
         .bind(&cf.submitted_by)
         .bind(cf.submitted_version)
         .bind(now)
-        .execute(&self.pool)
+        .execute(self.pool()?)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -107,7 +115,7 @@ impl CarbonRepository for CarbonRepositoryImpl {
             "#,
         )
         .bind(bpan)
-        .fetch_optional(&self.pool)
+        .fetch_optional(self.pool()?)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -167,7 +175,7 @@ impl CarbonRepository for CarbonRepositoryImpl {
             "#,
         )
         .bind(bpan)
-        .execute(&self.pool)
+        .execute(self.pool()?)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -183,7 +191,7 @@ impl CarbonRepository for CarbonRepositoryImpl {
         .bind(bpan)
         .bind(verified_by)
         .bind(Utc::now())
-        .execute(&self.pool)
+        .execute(self.pool()?)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 

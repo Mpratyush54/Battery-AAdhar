@@ -32,12 +32,20 @@ impl std::error::Error for RepositoryError {}
 
 /// The concrete BatteryRepository implementation
 pub struct BatteryRepositoryImpl {
-    pool: PgPool,
+    pool: Option<PgPool>,
 }
 
 impl BatteryRepositoryImpl {
     pub fn new(pool: PgPool) -> Self {
-        BatteryRepositoryImpl { pool }
+        BatteryRepositoryImpl { pool: Some(pool) }
+    }
+
+    pub fn new_stub() -> Self {
+        BatteryRepositoryImpl { pool: None }
+    }
+
+    fn pool(&self) -> Result<&PgPool, RepositoryError> {
+        self.pool.as_ref().ok_or(RepositoryError::NotFound("stub mode".to_string()))
     }
 }
 
@@ -80,7 +88,7 @@ impl BatteryRepository for BatteryRepositoryImpl {
         .bind(bpan)
         .bind(now)
         .bind(now)
-        .fetch_one(&self.pool)
+        .fetch_one(self.pool()?)
         .await
         .map_err(|e| {
             if e.to_string().contains("unique") {
@@ -98,7 +106,7 @@ impl BatteryRepository for BatteryRepositoryImpl {
             "SELECT id, bpan, created_at, updated_at FROM batteries WHERE bpan = $1",
         )
         .bind(bpan)
-        .fetch_optional(&self.pool)
+        .fetch_optional(self.pool()?)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -115,7 +123,7 @@ impl BatteryRepository for BatteryRepositoryImpl {
         )
         .bind(limit)
         .bind(offset)
-        .fetch_all(&self.pool)
+        .fetch_all(self.pool()?)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -128,7 +136,7 @@ impl BatteryRepository for BatteryRepositoryImpl {
         let result = sqlx::query("UPDATE batteries SET updated_at = $1 WHERE bpan = $2")
             .bind(now)
             .bind(bpan)
-            .execute(&self.pool)
+            .execute(self.pool()?)
             .await
             .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -158,7 +166,7 @@ impl BatteryRepository for BatteryRepositoryImpl {
         .bind(Uuid::new_v4())
         .bind(&bi.bpan)
         .bind(now)
-        .execute(&self.pool)
+        .execute(self.pool()?)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -173,7 +181,7 @@ impl BatteryRepository for BatteryRepositoryImpl {
             "SELECT * FROM battery_descriptor WHERE bpan = $1",
         )
         .bind(bpan)
-        .fetch_optional(&self.pool)
+        .fetch_optional(self.pool()?)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -185,7 +193,7 @@ impl BatteryRepository for BatteryRepositoryImpl {
             "SELECT state_of_health FROM battery_health WHERE bpan = $1 ORDER BY updated_at DESC LIMIT 1",
         )
         .bind(bpan)
-        .fetch_optional(&self.pool)
+        .fetch_optional(self.pool()?)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 
@@ -213,7 +221,7 @@ impl BatteryRepository for BatteryRepositoryImpl {
         .bind(bpan)
         .bind(new_soh)
         .bind(now)
-        .execute(&self.pool)
+        .execute(self.pool()?)
         .await
         .map_err(|e| RepositoryError::DatabaseError(e.to_string()))?;
 

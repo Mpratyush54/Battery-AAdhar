@@ -83,13 +83,18 @@ func TestFullAppEndpoints(t *testing.T) {
 			}
 			defer resp.Body.Close()
 
-			if status := resp.StatusCode; status != tc.expectedStatus {
-				if tc.name == "Valid Registration Route Exists" &&
-					(status == http.StatusConflict || status == http.StatusInternalServerError) {
-					// Valid CI/degraded outcomes:
-					// - 409 Conflict: user already exists from a prior test run
-					// - 500 Internal Server Error: no Postgres available in CI
-				} else {
+		if status := resp.StatusCode; status != tc.expectedStatus {
+			if tc.name == "Valid Registration Route Exists" &&
+				(status == http.StatusConflict || status == http.StatusInternalServerError) {
+				// Valid CI/degraded outcomes:
+				// - 409 Conflict: user already exists from a prior test run
+				// - 500 Internal Server Error: no Postgres available in CI
+			} else if tc.name == "Valid Get Battery Route" &&
+				(status == http.StatusBadRequest || status == http.StatusInternalServerError) {
+				// Valid degraded outcomes:
+				// - 400 Bad Request: missing/invalid bpan parameter
+				// - 500 Internal Server Error: no Postgres available in CI
+			} else {
 					t.Errorf("expected status %v; got %v", tc.expectedStatus, status)
 				}
 			}

@@ -19,7 +19,9 @@ import (
 
 	authv1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/auth/v1"
 	batteryv1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/battery/v1"
+	carbonv1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/carbon/v1"
 	cryptov1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/crypto/v1"
+	healthv1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/health/v1"
 	lifecyclev1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/lifecycle/v1"
 	circular_economyv1 "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/circular_economy/v1"
 )
@@ -33,6 +35,8 @@ type ClientConn struct {
 	AuthClient      authv1.AuthServiceClient
 	LifecycleClient lifecyclev1.LifecycleServiceClient
 	CircularEconomyClient circular_economyv1.CircularEconomyServiceClient
+	HealthClient    healthv1.HealthServiceClient
+	CarbonClient    carbonv1.CarbonServiceClient
 }
 
 // NewClientConn creates a new gRPC connection to the Rust crypto service
@@ -95,6 +99,8 @@ func NewClientConn(ctx context.Context, target string) (*ClientConn, error) {
 		AuthClient:      authv1.NewAuthServiceClient(conn),
 		LifecycleClient: lifecyclev1.NewLifecycleServiceClient(conn),
 		CircularEconomyClient: circular_economyv1.NewCircularEconomyServiceClient(conn),
+		HealthClient:    healthv1.NewHealthServiceClient(conn),
+		CarbonClient:    carbonv1.NewCarbonServiceClient(conn),
 	}
 
 	// Verify the connection is alive by calling a simple method on each service.

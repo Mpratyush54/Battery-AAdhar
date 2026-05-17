@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package bpa.carbon.v1;
+
+option go_package = "github.com/Mpratyush54/Battery-AAdhar/api/gen/proto/carbon/v1;carbonv1";
+
+import "google/protobuf/timestamp.proto";
+
+message CarbonFootprintProto {
+  string bpan = 1;
+  double raw_material_emissions_kg_co2e = 2;
+  double manufacturing_emissions_kg_co2e = 3;
+  double transport_emissions_kg_co2e = 4;
+  double usage_emissions_kg_co2e = 5;
+  double recycling_emissions_kg_co2e = 6;
+  double total_emissions_kg_co2e = 7;
+  bool verified = 8;
+  string verified_by = 9;
+  string verification_standard = 10;
+  google.protobuf.Timestamp verified_at = 11;
+  google.protobuf.Timestamp created_at = 12;
+}
+
+message SubmitCarbonRequest {
+  string bpan = 1;
+  double raw_material_emissions_kg_co2e = 2;
+  double manufacturing_emissions_kg_co2e = 3;
+  double transport_emissions_kg_co2e = 4;
+  double usage_emissions_kg_co2e = 5;
+  double recycling_emissions_kg_co2e = 6;
+  string submitter_id = 7;
+}
+
+message SubmitCarbonResponse {
+  string carbon_id = 1;
+  string data_hash = 2;
+  double total_emissions_kg_co2e = 3;
+}
+
+message GetCarbonRequest {
+  string bpan = 1;
+  string requester_role = 2;
+}
+
+message GetCarbonResponse {
+  CarbonFootprintProto carbon = 1;
+}
+
+message VerifyCarbonRequest {
+  string bpan = 1;
+  string verified_by = 2;
+  string standard = 3;
+}
+
+message VerifyCarbonResponse {
+  bool success = 1;
+  google.protobuf.Timestamp verified_at = 2;
+}
+
+message CompareCarbonRequest {
+  string bpan_a = 1;
+  string bpan_b = 2;
+}
+
+message CarbonComparisonProto {
+  string bpan_a = 1;
+  string bpan_b = 2;
+  double total_a_kg_co2e = 3;
+  double total_b_kg_co2e = 4;
+  double total_delta_kg_co2e = 5;
+  double raw_material_delta = 6;
+  double manufacturing_delta = 7;
+  double transport_delta = 8;
+  double usage_delta = 9;
+  double recycling_delta = 10;
+}
+
+message CompareCarbonResponse {
+  CarbonComparisonProto comparison = 1;
+}
+
+service CarbonService {
+  rpc SubmitCarbon (SubmitCarbonRequest) returns (SubmitCarbonResponse);
+  rpc GetCarbon (GetCarbonRequest) returns (GetCarbonResponse);
+  rpc VerifyCarbon (VerifyCarbonRequest) returns (VerifyCarbonResponse);
+  rpc CompareCarbon (CompareCarbonRequest) returns (CompareCarbonResponse);
+}

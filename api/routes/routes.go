@@ -88,12 +88,9 @@ func NewRouter(microservices *config.MicroserviceClients) http.Handler {
 			}
 		})
 
-		// Admin-only
-		r.Group(func(r chi.Router) {
-			r.Use(middleware.IsRole("admin"))
-			r.Post("/manufacturers", RegisterManufacturer)
-			r.Get("/manufacturers", ListManufacturers)
-		})
+		// Manufacturer routes (MANUFACTURER RBAC)
+		mfrSvc := services.NewManufacturerService()
+		controllers.RegisterManufacturerRoutes(r, mfrSvc)
 
 		// ── Controller-based routes (each controller registers its own group) ──
 		var healthSvc *services.HealthService
@@ -172,14 +169,6 @@ func handleUpdateStatus(w http.ResponseWriter, _ *http.Request) {
 	http.Error(w, "not implemented", http.StatusNotImplemented)
 }
 
-func handleRegisterManufacturer(w http.ResponseWriter, _ *http.Request) {
-	http.Error(w, "not implemented", http.StatusNotImplemented)
-}
-
-func handleListManufacturers(w http.ResponseWriter, _ *http.Request) {
-	http.Error(w, "not implemented", http.StatusNotImplemented)
-}
-
 func handleRegistrationUnavailable(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, `{"error":"registration service unavailable — Rust gRPC engine not connected"}`, http.StatusServiceUnavailable)
 }
@@ -206,27 +195,4 @@ func UpdateBatteryStatus(w http.ResponseWriter, r *http.Request) {
 	handleUpdateStatus(w, r)
 }
 
-// RegisterManufacturer — POST /api/v1/manufacturers
-// @Summary Register manufacturer
-// @Description Register a new manufacturer (admin only)
-// @Tags manufacturer
-// @Accept json
-// @Produce json
-// @Success 201 {object} map[string]interface{}
-// @Router /api/v1/manufacturers [post]
-// @Security Bearer
-func RegisterManufacturer(w http.ResponseWriter, r *http.Request) {
-	handleRegisterManufacturer(w, r)
-}
 
-// ListManufacturers — GET /api/v1/manufacturers
-// @Summary List manufacturers
-// @Description List all registered manufacturers (admin only)
-// @Tags manufacturer
-// @Produce json
-// @Success 200 {array} map[string]interface{}
-// @Router /api/v1/manufacturers [get]
-// @Security Bearer
-func ListManufacturers(w http.ResponseWriter, r *http.Request) {
-	handleListManufacturers(w, r)
-}

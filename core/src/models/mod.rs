@@ -34,3 +34,5 @@ pub mod battery_material_composition;
 pub use battery_material_composition::{MaterialComposition, MaterialCompositionRequest};
 pub mod compliance;
 pub use compliance::{ComplianceViolation, ComplianceSeverity, ComplianceStatus};
+pub mod manufacturers;
+pub use manufacturers::Manufacturers;

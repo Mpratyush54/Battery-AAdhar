@@ -38,3 +38,9 @@ pub mod telemetry;
 pub use telemetry::{TelemetryError, TelemetryRecord, TelemetryService, TelemetryServiceImpl};
 pub mod notification;
 pub use notification::{Notification, NotificationError as NotificationSvcError, NotificationService, NotificationServiceImpl};
+pub mod manufacturer;
+pub use manufacturer::{
+    BatteryBatchResult, BatteryCsvRow, BatchRegistrationResponse, ManufacturerBatterySummary,
+    ManufacturerDashboard, ManufacturerProfile, ManufacturerService,
+    RegisterManufacturerRequest, RegisterManufacturerResponse,
+};

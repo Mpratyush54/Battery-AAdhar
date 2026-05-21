@@ -34,3 +34,5 @@ pub use reuse_repo::{ReuseRepository, ReuseRepositoryImpl};
 pub use recycling_repo::{RecyclingRepository, RecyclingRepositoryImpl, CircularEconomyMetrics};
 pub mod compliance_repo;
 pub use compliance_repo::{ComplianceRepositoryImpl, ComplianceStats};
+pub mod manufacturer_repo;
+pub use manufacturer_repo::{ManufacturerRepository, ManufacturerRepositoryImpl};

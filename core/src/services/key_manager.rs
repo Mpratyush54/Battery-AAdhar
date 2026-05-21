@@ -298,6 +298,20 @@ impl KeyManagerImpl {
         // Step 2: Unwrap DEK
         self.unwrap_dek(&kek, wrapped_dek, bpan)
     }
+
+    /// Derive a DEK directly from the root key for a manufacturer code.
+    /// Used for manufacturer profile encryption — each manufacturer gets its own DEK.
+    pub fn derive_dek_from_code(&self, manufacturer_code: &str) -> Result<RawKey, KeyManagerError> {
+        let hkdf = Hkdf::<Sha256>::new(None, self.root_key.as_bytes());
+
+        let info = format!("BPA-MFR-DEK-{}", manufacturer_code).into_bytes();
+
+        let mut dek_bytes = [0u8; 32];
+        hkdf.expand(&info, &mut dek_bytes)
+            .map_err(|e| KeyManagerError::DerivationFailed(format!("HKDF expand: {}", e)))?;
+
+        Ok(RawKey::new(dek_bytes))
+    }
 }
 
 // Metadata structs for storage (will be persisted in Day 7)
